@@ -92,7 +92,7 @@ Open PowerShell in the repository root:
 
 ```powershell
 # Change to repo root directory first (example path)
-cd "c:\Users\orste\Downloads\llm_metadata_scraper-feat-parallel_run\llm_metadata_scraper-feat-parallel_run"
+cd "c:\Users\orste\Downloads\reusable_scraper_project\reusable_scraper_project"
 ```
 
 1. Create a virtual environment (recommended name: `.venv`):
