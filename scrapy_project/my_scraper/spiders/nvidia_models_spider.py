@@ -66,13 +66,13 @@ class NvidiaModelsSpider(scrapy.Spider):
 
     def clean_model_card_html(self, html_content):
         """
-        Clean model card HTML by removing UI elements and keeping only content
+        Convert model card HTML to clean plain text
 
         Args:
             html_content: Raw HTML string from model card page
 
         Returns:
-            Cleaned HTML string with only semantic content
+            Clean plain text string without HTML tags
         """
         if not html_content:
             return ''
@@ -80,7 +80,7 @@ class NvidiaModelsSpider(scrapy.Spider):
         try:
             soup = BeautifulSoup(html_content, 'html.parser')
 
-            # Remove unwanted elements
+            # Remove unwanted elements that don't contribute to content
             # 1. Remove all SVG elements (icons, graphics)
             for svg in soup.find_all('svg'):
                 svg.decompose()
@@ -89,66 +89,64 @@ class NvidiaModelsSpider(scrapy.Spider):
             for button in soup.find_all('button'):
                 button.decompose()
 
-            # 3. Remove elements with specific classes that are UI-only
-            ui_classes = [
-                'btn-', 'flex', 'grid', 'rounded', 'border',
-                'bg-', 'hover:', 'active:', 'aria-', 'gap-',
-                'inline-flex', 'items-center', 'justify-center'
-            ]
+            # 3. Remove script and style tags
+            for script in soup.find_all(['script', 'style']):
+                script.decompose()
 
-            for element in soup.find_all():
-                if element.get('class'):
-                    classes = ' '.join(element.get('class', []))
-                    # If element has only UI classes and no semantic content, remove it
-                    if any(ui_class in classes for ui_class in ui_classes):
-                        # But keep if it has important semantic tags inside
-                        if not element.find(['h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'p', 'ul', 'ol', 'li', 'a', 'code', 'pre']):
-                            element.decompose()
-                            continue
+            # Get text content with some structure preservation
+            text_lines = []
 
-            # 4. Clean up attributes on remaining elements
-            # Keep only semantic HTML with minimal attributes
-            for tag in soup.find_all():
-                # Preserve href on links, but clean the rest
-                if tag.name == 'a':
-                    attrs_to_keep = {}
-                    if tag.get('href'):
-                        attrs_to_keep['href'] = tag['href']
-                    if tag.get('target'):
-                        attrs_to_keep['target'] = tag['target']
-                    tag.attrs = attrs_to_keep
-                elif tag.name == 'code':
-                    # Keep code elements clean
-                    tag.attrs = {}
-                elif tag.name == 'pre':
-                    # Keep pre elements clean
-                    tag.attrs = {}
-                elif tag.name in ['div', 'span']:
-                    # For div/span, keep only if they have important content
-                    # Otherwise strip them but keep content
-                    if not tag.find(['h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'p', 'ul', 'ol', 'a', 'pre']):
-                        # Replace div/span with its contents
-                        tag.unwrap()
+            # Process each element to preserve some structure
+            for element in soup.find_all(['h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'p', 'li', 'a', 'strong', 'em']):
+                text = element.get_text(strip=True)
+                if not text:
+                    continue
+
+                # Add formatting for headings
+                if element.name in ['h1', 'h2']:
+                    text_lines.append('\n' + text + '\n' + '=' * len(text))
+                elif element.name in ['h3', 'h4']:
+                    text_lines.append('\n' + text + '\n' + '-' * len(text))
+                elif element.name == 'li':
+                    text_lines.append('• ' + text)
+                elif element.name == 'a' and element.get('href'):
+                    # Include link URL in parentheses
+                    href = element.get('href')
+                    if href and href != text:
+                        text_lines.append(f'{text} ({href})')
                     else:
-                        tag.attrs = {}
+                        text_lines.append(text)
                 else:
-                    # For semantic tags (h1, h2, p, ul, etc.), remove all attributes
-                    tag.attrs = {}
+                    text_lines.append(text)
 
-            # Get the cleaned HTML
-            cleaned_html = str(soup)
+            # Join lines and clean up
+            cleaned_text = '\n'.join(text_lines)
 
-            # Post-processing cleanup
             # Remove excessive whitespace
-            cleaned_html = re.sub(r'\n\s*\n', '\n\n', cleaned_html)
-            cleaned_html = re.sub(r'  +', ' ', cleaned_html)
+            cleaned_text = re.sub(r'\n\s*\n\s*\n+', '\n\n', cleaned_text)
+            cleaned_text = re.sub(r'  +', ' ', cleaned_text)
 
-            return cleaned_html.strip()
+            # Remove duplicate lines that may have been created
+            lines = cleaned_text.split('\n')
+            unique_lines = []
+            prev_line = None
+            for line in lines:
+                if line != prev_line or line.strip() in ['', '=' * len(line.strip()), '-' * len(line.strip())]:
+                    unique_lines.append(line)
+                    prev_line = line
+
+            cleaned_text = '\n'.join(unique_lines).strip()
+
+            return cleaned_text
 
         except Exception as e:
             self.logger.warning(f'Error cleaning HTML: {e}')
-            # Return original if cleaning fails
-            return html_content
+            # Fallback: just get text without formatting
+            try:
+                soup = BeautifulSoup(html_content, 'html.parser')
+                return soup.get_text(separator='\n', strip=True)
+            except:
+                return html_content
 
     def safe_get_attribute(self, driver, selector, attribute, max_retries=3):
         """

@@ -184,8 +184,9 @@ class SettingsMenu:
         if self.cli.confirm("Are you sure you want to reset?", default=False):
             # Reload default values
             for key, config in self.manager.settings_schema.items():
-                # Reset to defaults (you could store original defaults)
-                pass
+                # Reset to defaults if 'default' key exists, otherwise use current 'value'
+                if 'default' in config:
+                    config['value'] = config['default']
 
             # Delete config file
             if os.path.exists(self.manager.config_file):

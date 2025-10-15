@@ -6,9 +6,9 @@ Scrapes LLM model names and URLs from Kaggle models page
 import scrapy
 from selenium.webdriver.common.by import By
 from my_scraper.items import KaggleModelItem
-from my_scraper.utils import extract_model_name_from_url, build_full_url
 from my_scraper.selectors.site_selectors import get_selectors_for_site
 from my_scraper.extractors.selenium_utils import get_driver_from_response, parse_tree_from_response, click_element
+from my_scraper.extractors.kaggle_links_extractor import extract_model_links
 
 
 class KaggleLinksSpider(scrapy.Spider):
@@ -81,63 +81,22 @@ class KaggleLinksSpider(scrapy.Spider):
         else:
             # After navigation, parse from driver's current page source
             tree = parse_tree_from_response(response, driver=driver)
-        
-        # Extract model links using configured selector
-        model_links_xpath = self.selectors.get('model_links_xpath')
-        list_items = tree.xpath(model_links_xpath)
-        
-        self.logger.info(f'Page {page_num}: Found {len(list_items)} model links')
-        
-        # Track if we found any new models on this page
-        new_models_count = 0
-        first_model_url = None  # Track first model on this page
-        duplicate_count = 0  # Track duplicates for debugging
-        
-        # Extract data from each link
-        for link in list_items:
-            href = link.get('href', '')
-            
-            if not href or href == '/models':
-                continue
-            
-            # Build full URL
-            full_url = build_full_url('https://www.kaggle.com', href)
-            
-            # Track first model URL on this page for content change detection
-            if first_model_url is None:
-                first_model_url = full_url
-            
-            # Skip if already seen
-            if full_url in self.seen_urls:
-                duplicate_count += 1
-                self.logger.debug(f'Page {page_num}: Duplicate URL: {full_url}')
-                continue
-            
-            self.seen_urls.add(full_url)
-            new_models_count += 1
-            
-            # Extract model name
-            model_name_xpath = self.selectors.get('model_name_xpath')
-            name_elements = link.xpath(model_name_xpath)
-            
-            if name_elements:
-                model_name = name_elements[0].strip()
-            else:
-                # Fallback: extract from link text or URL
-                model_name = link.text_content().strip()
-                if not model_name:
-                    model_name = extract_model_name_from_url(href)
-            
-            if model_name:
-                # Create and yield item
-                item = KaggleModelItem()
-                item['name'] = model_name
-                item['kaggle_url'] = full_url
-                
-                yield item
-        
-        # Log results
-        self.logger.info(f'Page {page_num}: Scraped {new_models_count} new models (total seen: {len(self.seen_urls)})')
+
+        # Extract model links using the extractor
+        items, new_models_count, first_model_url = extract_model_links(
+            tree=tree,
+            selectors=self.selectors,
+            seen_urls=self.seen_urls,
+            page_num=page_num,
+            base_url='https://www.kaggle.com'
+        )
+
+        # Yield items
+        for item_data in items:
+            item = KaggleModelItem()
+            item['name'] = item_data['name']
+            item['kaggle_url'] = item_data['kaggle_url']
+            yield item
         
         # Set the first model for page 1 (for comparison after clicking next)
         if page_num == 1 and first_model_url:

@@ -109,7 +109,7 @@ SELENIUM_DRIVER_ARGUMENTS = [
     '--disable-dev-shm-usage',
     '--disable-blink-features=AutomationControlled'
 ]
-SELENIUM_POOL_SIZE = 32
+SELENIUM_POOL_SIZE = 8
 
 # Set settings whose default value is deprecated to a future-proof value
 REQUEST_FINGERPRINTER_IMPLEMENTATION = '2.7'

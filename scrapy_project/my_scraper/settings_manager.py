@@ -39,6 +39,7 @@ class SettingsManager:
         self.settings_schema = {
             'CONCURRENT_REQUESTS': {
                 'value': 64,
+                'default': 64,
                 'min': 1,
                 'max': 256,
                 'recommended_max': self.cpu_count * 8,
@@ -48,6 +49,7 @@ class SettingsManager:
             },
             'CONCURRENT_REQUESTS_PER_DOMAIN': {
                 'value': 24,
+                'default': 24,
                 'min': 1,
                 'max': 128,
                 'recommended_max': self.cpu_count * 4,
@@ -57,6 +59,7 @@ class SettingsManager:
             },
             'CONCURRENT_REQUESTS_PER_IP': {
                 'value': 24,
+                'default': 24,
                 'min': 1,
                 'max': 128,
                 'recommended_max': self.cpu_count * 4,
@@ -66,6 +69,7 @@ class SettingsManager:
             },
             'DOWNLOAD_DELAY': {
                 'value': 0.25,
+                'default': 0.25,
                 'min': 0.0,
                 'max': 10.0,
                 'recommended_min': 0.1,
@@ -75,6 +79,7 @@ class SettingsManager:
             },
             'AUTOTHROTTLE_TARGET_CONCURRENCY': {
                 'value': 16.0,
+                'default': 16.0,
                 'min': 1.0,
                 'max': 100.0,
                 'recommended_max': self.cpu_count * 2.0,
@@ -84,6 +89,7 @@ class SettingsManager:
             },
             'SELENIUM_POOL_SIZE': {
                 'value': 8,
+                'default': 8,
                 'min': 1,
                 'max': self.cpu_count * 4,
                 'recommended_max': self.cpu_count * 2,
@@ -93,6 +99,7 @@ class SettingsManager:
             },
             'AUTOTHROTTLE_START_DELAY': {
                 'value': 0.25,
+                'default': 0.25,
                 'min': 0.0,
                 'max': 10.0,
                 'recommended_min': 0.1,
@@ -102,6 +109,7 @@ class SettingsManager:
             },
             'AUTOTHROTTLE_MAX_DELAY': {
                 'value': 3.0,
+                'default': 3.0,
                 'min': 0.5,
                 'max': 60.0,
                 'recommended_max': 10.0,
