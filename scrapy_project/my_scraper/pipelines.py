@@ -83,7 +83,20 @@ class JsonExportPipeline:
 
         # Create filename with timestamp
         timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
-        filename = f'{output_dir}/{spider.name}_{timestamp}.json'
+
+        # Map spider names to custom output filenames
+        filename_mapping = {
+            'kaggle_metadata': f'kaggle_llm_model_metadata_{timestamp}.json',
+            'nvidia_models': f'nvidia_llm_model_metadata_{timestamp}.json',
+        }
+
+        # Use custom filename if spider is in mapping, otherwise use default
+        if spider.name in filename_mapping:
+            json_filename = filename_mapping[spider.name]
+        else:
+            json_filename = f'{spider.name}_{timestamp}.json'
+
+        filename = f'{output_dir}/{json_filename}'
 
         self.filename = filename
         self.file = open(filename, 'w', encoding='utf-8')
