@@ -83,7 +83,7 @@ class SettingsManager:
                 'warning': 'Should generally be lower than CONCURRENT_REQUESTS'
             },
             'SELENIUM_POOL_SIZE': {
-                'value': 16,
+                'value': 8,
                 'min': 1,
                 'max': self.cpu_count * 4,
                 'recommended_max': self.cpu_count * 2,
