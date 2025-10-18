@@ -1,0 +1,61 @@
+version: '3.8'
+
+services:
+  scraper:
+    build: .
+    image: llm-metadata-scraper
+    container_name: llm-scraper
+    volumes:
+      # Mount output directory to persist scraped data
+      - ./output:/app/output
+    environment:
+      # Selenium environment variables
+      - DISPLAY=:99
+      - CHROME_BIN=/usr/bin/chromium
+      - CHROMEDRIVER_PATH=/usr/bin/chromedriver
+    command: python run.py
+    # For running specific spiders, override the command:
+    # docker-compose run scraper python run.py kaggle_links -a max_pages=10
+
+  # Service for running individual spiders
+  kaggle-links:
+    build: .
+    image: llm-metadata-scraper
+    container_name: kaggle-links-scraper
+    volumes:
+      - ./output:/app/output
+    environment:
+      - DISPLAY=:99
+      - CHROME_BIN=/usr/bin/chromium
+      - CHROMEDRIVER_PATH=/usr/bin/chromedriver
+    command: python run.py kaggle_links -a max_pages=100
+    profiles:
+      - individual
+
+  kaggle-metadata:
+    build: .
+    image: llm-metadata-scraper
+    container_name: kaggle-metadata-scraper
+    volumes:
+      - ./output:/app/output
+    environment:
+      - DISPLAY=:99
+      - CHROME_BIN=/usr/bin/chromium
+      - CHROMEDRIVER_PATH=/usr/bin/chromedriver
+    command: python run.py kaggle_metadata
+    profiles:
+      - individual
+
+  nvidia-models:
+    build: .
+    image: llm-metadata-scraper
+    container_name: nvidia-models-scraper
+    volumes:
+      - ./output:/app/output
+    environment:
+      - DISPLAY=:99
+      - CHROME_BIN=/usr/bin/chromium
+      - CHROMEDRIVER_PATH=/usr/bin/chromedriver
+    command: python run.py nvidia_models
+    profiles:
+      - individual

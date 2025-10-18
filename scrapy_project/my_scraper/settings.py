@@ -24,16 +24,16 @@ USER_AGENT = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTM
 ROBOTSTXT_OBEY = False
 
 # Configure maximum concurrent requests performed by Scrapy (default: 16)
-# Increased to 64 for high-performance parallel scraping (80% resource usage)
-CONCURRENT_REQUESTS = 128
+# Optimized for speed + stability: 64 concurrent (4x default, matches autothrottle target)
+CONCURRENT_REQUESTS = 64
 
 # Configure a delay for requests for the same website (default: 0)
 # See https://docs.scrapy.org/en/latest/topics/settings.html#download-delay
 # See also autothrottle settings and docs
-DOWNLOAD_DELAY = 0.25
+DOWNLOAD_DELAY = 0.5
 # The download delay setting will honor only one of:
-CONCURRENT_REQUESTS_PER_DOMAIN = 48
-CONCURRENT_REQUESTS_PER_IP = 48
+CONCURRENT_REQUESTS_PER_DOMAIN = 24
+CONCURRENT_REQUESTS_PER_IP = 24
 
 # Disable cookies (enabled by default)
 COOKIES_ENABLED = True
@@ -78,12 +78,12 @@ ITEM_PIPELINES = {
 # See https://docs.scrapy.org/en/latest/topics/autothrottle.html
 AUTOTHROTTLE_ENABLED = True
 # The initial download delay
-AUTOTHROTTLE_START_DELAY = 0.25
+AUTOTHROTTLE_START_DELAY = 0.5
 # The maximum download delay to be set in case of high latencies
-AUTOTHROTTLE_MAX_DELAY = 3.0
+AUTOTHROTTLE_MAX_DELAY = 10.0
 # The average number of requests Scrapy should be sending in parallel to
-# each remote server
-AUTOTHROTTLE_TARGET_CONCURRENCY = 64.0
+# each remote server (matches CONCURRENT_REQUESTS for optimal performance)
+AUTOTHROTTLE_TARGET_CONCURRENCY = 32.0
 # Enable showing throttling stats for every response received:
 AUTOTHROTTLE_DEBUG = False
 
@@ -107,9 +107,13 @@ SELENIUM_DRIVER_ARGUMENTS = [
     '--headless',
     '--no-sandbox',
     '--disable-dev-shm-usage',
-    '--disable-blink-features=AutomationControlled'
+    '--disable-blink-features=AutomationControlled',
+    '--disable-gpu',
+    '--disable-extensions',
+    '--disable-logging',
+    '--log-level=3'
 ]
-SELENIUM_POOL_SIZE = 8
+SELENIUM_POOL_SIZE = 12  # Increased from 8 for better throughput (1.5x CPU cores typical)
 
 # Set settings whose default value is deprecated to a future-proof value
 REQUEST_FINGERPRINTER_IMPLEMENTATION = '2.7'
@@ -136,31 +140,3 @@ SYSTEM_MEMORY_GB = os.sysconf('SC_PAGE_SIZE') * os.sysconf('SC_PHYS_PAGES') / (1
 # Display configuration on startup
 import logging
 logger = logging.getLogger(__name__)
-
-def log_startup_info():
-    """Log system and performance configuration information"""
-    logger.info("="*70)
-    logger.info("SCRAPER CONFIGURATION")
-    logger.info("="*70)
-    logger.info(f"CPU Cores Available: {CPU_COUNT}")
-    logger.info(f"System Memory: {SYSTEM_MEMORY_GB:.2f} GB" if isinstance(SYSTEM_MEMORY_GB, float) else f"System Memory: {SYSTEM_MEMORY_GB}")
-    logger.info("-"*70)
-    logger.info("SCRAPY SETTINGS:")
-    logger.info(f"  Concurrent Requests: {CONCURRENT_REQUESTS}")
-    logger.info(f"  Concurrent Requests Per Domain: {CONCURRENT_REQUESTS_PER_DOMAIN}")
-    logger.info(f"  Download Delay: {DOWNLOAD_DELAY}s")
-    logger.info(f"  AutoThrottle Target Concurrency: {AUTOTHROTTLE_TARGET_CONCURRENCY}")
-    logger.info("-"*70)
-    logger.info("SELENIUM SETTINGS:")
-    logger.info(f"  Driver Pool Size: {SELENIUM_POOL_SIZE}")
-    logger.info(f"  Driver Type: {SELENIUM_DRIVER_NAME}")
-    logger.info(f"  Headless Mode: {'--headless' in SELENIUM_DRIVER_ARGUMENTS}")
-    logger.info("-"*70)
-    logger.info("PROXY SETTINGS:")
-    logger.info(f"  Proxy Rotation Enabled: {ENABLE_PROXY_ROTATION}")
-    logger.info(f"  Number of Proxies: {len(ROTATING_PROXIES)}")
-    logger.info("="*70)
-
-# Log startup info when settings are loaded
-# This will be called when the spider starts
-log_startup_info()

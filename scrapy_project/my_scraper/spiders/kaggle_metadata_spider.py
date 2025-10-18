@@ -44,11 +44,6 @@ class KaggleMetadataSpider(scrapy.Spider):
     name = 'kaggle_metadata'
     allowed_domains = ['kaggle.com']
 
-    custom_settings = {
-        'CONCURRENT_REQUESTS': 16,  # Process multiple requests in parallel (matches driver pool)
-        'DOWNLOAD_DELAY': 0.25,  # Reduced delay for maximum performance
-    }
-
     def __init__(self, input_file=None, *args, **kwargs):
         """
         Initialize spider

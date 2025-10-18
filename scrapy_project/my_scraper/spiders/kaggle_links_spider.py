@@ -22,11 +22,6 @@ class KaggleLinksSpider(scrapy.Spider):
     allowed_domains = ['kaggle.com']
     start_urls = ['https://www.kaggle.com/models?owner-type=organization']
 
-    custom_settings = {
-        'CONCURRENT_REQUESTS': 1,  # Single request at a time for pagination
-        'DOWNLOAD_DELAY': 2.0,
-    }
-
     def __init__(self, max_pages=100, *args, **kwargs):
         """
         Initialize spider

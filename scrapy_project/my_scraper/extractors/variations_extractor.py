@@ -681,3 +681,4 @@ def extract_variations(driver: webdriver.Chrome, selectors: Dict, name: str, mod
         logger.error(f"Error in multi-tab extract_variations for {name}: {e}")
 
     return all_variations
+1

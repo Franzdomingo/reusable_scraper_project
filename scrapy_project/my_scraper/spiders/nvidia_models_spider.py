@@ -38,16 +38,6 @@ class NvidiaModelsSpider(scrapy.Spider):
     allowed_domains = ['build.nvidia.com']
     start_urls = ['https://build.nvidia.com/models']
 
-    custom_settings = {
-        'CONCURRENT_REQUESTS': 8,  # Increased from 4 for better throughput
-        'DOWNLOAD_DELAY': 0.5,  # Reduced from 1.0 for faster scraping
-        'RANDOMIZE_DOWNLOAD_DELAY': True,  # Randomize delays
-        'AUTOTHROTTLE_ENABLED': True,  # Enable auto-throttling
-        'AUTOTHROTTLE_START_DELAY': 0.5,  # Reduced from 1.0
-        'AUTOTHROTTLE_MAX_DELAY': 5.0,  # Reduced from 10.0
-        'AUTOTHROTTLE_TARGET_CONCURRENCY': 4.0,  # Increased from 2.0
-    }
-
     def __init__(self, *args, skip_modelcard=False, **kwargs):
         """
         Initialize spider
