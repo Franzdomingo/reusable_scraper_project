@@ -36,11 +36,14 @@ COPY requirements.txt .
 # Install Python dependencies
 RUN pip install --no-cache-dir -r requirements.txt
 
-# Copy the rest of the application
+# Copy the scrapy_project application
 COPY . .
 
-# Create output directory
-RUN mkdir -p output
+# Copy the api module from parent directory
+COPY ../api /app/api
+
+# Create output directories
+RUN mkdir -p output api_output
 
 # Set permissions
 RUN chmod +x run.py

@@ -1,0 +1,632 @@
+{
+  "models": [
+    {
+      "id": 446705,
+      "ref": "qwen-lm/qwen3-next-80b",
+      "title": "Qwen3 Next 80B",
+      "subtitle": "Qwen3-Next-80B-A3B is the first installment in the Qwen3-Next series and features the following key enchancements like Hybrid Attention, High-Sparsity Mixture-of-Experts (MoE), Stability Optimizations and Multi-Token Prediction (MTP)",
+      "author": "QwenLM",
+      "slug": "qwen3-next-80b",
+      "description": "<a href=\"https://chat.qwen.ai/\" target=\"_blank\" style=\"margin: 2px\">\n    <img alt=\"Chat\" src=\"https://img.shields.io/badge/%F0%9F%92%9C%EF%B8%8F%20Qwen%20Chat%20-536af5\" style=\"display: inline-block; vertical-align: middle\">\n</a>\n\nOver the past few months, we have observed increasingly clear trends toward scaling both total parameters and context lengths in the pursuit of more powerful and agentic artificial intelligence (AI). \nWe are excited to share our latest advancements in addressing these demands, centered on improving scaling efficiency through innovative model architecture. \nWe call this next-generation foundation models **Qwen3-Next**.\n\n## Highlights\n\n**Qwen3-Next-80B-A3B** is the first installment in the Qwen3-Next series and features the following key enchancements:\n- **Hybrid Attention**: Replaces standard attention with the combination of **Gated DeltaNet** and **Gated Attention**, enabling efficient context modeling for ultra-long context length.\n- **High-Sparsity Mixture-of-Experts (MoE)**: Achieves an extreme low activation ratio in MoE layers, drastically reducing FLOPs per token while preserving model capacity. \n- **Stability Optimizations**: Includes techniques such as **zero-centered and weight-decayed layernorm**, and other stabilizing enhancements for robust pre-training and post-training.  \n- **Multi-Token Prediction (MTP)**: Boosts pretraining model performance and accelerates inference.\n\nWe are seeing strong performance in terms of both parameter efficiency and inference speed for Qwen3-Next-80B-A3B:\n- Qwen3-Next-80B-A3B-Base outperforms Qwen3-32B-Base on downstream tasks with 10% of the total training cost and with 10 times inference throughput for context over 32K tokens.\n- Qwen3-Next-80B-A3B-Instruct performs on par with Qwen3-235B-A22B-Instruct-2507 on certain benchmarks, while demonstrating significant advantages in handling ultra-long-context tasks up to 256K tokens.\n\n![Qwen3-Next-80B-A3B-Instruct Benchmark Comparison](https://qianwen-res.oss-accelerate.aliyuncs.com/Qwen3-Next/Qwen3-Next-80B-A3B-Instruct.001.jpeg)\n\nFor more details, please refer to our blog post [Qwen3-Next](https://qwenlm.github.io/blog/qwen3_next/).\n\n## Model Overview\n\n&gt; [!Note]\n&gt; **Qwen3-Next-80B-A3B-Instruct** supports only instruct (non-thinking) mode and does not generate ``&lt;think&gt;&lt;/think&gt;`` blocks in its output.\n\n**Qwen3-Next-80B-A3B-Instruct** has the following features:\n- Type: Causal Language Models\n- Training Stage: Pretraining (15T tokens) & Post-training\n- Number of Parameters: 80B in total and 3B activated\n- Number of Paramaters (Non-Embedding): 79B\n- Number of Layers: 48\n- Hidden Dimension: 2048\n- Hybrid Layout: 12 \\* (3 \\* (Gated DeltaNet -&gt; MoE) -&gt; (Gated Attention -&gt; MoE))\n- Gated Attention:\n  - Number of Attention Heads: 16 for Q and 2 for KV\n  - Head Dimension: 256\n  - Rotary Position Embedding Dimension: 64\n- Gated DeltaNet:\n  - Number of Linear Attention Heads: 32 for V and 16 for QK\n  - Head Dimension: 128\n- Mixture of Experts:\n  - Number of Experts: 512\n  - Number of Activated Experts: 10\n  - Number of Shared Experts: 1\n  - Expert Intermediate Dimension: 512\n- Context Length: 262,144 natively and extensible up to 1,010,000 tokens\n\n<img src=\"https://qianwen-res.oss-accelerate.aliyuncs.com/Qwen3-Next/model_architecture.png\">\n\n\n## Performance\n\n|  | Qwen3-30B-A3B-Instruct-2507 | Qwen3-32B Non-Thinking | Qwen3-235B-A22B-Instruct-2507 | Qwen3-Next-80B-A3B-Instruct |\n|--- | --- | --- | --- | --- |\n| **Knowledge** | | | | |\n| MMLU-Pro | 78.4 | 71.9 | **83.0** | 80.6 |\n| MMLU-Redux | 89.3 | 85.7 | **93.1** | 90.9 |\n| GPQA | 70.4 | 54.6 | **77.5** | 72.9 |\n| SuperGPQA | 53.4 | 43.2 | **62.6** | 58.8 |\n| **Reasoning** | | | | |\n| AIME25 | 61.3 | 20.2 | **70.3** | 69.5 |\n| HMMT25 | 43.0 | 9.8 | **55.4** | 54.1 |\n| LiveBench 20241125 | 69.0 | 59.8 | 75.4 | **75.8** |\n| **Coding** | | | | |\n| LiveCodeBench v6 (25.02-25.05) | 43.2 | 29.1 | 51.8 | **56.6** |\n| MultiPL-E | 83.8 | 76.9 | **87.9** | 87.8 |\n| Aider-Polyglot | 35.6 | 40.0 | **57.3** | 49.8 |\n| **Alignment** | | | | |\n| IFEval | 84.7 | 83.2 | **88.7** | 87.6 |\n| Arena-Hard v2* | 69.0 | 34.1 | 79.2 | **82.7** |\n| Creative Writing v3 | 86.0 | 78.3 | **87.5** | 85.3 |\n| WritingBench | 85.5 | 75.4 | 85.2 | **87.3** |\n| **Agent** | | | | |\n| BFCL-v3 | 65.1 | 63.0 | **70.9** | 70.3 |\n| TAU1-Retail | 59.1 | 40.1 | **71.3** | 60.9 |\n| TAU1-Airline | 40.0 | 17.0 | **44.0** | 44.0 |\n| TAU2-Retail | 57.0 | 48.8 | **74.6** | 57.3 |\n| TAU2-Airline | 38.0 | 24.0 | **50.0** | 45.5 |\n| TAU2-Telecom | 12.3 | 24.6 | **32.5** | 13.2 |\n| **Multilingualism** | | | | |\n| MultiIF | 67.9 | 70.7 | **77.5** | 75.8 |\n| MMLU-ProX | 72.0 | 69.3 | **79.4** | 76.7 |\n| INCLUDE | 71.9 | 70.9 | **79.5** | 78.9 |\n| PolyMATH | 43.1 | 22.5 | **50.2** | 45.9 |\n\n![Qwen3-Next-80B-A3B-Thinking Benchmark Comparison](https://qianwen-res.oss-accelerate.aliyuncs.com/Qwen3-Next/Qwen3-Next-80B-A3B-Thinking.001.jpeg)\n\nFor more details, please refer to our blog post [Qwen3-Next](https://qwenlm.github.io/blog/qwen3_next/).\n\n## Model Overview\n\n&gt; [!Note]\n&gt; **Qwen3-Next-80B-A3B-Thinking** supports only thinking mode. \n&gt; To enforce model thinking, the default chat template automatically includes `&lt;think&gt;`. \n&gt; Therefore, it is normal for the model's output to contain only `&lt;/think&gt;` without an explicit opening `&lt;think&gt;` tag.\n\n&gt; [!Note]\n&gt; **Qwen3-Next-80B-A3B-Thinking** may generate thinking content longer than its predecessor.\n&gt; We strongly recommend its use in highly complex reasoning tasks.\n\n\n**Qwen3-Next-80B-A3B-Thinking** has the following features:\n- Type: Causal Language Models\n- Training Stage: Pretraining (15T tokens) & Post-training\n- Number of Parameters: 80B in total and 3B activated\n- Number of Paramaters (Non-Embedding): 79B\n- Number of Layers: 48\n- Hidden Dimension: 2048\n- Hybrid Layout: 12 \\* (3 \\* (Gated DeltaNet -&gt; MoE) -&gt; (Gated Attention -&gt; MoE))\n- Gated Attention:\n  - Number of Attention Heads: 16 for Q and 2 for KV\n  - Head Dimension: 256\n  - Rotary Position Embedding Dimension: 64\n- Gated DeltaNet:\n  - Number of Linear Attention Heads: 32 for V and 16 for QK\n  - Head Dimension: 128\n- Mixture of Experts:\n  - Number of Experts: 512\n  - Number of Activated Experts: 10\n  - Number of Shared Experts: 1\n  - Expert Intermediate Dimension: 512\n- Context Length: 262,144 natively and extensible up to 1,010,000 tokens\n\n<img src=\"https://qianwen-res.oss-accelerate.aliyuncs.com/Qwen3-Next/model_architecture.png\">\n\n\n## Performance\n\n|  | Qwen3-30B-A3B-Thinking-2507 | Qwen3-32B Thinking | Qwen3-235B-A22B-Thinking-2507 | Gemini-2.5-Flash Thinking | Qwen3-Next-80B-A3B-Thinking |\n|--- | --- | --- | --- | --- | --- |\n| **Knowledge** | | | | |\n| MMLU-Pro | 80.9 | 79.1 | **84.4** | 81.9 | 82.7 |\n| MMLU-Redux | 91.4 | 90.9 | **93.8** | 92.1 | 92.5 |\n| GPQA | 73.4 | 68.4 | 81.1 | **82.8** | 77.2 |\n| SuperGPQA | 56.8 | 54.1 | **64.9** | 57.8 | 60.8 |\n| **Reasoning** | | | | |\n| AIME25 | 85.0 | 72.9 | **92.3** | 72.0 | 87.8 |\n| HMMT25 | 71.4 | 51.5 | **83.9** | 64.2 | 73.9 |\n| LiveBench 241125 | 76.8 | 74.9 | **78.4** | 74.3 | 76.6 |\n| **Coding** | | | | |\n| LiveCodeBench v6 (25.02-25.05) | 66.0 | 60.6 | **74.1** | 61.2 | 68.7 |\n| CFEval | 2044 | 1986 | **2134** | 1995 | 2071 |\n| OJBench | 25.1 | 24.1 | **32.5** | 23.5 | 29.7 |\n| **Alignment** | | | | |\n| IFEval | 88.9 | 85.0 | 87.8 | **89.8** | 88.9 |\n| Arena-Hard v2* | 56.0 | 48.4 | **79.7** | 56.7 | 62.3 |\n| WritingBench | 85.0 | 79.0 | **88.3** | 83.9 | 84.6 |\n| **Agent** | | | | |\n| BFCL-v3 |  **72.4** | 70.3 | 71.9 | 68.6 | 72.0 |\n| TAU1-Retail | 67.8 | 52.8 | 67.8 | 65.2 | **69.6** |\n| TAU1-Airline | 48.0 | 29.0 | 46.0 | **54.0** | 49.0 |\n| TAU2-Retail | 58.8 | 49.7 | **71.9** | 66.7 | 67.8 |\n| TAU2-Airline | 58.0 | 45.5 | 58.0 | 52.0 | **60.5** |\n| TAU2-Telecom | 26.3 | 27.2 | **45.6** | 31.6 | 43.9 |\n| **Multilingualism** | | | | |\n| MultiIF | 76.4 | 73.0 | **80.6** | 74.4 | 77.8 |\n| MMLU-ProX | 76.4 | 74.6 | **81.0** | 80.2 | 78.7 |\n| INCLUDE | 74.4 | 73.7 | 81.0 | **83.9** | 78.9 |\n| PolyMATH | 52.6 | 47.4 | **60.1** | 49.8 | 56.3 |\n\n*: For reproducibility, we report the win rates evaluated by GPT-4.1.\n\n### Citation\n\nIf you find our work helpful, feel free to give us a cite.\n\n```\n@misc{qwen3technicalreport,\n      title={Qwen3 Technical Report}, \n      author={Qwen Team},\n      year={2025},\n      eprint={2505.09388},\n      archivePrefix={arXiv},\n      primaryClass={cs.CL},\n      url={https://arxiv.org/abs/2505.09388}, \n}\n\n@article{qwen2.5-1m,\n      title={Qwen2.5-1M Technical Report}, \n      author={An Yang and Bowen Yu and Chengyuan Li and Dayiheng Liu and Fei Huang and Haoyan Huang and Jiandong Jiang and Jianhong Tu and Jianwei Zhang and Jingren Zhou and Junyang Lin and Kai Dang and Kexin Yang and Le Yu and Mei Li and Minmin Sun and Qin Zhu and Rui Men and Tao He and Weijia Xu and Wenbiao Yin and Wenyuan Yu and Xiafei Qiu and Xingzhang Ren and Xinlong Yang and Yong Li and Zhiying Xu and Zipeng Zhang},\n      journal={arXiv preprint arXiv:2501.15383},\n      year={2025}\n}\n```",
+      "instances": [
+        {
+          "id": 430985,
+          "slug": "qwen3-next-80b-a3b-instruct",
+          "framework": "transformers",
+          "fineTunable": true,
+          "overview": "## Model Overview\n\n&gt; [!Note]\n&gt; **Qwen3-Next-80B-A3B-Instruct** supports only instruct (non-thinking) mode and does not generate ``&lt;think&gt;&lt;/think&gt;`` blocks in its output.\n\n**Qwen3-Next-80B-A3B-Instruct** has the following features:\n- Type: Causal Language Models\n- Training Stage: Pretraining (15T tokens) & Post-training\n- Number of Parameters: 80B in total and 3B activated\n- Number of Paramaters (Non-Embedding): 79B\n- Number of Layers: 48\n- Hidden Dimension: 2048\n- Hybrid Layout: 12 \\* (3 \\* (Gated DeltaNet -&gt; MoE) -&gt; (Gated Attention -&gt; MoE))\n- Gated Attention:\n  - Number of Attention Heads: 16 for Q and 2 for KV\n  - Head Dimension: 256\n  - Rotary Position Embedding Dimension: 64\n- Gated DeltaNet:\n  - Number of Linear Attention Heads: 32 for V and 16 for QK\n  - Head Dimension: 128\n- Mixture of Experts:\n  - Number of Experts: 512\n  - Number of Activated Experts: 10\n  - Number of Shared Experts: 1\n  - Expert Intermediate Dimension: 512\n- Context Length: 262,144 natively and extensible up to 1,010,000 tokens\n\n<img src=\"https://qianwen-res.oss-accelerate.aliyuncs.com/Qwen3-Next/model_architecture.png\">",
+          "usage": "## Quickstart\n\nThe code for Qwen3-Next has been merged into the main branch of Hugging Face `transformers`.\n\n```shell\npip install git+https://github.com/huggingface/transformers.git@main\n```\n\nWith earlier versions, you will encounter the following error:\n```\nKeyError: 'qwen3_next'\n```\n\nThe following contains a code snippet illustrating how to use the model generate content based on given inputs. \n```python\nfrom transformers import AutoModelForCausalLM, AutoTokenizer\nimport kagglehub\n\nmodel_name = kagglehub.model_download(\"qwen-lm/qwen3-next-80b/transformers/qwen3-next-80b-a3b-instruct\")\n\n# load the tokenizer and the model\ntokenizer = AutoTokenizer.from_pretrained(model_name)\nmodel = AutoModelForCausalLM.from_pretrained(\n    model_name,\n    dtype=\"auto\",\n    device_map=\"auto\",\n)\n\n# prepare the model input\nprompt = \"Give me a short introduction to large language model.\"\nmessages = [\n    {\"role\": \"user\", \"content\": prompt},\n]\ntext = tokenizer.apply_chat_template(\n    messages,\n    tokenize=False,\n    add_generation_prompt=True,\n)\nmodel_inputs = tokenizer([text], return_tensors=\"pt\").to(model.device)\n\n# conduct text completion\ngenerated_ids = model.generate(\n    **model_inputs,\n    max_new_tokens=16384,\n)\noutput_ids = generated_ids[0][len(model_inputs.input_ids[0]):].tolist() \n\ncontent = tokenizer.decode(output_ids, skip_special_tokens=True)\n\nprint(\"content:\", content)\n```\n\n&gt; [!Note]\n&gt; Multi-Token Prediction (MTP) is not generally available in Hugging Face Transformers.\n\n&gt; [!Note]\n&gt; The efficiency or throughput improvement depends highly on the implementation.\n&gt; It is recommended to adopt a dedicated inference framework, e.g., SGLang and vLLM, for inference tasks.\n\n&gt; [!Tip]\n&gt; Depending on the inference settings, you may observe better efficiency with [`flash-linear-attention`](https://github.com/fla-org/flash-linear-attention#installation) and [`causal-conv1d`](https://github.com/Dao-AILab/causal-conv1d).\n&gt; See the above links for detailed instructions and requirements.\n\n\n## Deployment\n\nFor deployment, you can use the latest `sglang` or `vllm` to create an OpenAI-compatible API endpoint.\n\n### SGLang\n\n[SGLang](https://github.com/sgl-project/sglang) is a fast serving framework for large language models and vision language models.\nSGLang could be used to launch a server with OpenAI-compatible API service. \n\nSGLang has supported Qwen3-Next in its `main` branch, which can be installed from source:\n```shell\npip install 'sglang[all] @ git+https://github.com/sgl-project/sglang.git@main#subdirectory=python'\n```\n\nThe following command can be used to create an API endpoint at `http://localhost:30000/v1` with maximum context length 256K tokens using tensor parallel on 4 GPUs.\n```shell\nSGLANG_ALLOW_OVERWRITE_LONGER_CONTEXT_LEN=1 python -m sglang.launch_server --model-path Qwen/Qwen3-Next-80B-A3B-Instruct --port 30000 --tp-size 4 --context-length 262144 --mem-fraction-static 0.8\n```\n\nThe following command is recommended for MTP with the rest settings the same as above:\n```shell\nSGLANG_ALLOW_OVERWRITE_LONGER_CONTEXT_LEN=1 python -m sglang.launch_server --model-path Qwen/Qwen3-Next-80B-A3B-Instruct --port 30000 --tp-size 4 --context-length 262144 --mem-fraction-static 0.8 --speculative-algo NEXTN --speculative-num-steps 3 --speculative-eagle-topk 1 --speculative-num-draft-tokens 4\n```\n\n&gt; [!Note]\n&gt; The environment variable `SGLANG_ALLOW_OVERWRITE_LONGER_CONTEXT_LEN=1` is required at the moment.\n\n&gt; [!Note]\n&gt; The default context length is 256K. Consider reducing the context length to a smaller value, e.g., `32768`, if the server fail to start.\n\n### vLLM\n\n[vLLM](https://github.com/vllm-project/vllm) is a high-throughput and memory-efficient inference and serving engine for LLMs.\nvLLM could be used to launch a server with OpenAI-compatible API service. \n\nvLLM has supported Qwen3-Next in its `main` branch, which can be installed from source:\n```shell\npip install git+https://github.com/vllm-project/vllm.git\n```\n\nThe following command can be used to create an API endpoint at `http://localhost:8000/v1` with maximum context length 256K tokens using tensor parallel on 4 GPUs.\n```shell\nVLLM_ALLOW_LONG_MAX_MODEL_LEN=1 vllm serve Qwen/Qwen3-Next-80B-A3B-Instruct --port 8000 --tensor-parallel-size 4 --max-model-len 262144\n```\n\nThe following command is recommended for MTP with the rest settings the same as above:\n```shell\nVLLM_ALLOW_LONG_MAX_MODEL_LEN=1 vllm serve Qwen/Qwen3-Next-80B-A3B-Instruct --port 8000 --tensor-parallel-size 4 --max-model-len 262144 --speculative-config '{\"method\":\"qwen3_next_mtp\",\"num_speculative_tokens\":2}'\n```\n\n&gt; [!Note]\n&gt; The environment variable `VLLM_ALLOW_LONG_MAX_MODEL_LEN=1` is required at the moment.\n\n&gt; [!Note]\n&gt; The default context length is 256K. Consider reducing the context length to a smaller value, e.g., `32768`, if the server fail to start.\n\n## Agentic Use\n\nQwen3 excels in tool calling capabilities. We recommend using [Qwen-Agent](https://github.com/QwenLM/Qwen-Agent) to make the best use of agentic ability of Qwen3. Qwen-Agent encapsulates tool-calling templates and tool-calling parsers internally, greatly reducing coding complexity.\n\nTo define the available tools, you can use the MCP configuration file, use the integrated tool of Qwen-Agent, or integrate other tools by yourself.\n```python\nfrom qwen_agent.agents import Assistant\n\n# Define LLM\nllm_cfg = {\n    'model': 'Qwen3-Next-80B-A3B-Instruct',\n\n    # Use a custom endpoint compatible with OpenAI API:\n    'model_server': 'http://localhost:8000/v1',  # api_base\n    'api_key': 'EMPTY',\n}\n\n# Define Tools\ntools = [\n    {'mcpServers': {  # You can specify the MCP configuration file\n            'time': {\n                'command': 'uvx',\n                'args': ['mcp-server-time', '--local-timezone=Asia/Shanghai']\n            },\n            \"fetch\": {\n                \"command\": \"uvx\",\n                \"args\": [\"mcp-server-fetch\"]\n            }\n        }\n    },\n  'code_interpreter',  # Built-in tools\n]\n\n# Define Agent\nbot = Assistant(llm=llm_cfg, function_list=tools)\n\n# Streaming generation\nmessages = [{'role': 'user', 'content': 'https://qwenlm.github.io/blog/ Introduce the latest developments of Qwen'}]\nfor responses in bot.run(messages=messages):\n    pass\nprint(responses)\n```\n\n\n## Processing Ultra-Long Texts\n\nQwen3-Next natively supports context lengths of up to 262,144 tokens. \nFor conversations where the total length (including both input and output) significantly exceeds this limit, we recommend using RoPE scaling techniques to handle long texts effectively. \nWe have validated the model's performance on context lengths of up to 1 million tokens using the [YaRN](https://arxiv.org/abs/2309.00071) method.\n\nYaRN is currently supported by several inference frameworks, e.g., `transformers`, `vllm` and `sglang`. \nIn general, there are two approaches to enabling YaRN for supported frameworks:\n\n- Modifying the model files:\n  In the `config.json` file, add the `rope_scaling` fields:\n    ```json\n    {\n        ...,\n        \"rope_scaling\": {\n            \"rope_type\": \"yarn\",\n            \"factor\": 4.0,\n            \"original_max_position_embeddings\": 262144\n        }\n    }\n    ```\n\n- Passing command line arguments:\n\n  For `vllm`, you can use\n    ```shell\n    VLLM_ALLOW_LONG_MAX_MODEL_LEN=1 vllm serve ... --rope-scaling '{\"rope_type\":\"yarn\",\"factor\":4.0,\"original_max_position_embeddings\":262144}' --max-model-len 1010000  \n    ```\n\n  For `sglang`, you can use\n    ```shell\n    SGLANG_ALLOW_OVERWRITE_LONGER_CONTEXT_LEN=1 python -m sglang.launch_server ... --json-model-override-args '{\"rope_scaling\":{\"rope_type\":\"yarn\",\"factor\":4.0,\"original_max_position_embeddings\":262144}}' --context-length 1010000\n    ```\n\n\n&gt; [!NOTE]\n&gt; All the notable open-source frameworks implement static YaRN, which means the scaling factor remains constant regardless of input length, **potentially impacting performance on shorter texts.**\n&gt; We advise adding the `rope_scaling` configuration only when processing long contexts is required. \n&gt; It is also recommended to modify the `factor` as needed. For example, if the typical context length for your application is 524,288 tokens, it would be better to set `factor` as 2.0. \n\n\n#### Long-Context Performance\n\nWe test the model on an 1M version of the [RULER](https://arxiv.org/abs/2404.06654) benchmark.\n\n| Model Name                                  | Acc avg | 4k   | 8k   | 16k  | 32k  | 64k  | 96k  | 128k | 192k | 256k | 384k | 512k | 640k | 768k | 896k | 1000k |\n|---------------------------------------------|---------|------|------|------|------|------|------|------|------|------|------|------|------|------|------|-------|\n| Qwen3-30B-A3B-Instruct-2507                 | 86.8    | 98.0 | 96.7 | 96.9 | 97.2 | 93.4 | 91.0 | 89.1 | 89.8 | 82.5 | 83.6 | 78.4 | 79.7 | 77.6 | 75.7 | 72.8  |\n| Qwen3-235B-A22B-Instruct-2507               | 92.5    | 98.5 | 97.6 | 96.9 | 97.3 | 95.8 | 94.9 | 93.9 | 94.5 | 91.0 | 92.2 | 90.9 | 87.8 | 84.8 | 86.5 | 84.5  |\n| Qwen3-Next-80B-A3B-Instruct                 | 91.8    | 98.5 | 99.0 | 98.0 | 98.7 | 97.6 | 95.0 | 96.0 | 94.0 | 93.5 | 91.7 | 86.9 | 85.5 | 81.7 | 80.3 | 80.3  |\n\n* Qwen3-Next are evaluated with YaRN enabled. Qwen3-2507 models are evaluated with Dual Chunk Attention enabled.\n* Since the evaluation is time-consuming, we use 260 samples for each length (13 sub-tasks, 20 samples for each).\n\n\n## Best Practices\n\nTo achieve optimal performance, we recommend the following settings:\n\n1. **Sampling Parameters**:\n   - We suggest using `Temperature=0.7`, `TopP=0.8`, `TopK=20`, and `MinP=0`.\n   - For supported frameworks, you can adjust the `presence_penalty` parameter between 0 and 2 to reduce endless repetitions. However, using a higher value may occasionally result in language mixing and a slight decrease in model performance.\n\n2. **Adequate Output Length**: We recommend using an output length of 16,384 tokens for most queries, which is adequate for instruct models.\n\n3. **Standardize Output Format**: We recommend using prompts to standardize model outputs when benchmarking.\n   - **Math Problems**: Include \"Please reason step by step, and put your final answer within \\boxed{}.\" in the prompt.\n   - **Multiple-Choice Questions**: Add the following JSON structure to the prompt to standardize responses: \"Please show your choice in the `answer` field with only the choice letter, e.g., `\"answer\": \"C\"`.\"",
+          "versionId": 576164,
+          "versionNumber": 1,
+          "url": "https://www.kaggle.com/models/qwen-lm/qwen3-next-80b/Transformers/qwen3-next-80b-a3b-instruct",
+          "licenseName": "Apache 2.0",
+          "totalUncompressedBytes": 162682272799
+        },
+        {
+          "id": 430986,
+          "slug": "qwen3-next-80b-a3b-thinking",
+          "framework": "transformers",
+          "fineTunable": true,
+          "overview": "## Model Overview\n\n&gt; [!Note]\n&gt; **Qwen3-Next-80B-A3B-Thinking** supports only thinking mode. \n&gt; To enforce model thinking, the default chat template automatically includes `&lt;think&gt;`. \n&gt; Therefore, it is normal for the model's output to contain only `&lt;/think&gt;` without an explicit opening `&lt;think&gt;` tag.\n\n&gt; [!Note]\n&gt; **Qwen3-Next-80B-A3B-Thinking** may generate thinking content longer than its predecessor.\n&gt; We strongly recommend its use in highly complex reasoning tasks.\n\n\n**Qwen3-Next-80B-A3B-Thinking** has the following features:\n- Type: Causal Language Models\n- Training Stage: Pretraining (15T tokens) & Post-training\n- Number of Parameters: 80B in total and 3B activated\n- Number of Paramaters (Non-Embedding): 79B\n- Number of Layers: 48\n- Hidden Dimension: 2048\n- Hybrid Layout: 12 \\* (3 \\* (Gated DeltaNet -&gt; MoE) -&gt; (Gated Attention -&gt; MoE))\n- Gated Attention:\n  - Number of Attention Heads: 16 for Q and 2 for KV\n  - Head Dimension: 256\n  - Rotary Position Embedding Dimension: 64\n- Gated DeltaNet:\n  - Number of Linear Attention Heads: 32 for V and 16 for QK\n  - Head Dimension: 128\n- Mixture of Experts:\n  - Number of Experts: 512\n  - Number of Activated Experts: 10\n  - Number of Shared Experts: 1\n  - Expert Intermediate Dimension: 512\n- Context Length: 262,144 natively and extensible up to 1,010,000 tokens\n\n<img src=\"https://qianwen-res.oss-accelerate.aliyuncs.com/Qwen3-Next/model_architecture.png\">",
+          "usage": "## Quickstart\n\nThe code for Qwen3-Next has been merged into the main branch of Hugging Face `transformers`.\n\n```shell\npip install git+https://github.com/huggingface/transformers.git@main\n```\n\nWith earlier versions, you will encounter the following error:\n```\nKeyError: 'qwen3_next'\n```\n\nThe following contains a code snippet illustrating how to use the model generate content based on given inputs. \n```python\nfrom transformers import AutoModelForCausalLM, AutoTokenizer\nimport kagglehub\n\nmodel_name = kagglehub.model_download(\"qwen-lm/qwen3-next-80b/transformers/qwen3-next-80b-a3b-thinking\")\n\n# load the tokenizer and the model\ntokenizer = AutoTokenizer.from_pretrained(model_name)\nmodel = AutoModelForCausalLM.from_pretrained(\n    model_name,\n    dtype=\"auto\",\n    device_map=\"auto\",\n)\n\n# prepare the model input\nprompt = \"Give me a short introduction to large language model.\"\nmessages = [\n    {\"role\": \"user\", \"content\": prompt},\n]\ntext = tokenizer.apply_chat_template(\n    messages,\n    tokenize=False,\n    add_generation_prompt=True,\n)\nmodel_inputs = tokenizer([text], return_tensors=\"pt\").to(model.device)\n\n# conduct text completion\ngenerated_ids = model.generate(\n    **model_inputs,\n    max_new_tokens=16384,\n)\noutput_ids = generated_ids[0][len(model_inputs.input_ids[0]):].tolist() \n\ncontent = tokenizer.decode(output_ids, skip_special_tokens=True)\n\nprint(\"content:\", content)\n```",
+          "versionId": 576166,
+          "versionNumber": 1,
+          "url": "https://www.kaggle.com/models/qwen-lm/qwen3-next-80b/Transformers/qwen3-next-80b-a3b-thinking",
+          "licenseName": "Apache 2.0",
+          "totalUncompressedBytes": 162682274519
+        }
+      ],
+      "tags": [
+        {
+          "ref": "transformers",
+          "name": "transformers",
+          "description": "",
+          "fullPath": "packages > transformers",
+          "competitionCount": 5,
+          "datasetCount": 466,
+          "scriptCount": 2752,
+          "totalCount": 3223
+        },
+        {
+          "ref": "text conversation",
+          "name": "text conversation",
+          "description": "",
+          "fullPath": "task > text-conversation",
+          "competitionCount": 5,
+          "datasetCount": 83,
+          "scriptCount": 38,
+          "totalCount": 126
+        },
+        {
+          "ref": "english",
+          "name": "english",
+          "description": "",
+          "fullPath": "language > english",
+          "competitionCount": 24,
+          "datasetCount": 3801,
+          "scriptCount": 1239,
+          "totalCount": 5064
+        }
+      ],
+      "url": "https://www.kaggle.com/models/qwen-lm/qwen3-next-80b",
+      "input_name": "Qwen3 Next 80B",
+      "owner": "qwen-lm"
+    },
+    {
+      "id": 164048,
+      "ref": "qwen-lm/qwen2.5",
+      "title": "Qwen2.5",
+      "subtitle": "Qwen2.5 is the latest series of Qwen large language models. Qwen2.5 has a number of base language models and instruction-tuned language models ranging from 0.5 to 72 billion parameters.",
+      "author": "QwenLM",
+      "slug": "qwen2.5",
+      "description": "# Qwen2.5\n\n<p>\n    <img src=\"https://qianwen-res.oss-accelerate-overseas.aliyuncs.com/assets/logo/qwen2.5_logo.png\">\n</p><p>\n\n</p><p>\n       <a href=\"https://modelscope.cn/organization/qwen\">ModelScope</a>&nbsp;&nbsp; | &nbsp;&nbsp; 📑 Paper (TBD) &nbsp;&nbsp; | &nbsp;&nbsp; 📑 <a href=\"https://qwenlm.github.io/blog/qwen2.5/\">Blog</a> &nbsp;&nbsp; ｜ &nbsp;&nbsp;📖 <a href=\"https://qwen.readthedocs.io/\">Documentation</a>\n<br>\n🖥️ <a href=\"https://huggingface.co/spaces/Qwen/Qwen2.5-72B-Instruct\">Demo</a>&nbsp;&nbsp; | &nbsp;&nbsp;💬 <a href=\"https://github.com/QwenLM/Qwen/blob/main/assets/wechat.png\">WeChat (微信)</a>&nbsp;&nbsp; | &nbsp;&nbsp;🫨 <a href=\"https://discord.gg/CV4E9rpNSD\">Discord</a>&nbsp;&nbsp;\n</p>\n\n\nTo learn more about Qwen2.5, feel free to read our documentation \\[[EN](https://qwen.readthedocs.io/en/latest/)|[ZH](https://qwen.readthedocs.io/zh-cn/latest/)\\]. Our documentation consists of the following sections:\n\n## Introduction\n\nIn the past three months since Qwen2's release, numerous developers have built new models on the Qwen2 language models, providing us with valuable feedback. During this period, we have focused on creating smarter and more knowledgeable language models. Today, we are excited to introduce the latest addition to the Qwen family: **Qwen2.5**. \n\n- Dense, easy-to-use, decoder-only language models, available in **0.5B**, **1.5B**, **3B**, **7B**, **14B**, **32B**, and **72B** sizes, and base and instruct variants.\n- Pretrained on our latest large-scale dataset, encompassing up to **18T** tokens.\n- Significant improvements in instruction following, generating long texts (over 8K tokens), understanding structured data (e.g, tables), and generating structured outputs especially JSON. \n- More resilient to the diversity of system prompts, enhancing role-play implementation and condition-setting for chatbots. \n- Context length support up to **128K** tokens and can generate up to **8K** tokens. \n- Multilingual support for over **29** languages, including Chinese, English, French, Spanish, Portuguese, German, Italian, Russian, Japanese, Korean, Vietnamese, Thai, Arabic, and more. \n\n## Performance\n\nDetailed evaluation results are reported in this <a href=\"https://qwenlm.github.io/blog/qwen2.5/\"> 📑 blog</a>.\n\nFor requirements on GPU memory and the respective throughput, see results [here](https://qwen.readthedocs.io/en/latest/benchmark/speed_benchmark.html) .\n\n## License Agreement\n\nAll our open-source models, except for the 3B and 72B variants, are licensed under Apache 2.0. \nYou can find the license files in the respective Hugging Face repositories.\nIt is NOT necessary for you to submit a request for commercial usage.\n\n## Citation\n\nIf you find our work helpful, feel free to give us a cite.\n\n```\n@misc{qwen2.5,\n    title = {Qwen2.5: A Party of Foundation Models},\n    url = {https://qwenlm.github.io/blog/qwen2.5/},\n    author = {Qwen Team},\n    month = {September},\n    year = {2024}\n}\n\n@article{qwen2,\n      title={Qwen2 Technical Report}, \n      author={An Yang and Baosong Yang and Binyuan Hui and Bo Zheng and Bowen Yu and Chang Zhou and Chengpeng Li and Chengyuan Li and Dayiheng Liu and Fei Huang and Guanting Dong and Haoran Wei and Huan Lin and Jialong Tang and Jialin Wang and Jian Yang and Jianhong Tu and Jianwei Zhang and Jianxin Ma and Jin Xu and Jingren Zhou and Jinze Bai and Jinzheng He and Junyang Lin and Kai Dang and Keming Lu and Keqin Chen and Kexin Yang and Mei Li and Mingfeng Xue and Na Ni and Pei Zhang and Peng Wang and Ru Peng and Rui Men and Ruize Gao and Runji Lin and Shijie Wang and Shuai Bai and Sinan Tan and Tianhang Zhu and Tianhao Li and Tianyu Liu and Wenbin Ge and Xiaodong Deng and Xiaohuan Zhou and Xingzhang Ren and Xinyu Zhang and Xipin Wei and Xuancheng Ren and Yang Fan and Yang Yao and Yichang Zhang and Yu Wan and Yunfei Chu and Yuqiong Liu and Zeyu Cui and Zhenru Zhang and Zhihao Fan},\n      journal={arXiv preprint arXiv:2407.10671},\n      year={2024}\n}\n```\n\n## Contact Us\nIf you are interested to leave a message to either our research team or product team, join our [Discord](https://discord.gg/z3GAxXZ9Ce) or [WeChat groups](assets/wechat.png)!",
+      "instances": [
+        {
+          "id": 141432,
+          "slug": "0.5b",
+          "framework": "transformers",
+          "usage": "## Quickstart\n\nHere provides a code snippet with `apply_chat_template` to show you how to load the tokenizer and model and how to generate contents.\n\n```python\nfrom transformers import AutoModelForCausalLM, AutoTokenizer\n\nmodel_name = \"/kaggle/input/qwen2.5/transformers/0.5b/1\"\n\nmodel = AutoModelForCausalLM.from_pretrained(\n    model_name,\n    torch_dtype=\"auto\",\n    device_map=\"auto\"\n)\ntokenizer = AutoTokenizer.from_pretrained(model_name)\n\nprompt = \"Give me a short introduction to large language model.\"\nmessages = [\n    {\"role\": \"system\", \"content\": \"You are Qwen, created by Alibaba Cloud. You are a helpful assistant.\"},\n    {\"role\": \"user\", \"content\": prompt}\n]\ntext = tokenizer.apply_chat_template(\n    messages,\n    tokenize=False,\n    add_generation_prompt=True\n)\nmodel_inputs = tokenizer([text], return_tensors=\"pt\").to(model.device)\n\ngenerated_ids = model.generate(\n    **model_inputs,\n    max_new_tokens=512\n)\ngenerated_ids = [\n    output_ids[len(input_ids):] for input_ids, output_ids in zip(model_inputs.input_ids, generated_ids)\n]\n\nresponse = tokenizer.batch_decode(generated_ids, skip_special_tokens=True)[0]\n```",
+          "versionId": 166218,
+          "versionNumber": 1,
+          "url": "https://www.kaggle.com/models/qwen-lm/qwen2.5/Transformers/0.5b",
+          "licenseName": "Apache 2.0",
+          "totalUncompressedBytes": 999602900
+        },
+        {
+          "id": 141449,
+          "slug": "0.5b-instruct",
+          "framework": "transformers",
+          "usage": "## Quickstart\n\nHere provides a code snippet with `apply_chat_template` to show you how to load the tokenizer and model and how to generate contents.\n\n```python\nfrom transformers import AutoModelForCausalLM, AutoTokenizer\n\nmodel_name = \"/kaggle/input/qwen2.5/transformers/0.5b-instruct/1\"\n\nmodel = AutoModelForCausalLM.from_pretrained(\n    model_name,\n    torch_dtype=\"auto\",\n    device_map=\"auto\"\n)\ntokenizer = AutoTokenizer.from_pretrained(model_name)\n\nprompt = \"Give me a short introduction to large language model.\"\nmessages = [\n    {\"role\": \"system\", \"content\": \"You are Qwen, created by Alibaba Cloud. You are a helpful assistant.\"},\n    {\"role\": \"user\", \"content\": prompt}\n]\ntext = tokenizer.apply_chat_template(\n    messages,\n    tokenize=False,\n    add_generation_prompt=True\n)\nmodel_inputs = tokenizer([text], return_tensors=\"pt\").to(model.device)\n\ngenerated_ids = model.generate(\n    **model_inputs,\n    max_new_tokens=512\n)\ngenerated_ids = [\n    output_ids[len(input_ids):] for input_ids, output_ids in zip(model_inputs.input_ids, generated_ids)\n]\n\nresponse = tokenizer.batch_decode(generated_ids, skip_special_tokens=True)[0]\n```",
+          "versionId": 166236,
+          "versionNumber": 1,
+          "url": "https://www.kaggle.com/models/qwen-lm/qwen2.5/Transformers/0.5b-instruct",
+          "licenseName": "Apache 2.0",
+          "totalUncompressedBytes": 999604126
+        },
+        {
+          "id": 141536,
+          "slug": "0.5b-instruct-awq",
+          "framework": "transformers",
+          "usage": "## Quickstart\n\nHere provides a code snippet with `apply_chat_template` to show you how to load the tokenizer and model and how to generate contents.\n\n```python\nfrom transformers import AutoModelForCausalLM, AutoTokenizer\n\nmodel_name = \"/kaggle/input/qwen2.5/transformers/0.5b-instruct-awq/1\"\n\nmodel = AutoModelForCausalLM.from_pretrained(\n    model_name,\n    torch_dtype=\"auto\",\n    device_map=\"auto\"\n)\ntokenizer = AutoTokenizer.from_pretrained(model_name)\n\nprompt = \"Give me a short introduction to large language model.\"\nmessages = [\n    {\"role\": \"system\", \"content\": \"You are Qwen, created by Alibaba Cloud. You are a helpful assistant.\"},\n    {\"role\": \"user\", \"content\": prompt}\n]\ntext = tokenizer.apply_chat_template(\n    messages,\n    tokenize=False,\n    add_generation_prompt=True\n)\nmodel_inputs = tokenizer([text], return_tensors=\"pt\").to(model.device)\n\ngenerated_ids = model.generate(\n    **model_inputs,\n    max_new_tokens=512\n)\ngenerated_ids = [\n    output_ids[len(input_ids):] for input_ids, output_ids in zip(model_inputs.input_ids, generated_ids)\n]\n\nresponse = tokenizer.batch_decode(generated_ids, skip_special_tokens=True)[0]\n```",
+          "versionId": 166333,
+          "versionNumber": 1,
+          "url": "https://www.kaggle.com/models/qwen-lm/qwen2.5/Transformers/0.5b-instruct-awq",
+          "licenseName": "Apache 2.0",
+          "totalUncompressedBytes": 742159088
+        },
+        {
+          "id": 146086,
+          "slug": "0.5b-instruct-gptq-int4",
+          "framework": "transformers",
+          "usage": "## Quickstart\n\nHere provides a code snippet with `apply_chat_template` to show you how to load the tokenizer and model and how to generate contents.\n\n```python\nfrom transformers import AutoModelForCausalLM, AutoTokenizer\n\nmodel_name = \"/kaggle/input/qwen2.5/transformers/0.5b-instruct-gptq-int4/1\"\n\nmodel = AutoModelForCausalLM.from_pretrained(\n    model_name,\n    torch_dtype=\"auto\",\n    device_map=\"auto\"\n)\ntokenizer = AutoTokenizer.from_pretrained(model_name)\n\nprompt = \"Give me a short introduction to large language model.\"\nmessages = [\n    {\"role\": \"system\", \"content\": \"You are Qwen, created by Alibaba Cloud. You are a helpful assistant.\"},\n    {\"role\": \"user\", \"content\": prompt}\n]\ntext = tokenizer.apply_chat_template(\n    messages,\n    tokenize=False,\n    add_generation_prompt=True\n)\nmodel_inputs = tokenizer([text], return_tensors=\"pt\").to(model.device)\n\ngenerated_ids = model.generate(\n    **model_inputs,\n    max_new_tokens=512\n)\ngenerated_ids = [\n    output_ids[len(input_ids):] for input_ids, output_ids in zip(model_inputs.input_ids, generated_ids)\n]\n\nresponse = tokenizer.batch_decode(generated_ids, skip_special_tokens=True)[0]\n```",
+          "versionId": 171638,
+          "versionNumber": 1,
+          "url": "https://www.kaggle.com/models/qwen-lm/qwen2.5/Transformers/0.5b-instruct-gptq-int4",
+          "licenseName": "Other (specified in description)",
+          "totalUncompressedBytes": 470890863
+        },
+        {
+          "id": 146089,
+          "slug": "0.5b-instruct-gptq-int8",
+          "framework": "transformers",
+          "usage": "## Quickstart\n\nHere provides a code snippet with `apply_chat_template` to show you how to load the tokenizer and model and how to generate contents.\n\n```python\nfrom transformers import AutoModelForCausalLM, AutoTokenizer\n\nmodel_name = \"/kaggle/input/qwen2.5/transformers/0.5b-instruct-gptq-int8/1\"\n\nmodel = AutoModelForCausalLM.from_pretrained(\n    model_name,\n    torch_dtype=\"auto\",\n    device_map=\"auto\"\n)\ntokenizer = AutoTokenizer.from_pretrained(model_name)\n\nprompt = \"Give me a short introduction to large language model.\"\nmessages = [\n    {\"role\": \"system\", \"content\": \"You are Qwen, created by Alibaba Cloud. You are a helpful assistant.\"},\n    {\"role\": \"user\", \"content\": prompt}\n]\ntext = tokenizer.apply_chat_template(\n    messages,\n    tokenize=False,\n    add_generation_prompt=True\n)\nmodel_inputs = tokenizer([text], return_tensors=\"pt\").to(model.device)\n\ngenerated_ids = model.generate(\n    **model_inputs,\n    max_new_tokens=512\n)\ngenerated_ids = [\n    output_ids[len(input_ids):] for input_ids, output_ids in zip(model_inputs.input_ids, generated_ids)\n]\n\nresponse = tokenizer.batch_decode(generated_ids, skip_special_tokens=True)[0]\n```",
+          "versionId": 171641,
+          "versionNumber": 1,
+          "url": "https://www.kaggle.com/models/qwen-lm/qwen2.5/Transformers/0.5b-instruct-gptq-int8",
+          "licenseName": "Other (specified in description)",
+          "totalUncompressedBytes": 651202314
+        },
+        {
+          "id": 141456,
+          "slug": "1.5b",
+          "framework": "transformers",
+          "versionId": 166243,
+          "versionNumber": 1,
+          "url": "https://www.kaggle.com/models/qwen-lm/qwen2.5/Transformers/1.5b",
+          "licenseName": "Apache 2.0",
+          "totalUncompressedBytes": 3098972223
+        },
+        {
+          "id": 141458,
+          "slug": "1.5b-instruct",
+          "framework": "transformers",
+          "usage": "## Quickstart\n\nHere provides a code snippet with `apply_chat_template` to show you how to load the tokenizer and model and how to generate contents.\n\n```python\nfrom transformers import AutoModelForCausalLM, AutoTokenizer\n\nmodel_name = \"/kaggle/input/qwen2.5/transformers/1.5b-instruct/1\"\n\nmodel = AutoModelForCausalLM.from_pretrained(\n    model_name,\n    torch_dtype=\"auto\",\n    device_map=\"auto\"\n)\ntokenizer = AutoTokenizer.from_pretrained(model_name)\n\nprompt = \"Give me a short introduction to large language model.\"\nmessages = [\n    {\"role\": \"system\", \"content\": \"You are Qwen, created by Alibaba Cloud. You are a helpful assistant.\"},\n    {\"role\": \"user\", \"content\": prompt}\n]\ntext = tokenizer.apply_chat_template(\n    messages,\n    tokenize=False,\n    add_generation_prompt=True\n)\nmodel_inputs = tokenizer([text], return_tensors=\"pt\").to(model.device)\n\ngenerated_ids = model.generate(\n    **model_inputs,\n    max_new_tokens=512\n)\ngenerated_ids = [\n    output_ids[len(input_ids):] for input_ids, output_ids in zip(model_inputs.input_ids, generated_ids)\n]\n\nresponse = tokenizer.batch_decode(generated_ids, skip_special_tokens=True)[0]\n```",
+          "versionId": 166245,
+          "versionNumber": 1,
+          "url": "https://www.kaggle.com/models/qwen-lm/qwen2.5/Transformers/1.5b-instruct",
+          "licenseName": "Apache 2.0",
+          "totalUncompressedBytes": 3098973447
+        },
+        {
+          "id": 141543,
+          "slug": "1.5b-instruct-awq",
+          "framework": "transformers",
+          "usage": "## Quickstart\n\nHere provides a code snippet with `apply_chat_template` to show you how to load the tokenizer and model and how to generate contents.\n\n```python\nfrom transformers import AutoModelForCausalLM, AutoTokenizer\n\nmodel_name = \"/kaggle/input/qwen2.5/transformers/1.5b-instruct-awq/1\"\n\nmodel = AutoModelForCausalLM.from_pretrained(\n    model_name,\n    torch_dtype=\"auto\",\n    device_map=\"auto\"\n)\ntokenizer = AutoTokenizer.from_pretrained(model_name)\n\nprompt = \"Give me a short introduction to large language model.\"\nmessages = [\n    {\"role\": \"system\", \"content\": \"You are Qwen, created by Alibaba Cloud. You are a helpful assistant.\"},\n    {\"role\": \"user\", \"content\": prompt}\n]\ntext = tokenizer.apply_chat_template(\n    messages,\n    tokenize=False,\n    add_generation_prompt=True\n)\nmodel_inputs = tokenizer([text], return_tensors=\"pt\").to(model.device)\n\ngenerated_ids = model.generate(\n    **model_inputs,\n    max_new_tokens=512\n)\ngenerated_ids = [\n    output_ids[len(input_ids):] for input_ids, output_ids in zip(model_inputs.input_ids, generated_ids)\n]\n\nresponse = tokenizer.batch_decode(generated_ids, skip_special_tokens=True)[0]\n```",
+          "versionId": 166344,
+          "versionNumber": 1,
+          "url": "https://www.kaggle.com/models/qwen-lm/qwen2.5/Transformers/1.5b-instruct-awq",
+          "licenseName": "Apache 2.0",
+          "totalUncompressedBytes": 1626060681
+        },
+        {
+          "id": 146093,
+          "slug": "1.5b-instruct-gptq-int4",
+          "framework": "transformers",
+          "usage": "## Quickstart\n\nHere provides a code snippet with `apply_chat_template` to show you how to load the tokenizer and model and how to generate contents.\n\n```python\nfrom transformers import AutoModelForCausalLM, AutoTokenizer\n\nmodel_name = \"/kaggle/input/qwen2.5/transformers/1.5b-instruct-gptq-int4/1\"\n\nmodel = AutoModelForCausalLM.from_pretrained(\n    model_name,\n    torch_dtype=\"auto\",\n    device_map=\"auto\"\n)\ntokenizer = AutoTokenizer.from_pretrained(model_name)\n\nprompt = \"Give me a short introduction to large language model.\"\nmessages = [\n    {\"role\": \"system\", \"content\": \"You are Qwen, created by Alibaba Cloud. You are a helpful assistant.\"},\n    {\"role\": \"user\", \"content\": prompt}\n]\ntext = tokenizer.apply_chat_template(\n    messages,\n    tokenize=False,\n    add_generation_prompt=True\n)\nmodel_inputs = tokenizer([text], return_tensors=\"pt\").to(model.device)\n\ngenerated_ids = model.generate(\n    **model_inputs,\n    max_new_tokens=512\n)\ngenerated_ids = [\n    output_ids[len(input_ids):] for input_ids, output_ids in zip(model_inputs.input_ids, generated_ids)\n]\n\nresponse = tokenizer.batch_decode(generated_ids, skip_special_tokens=True)[0]\n```",
+          "versionId": 171646,
+          "versionNumber": 1,
+          "url": "https://www.kaggle.com/models/qwen-lm/qwen2.5/Transformers/1.5b-instruct-gptq-int4",
+          "licenseName": "Apache 2.0",
+          "totalUncompressedBytes": 1161370259
+        },
+        {
+          "id": 146094,
+          "slug": "1.5b-instruct-gptq-int8",
+          "framework": "transformers",
+          "usage": "## Quickstart\n\nHere provides a code snippet with `apply_chat_template` to show you how to load the tokenizer and model and how to generate contents.\n\n```python\nfrom transformers import AutoModelForCausalLM, AutoTokenizer\n\nmodel_name = \"/kaggle/input/qwen2.5/transformers/1.5b-instruct-gptq-int8/1\"\n\nmodel = AutoModelForCausalLM.from_pretrained(\n    model_name,\n    torch_dtype=\"auto\",\n    device_map=\"auto\"\n)\ntokenizer = AutoTokenizer.from_pretrained(model_name)\n\nprompt = \"Give me a short introduction to large language model.\"\nmessages = [\n    {\"role\": \"system\", \"content\": \"You are Qwen, created by Alibaba Cloud. You are a helpful assistant.\"},\n    {\"role\": \"user\", \"content\": prompt}\n]\ntext = tokenizer.apply_chat_template(\n    messages,\n    tokenize=False,\n    add_generation_prompt=True\n)\nmodel_inputs = tokenizer([text], return_tensors=\"pt\").to(model.device)\n\ngenerated_ids = model.generate(\n    **model_inputs,\n    max_new_tokens=512\n)\ngenerated_ids = [\n    output_ids[len(input_ids):] for input_ids, output_ids in zip(model_inputs.input_ids, generated_ids)\n]\n\nresponse = tokenizer.batch_decode(generated_ids, skip_special_tokens=True)[0]\n```",
+          "versionId": 171647,
+          "versionNumber": 1,
+          "url": "https://www.kaggle.com/models/qwen-lm/qwen2.5/Transformers/1.5b-instruct-gptq-int8",
+          "licenseName": "Apache 2.0",
+          "totalUncompressedBytes": 1821586451
+        },
+        {
+          "id": 141476,
+          "slug": "14b",
+          "framework": "transformers",
+          "versionId": 166265,
+          "versionNumber": 1,
+          "url": "https://www.kaggle.com/models/qwen-lm/qwen2.5/Transformers/14b",
+          "licenseName": "Apache 2.0",
+          "totalUncompressedBytes": 29551686396
+        },
+        {
+          "id": 141475,
+          "slug": "14b-instruct",
+          "framework": "transformers",
+          "usage": "## Quickstart\n\nHere provides a code snippet with `apply_chat_template` to show you how to load the tokenizer and model and how to generate contents.\n\n```python\nfrom transformers import AutoModelForCausalLM, AutoTokenizer\n\nmodel_name = \"/kaggle/input/qwen2.5/transformers/14b-instruct/1\"\n\nmodel = AutoModelForCausalLM.from_pretrained(\n    model_name,\n    torch_dtype=\"auto\",\n    device_map=\"auto\"\n)\ntokenizer = AutoTokenizer.from_pretrained(model_name)\n\nprompt = \"Give me a short introduction to large language model.\"\nmessages = [\n    {\"role\": \"system\", \"content\": \"You are Qwen, created by Alibaba Cloud. You are a helpful assistant.\"},\n    {\"role\": \"user\", \"content\": prompt}\n]\ntext = tokenizer.apply_chat_template(\n    messages,\n    tokenize=False,\n    add_generation_prompt=True\n)\nmodel_inputs = tokenizer([text], return_tensors=\"pt\").to(model.device)\n\ngenerated_ids = model.generate(\n    **model_inputs,\n    max_new_tokens=512\n)\ngenerated_ids = [\n    output_ids[len(input_ids):] for input_ids, output_ids in zip(model_inputs.input_ids, generated_ids)\n]\n\nresponse = tokenizer.batch_decode(generated_ids, skip_special_tokens=True)[0]\n```",
+          "versionId": 166264,
+          "versionNumber": 1,
+          "url": "https://www.kaggle.com/models/qwen-lm/qwen2.5/Transformers/14b-instruct",
+          "licenseName": "Apache 2.0",
+          "totalUncompressedBytes": 29551688871
+        },
+        {
+          "id": 141558,
+          "slug": "14b-instruct-awq",
+          "framework": "transformers",
+          "usage": "## Quickstart\n\nHere provides a code snippet with `apply_chat_template` to show you how to load the tokenizer and model and how to generate contents.\n\n```python\nfrom transformers import AutoModelForCausalLM, AutoTokenizer\n\nmodel_name = \"/kaggle/input/qwen2.5/transformers/14b-instruct-awq/1\"\n\nmodel = AutoModelForCausalLM.from_pretrained(\n    model_name,\n    torch_dtype=\"auto\",\n    device_map=\"auto\"\n)\ntokenizer = AutoTokenizer.from_pretrained(model_name)\n\nprompt = \"Give me a short introduction to large language model.\"\nmessages = [\n    {\"role\": \"system\", \"content\": \"You are Qwen, created by Alibaba Cloud. You are a helpful assistant.\"},\n    {\"role\": \"user\", \"content\": prompt}\n]\ntext = tokenizer.apply_chat_template(\n    messages,\n    tokenize=False,\n    add_generation_prompt=True\n)\nmodel_inputs = tokenizer([text], return_tensors=\"pt\").to(model.device)\n\ngenerated_ids = model.generate(\n    **model_inputs,\n    max_new_tokens=512\n)\ngenerated_ids = [\n    output_ids[len(input_ids):] for input_ids, output_ids in zip(model_inputs.input_ids, generated_ids)\n]\n\nresponse = tokenizer.batch_decode(generated_ids, skip_special_tokens=True)[0]\n```",
+          "versionId": 166361,
+          "versionNumber": 1,
+          "url": "https://www.kaggle.com/models/qwen-lm/qwen2.5/Transformers/14b-instruct-awq",
+          "licenseName": "Apache 2.0",
+          "totalUncompressedBytes": 9991785925
+        },
+        {
+          "id": 145960,
+          "slug": "14b-instruct-gptq-int4",
+          "framework": "transformers",
+          "usage": "## Quickstart\n\nHere provides a code snippet with `apply_chat_template` to show you how to load the tokenizer and model and how to generate contents.\n\n```python\nfrom transformers import AutoModelForCausalLM, AutoTokenizer\n\nmodel_name = \"/kaggle/input/qwen2.5/transformers/14b-instruct-gptq-int4/1\"\n\nmodel = AutoModelForCausalLM.from_pretrained(\n    model_name,\n    torch_dtype=\"auto\",\n    device_map=\"auto\"\n)\ntokenizer = AutoTokenizer.from_pretrained(model_name)\n\nprompt = \"Give me a short introduction to large language model.\"\nmessages = [\n    {\"role\": \"system\", \"content\": \"You are Qwen, created by Alibaba Cloud. You are a helpful assistant.\"},\n    {\"role\": \"user\", \"content\": prompt}\n]\ntext = tokenizer.apply_chat_template(\n    messages,\n    tokenize=False,\n    add_generation_prompt=True\n)\nmodel_inputs = tokenizer([text], return_tensors=\"pt\").to(model.device)\n\ngenerated_ids = model.generate(\n    **model_inputs,\n    max_new_tokens=512\n)\ngenerated_ids = [\n    output_ids[len(input_ids):] for input_ids, output_ids in zip(model_inputs.input_ids, generated_ids)\n]\n\nresponse = tokenizer.batch_decode(generated_ids, skip_special_tokens=True)[0]\n```",
+          "versionId": 171496,
+          "versionNumber": 1,
+          "url": "https://www.kaggle.com/models/qwen-lm/qwen2.5/Transformers/14b-instruct-gptq-int4",
+          "licenseName": "Apache 2.0",
+          "totalUncompressedBytes": 10000397241
+        },
+        {
+          "id": 145968,
+          "slug": "14b-instruct-gptq-int8",
+          "framework": "transformers",
+          "usage": "## Quickstart\n\nHere provides a code snippet with `apply_chat_template` to show you how to load the tokenizer and model and how to generate contents.\n\n```python\nfrom transformers import AutoModelForCausalLM, AutoTokenizer\n\nmodel_name = \"/kaggle/input/qwen2.5/transformers/14b-instruct-gptq-int8/1\"\n\nmodel = AutoModelForCausalLM.from_pretrained(\n    model_name,\n    torch_dtype=\"auto\",\n    device_map=\"auto\"\n)\ntokenizer = AutoTokenizer.from_pretrained(model_name)\n\nprompt = \"Give me a short introduction to large language model.\"\nmessages = [\n    {\"role\": \"system\", \"content\": \"You are Qwen, created by Alibaba Cloud. You are a helpful assistant.\"},\n    {\"role\": \"user\", \"content\": prompt}\n]\ntext = tokenizer.apply_chat_template(\n    messages,\n    tokenize=False,\n    add_generation_prompt=True\n)\nmodel_inputs = tokenizer([text], return_tensors=\"pt\").to(model.device)\n\ngenerated_ids = model.generate(\n    **model_inputs,\n    max_new_tokens=512\n)\ngenerated_ids = [\n    output_ids[len(input_ids):] for input_ids, output_ids in zip(model_inputs.input_ids, generated_ids)\n]\n\nresponse = tokenizer.batch_decode(generated_ids, skip_special_tokens=True)[0]\n```",
+          "versionId": 171505,
+          "versionNumber": 1,
+          "url": "https://www.kaggle.com/models/qwen-lm/qwen2.5/Transformers/14b-instruct-gptq-int8",
+          "licenseName": "Apache 2.0",
+          "totalUncompressedBytes": 16658036306
+        },
+        {
+          "id": 145925,
+          "slug": "32b",
+          "framework": "transformers",
+          "fineTunable": true,
+          "versionId": 171459,
+          "versionNumber": 1,
+          "url": "https://www.kaggle.com/models/qwen-lm/qwen2.5/Transformers/32b",
+          "licenseName": "Apache 2.0",
+          "totalUncompressedBytes": 65539408485
+        },
+        {
+          "id": 145133,
+          "slug": "32b-instruct",
+          "framework": "transformers",
+          "fineTunable": true,
+          "versionId": 170579,
+          "versionNumber": 1,
+          "url": "https://www.kaggle.com/models/qwen-lm/qwen2.5/Transformers/32b-instruct",
+          "licenseName": "Apache 2.0",
+          "totalUncompressedBytes": 65539410984
+        },
+        {
+          "id": 141565,
+          "slug": "32b-instruct-awq",
+          "framework": "transformers",
+          "usage": "## Quickstart\n\nHere provides a code snippet with `apply_chat_template` to show you how to load the tokenizer and model and how to generate contents.\n\n```python\nfrom transformers import AutoModelForCausalLM, AutoTokenizer\n\nmodel_name = \"/kaggle/input/qwen2.5/transformers/32b-instruct-awq/1\"\n\nmodel = AutoModelForCausalLM.from_pretrained(\n    model_name,\n    torch_dtype=\"auto\",\n    device_map=\"auto\"\n)\ntokenizer = AutoTokenizer.from_pretrained(model_name)\n\nprompt = \"Give me a short introduction to large language model.\"\nmessages = [\n    {\"role\": \"system\", \"content\": \"You are Qwen, created by Alibaba Cloud. You are a helpful assistant.\"},\n    {\"role\": \"user\", \"content\": prompt}\n]\ntext = tokenizer.apply_chat_template(\n    messages,\n    tokenize=False,\n    add_generation_prompt=True\n)\nmodel_inputs = tokenizer([text], return_tensors=\"pt\").to(model.device)\n\ngenerated_ids = model.generate(\n    **model_inputs,\n    max_new_tokens=512\n)\ngenerated_ids = [\n    output_ids[len(input_ids):] for input_ids, output_ids in zip(model_inputs.input_ids, generated_ids)\n]\n\nresponse = tokenizer.batch_decode(generated_ids, skip_special_tokens=True)[0]\n```",
+          "versionId": 166368,
+          "versionNumber": 1,
+          "url": "https://www.kaggle.com/models/qwen-lm/qwen2.5/Transformers/32b-instruct-awq",
+          "licenseName": "Apache 2.0",
+          "totalUncompressedBytes": 19340645038
+        },
+        {
+          "id": 145971,
+          "slug": "32b-instruct-gptq-int4",
+          "framework": "transformers",
+          "usage": "## Quickstart\n\nHere provides a code snippet with `apply_chat_template` to show you how to load the tokenizer and model and how to generate contents.\n\n```python\nfrom transformers import AutoModelForCausalLM, AutoTokenizer\n\nmodel_name = \"/kaggle/input/qwen2.5/transformers/32b-instruct-gptq-int4/1\"\n\nmodel = AutoModelForCausalLM.from_pretrained(\n    model_name,\n    torch_dtype=\"auto\",\n    device_map=\"auto\"\n)\ntokenizer = AutoTokenizer.from_pretrained(model_name)\n\nprompt = \"Give me a short introduction to large language model.\"\nmessages = [\n    {\"role\": \"system\", \"content\": \"You are Qwen, created by Alibaba Cloud. You are a helpful assistant.\"},\n    {\"role\": \"user\", \"content\": prompt}\n]\ntext = tokenizer.apply_chat_template(\n    messages,\n    tokenize=False,\n    add_generation_prompt=True\n)\nmodel_inputs = tokenizer([text], return_tensors=\"pt\").to(model.device)\n\ngenerated_ids = model.generate(\n    **model_inputs,\n    max_new_tokens=512\n)\ngenerated_ids = [\n    output_ids[len(input_ids):] for input_ids, output_ids in zip(model_inputs.input_ids, generated_ids)\n]\n\nresponse = tokenizer.batch_decode(generated_ids, skip_special_tokens=True)[0]\n```",
+          "versionId": 171509,
+          "versionNumber": 1,
+          "url": "https://www.kaggle.com/models/qwen-lm/qwen2.5/Transformers/32b-instruct-gptq-int4",
+          "licenseName": "Apache 2.0",
+          "totalUncompressedBytes": 19355665690
+        },
+        {
+          "id": 145980,
+          "slug": "32b-instruct-gptq-int8",
+          "framework": "transformers",
+          "usage": "## Quickstart\n\nHere provides a code snippet with `apply_chat_template` to show you how to load the tokenizer and model and how to generate contents.\n\n```python\nfrom transformers import AutoModelForCausalLM, AutoTokenizer\n\nmodel_name = \"/kaggle/input/qwen2.5/transformers/32b-instruct-gptq-int8/1\"\n\nmodel = AutoModelForCausalLM.from_pretrained(\n    model_name,\n    torch_dtype=\"auto\",\n    device_map=\"auto\"\n)\ntokenizer = AutoTokenizer.from_pretrained(model_name)\n\nprompt = \"Give me a short introduction to large language model.\"\nmessages = [\n    {\"role\": \"system\", \"content\": \"You are Qwen, created by Alibaba Cloud. You are a helpful assistant.\"},\n    {\"role\": \"user\", \"content\": prompt}\n]\ntext = tokenizer.apply_chat_template(\n    messages,\n    tokenize=False,\n    add_generation_prompt=True\n)\nmodel_inputs = tokenizer([text], return_tensors=\"pt\").to(model.device)\n\ngenerated_ids = model.generate(\n    **model_inputs,\n    max_new_tokens=512\n)\ngenerated_ids = [\n    output_ids[len(input_ids):] for input_ids, output_ids in zip(model_inputs.input_ids, generated_ids)\n]\n\nresponse = tokenizer.batch_decode(generated_ids, skip_special_tokens=True)[0]\n```",
+          "versionId": 171519,
+          "versionNumber": 1,
+          "url": "https://www.kaggle.com/models/qwen-lm/qwen2.5/Transformers/32b-instruct-gptq-int8",
+          "licenseName": "Apache 2.0",
+          "totalUncompressedBytes": 35080374434
+        },
+        {
+          "id": 141462,
+          "slug": "3b",
+          "framework": "transformers",
+          "overview": "License Details: [qwen-research](https://www.kaggle.com/models/qwen-lm/qwen2.5/transformers/3b?select=LICENSE)",
+          "usage": "## Quickstart\n\nHere provides a code snippet with `apply_chat_template` to show you how to load the tokenizer and model and how to generate contents.\n\n```python\nfrom transformers import AutoModelForCausalLM, AutoTokenizer\n\nmodel_name = \"/kaggle/input/qwen2.5/transformers/3b/1\"\n\nmodel = AutoModelForCausalLM.from_pretrained(\n    model_name,\n    torch_dtype=\"auto\",\n    device_map=\"auto\"\n)\ntokenizer = AutoTokenizer.from_pretrained(model_name)\n\nprompt = \"Give me a short introduction to large language model.\"\nmessages = [\n    {\"role\": \"system\", \"content\": \"You are Qwen, created by Alibaba Cloud. You are a helpful assistant.\"},\n    {\"role\": \"user\", \"content\": prompt}\n]\ntext = tokenizer.apply_chat_template(\n    messages,\n    tokenize=False,\n    add_generation_prompt=True\n)\nmodel_inputs = tokenizer([text], return_tensors=\"pt\").to(model.device)\n\ngenerated_ids = model.generate(\n    **model_inputs,\n    max_new_tokens=512\n)\ngenerated_ids = [\n    output_ids[len(input_ids):] for input_ids, output_ids in zip(model_inputs.input_ids, generated_ids)\n]\n\nresponse = tokenizer.batch_decode(generated_ids, skip_special_tokens=True)[0]\n```",
+          "versionId": 166249,
+          "versionNumber": 1,
+          "url": "https://www.kaggle.com/models/qwen-lm/qwen2.5/Transformers/3b",
+          "licenseName": "Other (specified in description)",
+          "totalUncompressedBytes": 6183463686
+        },
+        {
+          "id": 141460,
+          "slug": "3b-instruct",
+          "framework": "transformers",
+          "overview": "License Details: [qwen-research](https://www.kaggle.com/models/qwen-lm/qwen2.5/transformers/3b-instruct?select=LICENSE)",
+          "usage": "## Quickstart\n\nHere provides a code snippet with `apply_chat_template` to show you how to load the tokenizer and model and how to generate contents.\n\n```python\nfrom transformers import AutoModelForCausalLM, AutoTokenizer\n\nmodel_name = \"/kaggle/input/qwen2.5/transformers/3b-instruct/1\"\n\nmodel = AutoModelForCausalLM.from_pretrained(\n    model_name,\n    torch_dtype=\"auto\",\n    device_map=\"auto\"\n)\ntokenizer = AutoTokenizer.from_pretrained(model_name)\n\nprompt = \"Give me a short introduction to large language model.\"\nmessages = [\n    {\"role\": \"system\", \"content\": \"You are Qwen, created by Alibaba Cloud. You are a helpful assistant.\"},\n    {\"role\": \"user\", \"content\": prompt}\n]\ntext = tokenizer.apply_chat_template(\n    messages,\n    tokenize=False,\n    add_generation_prompt=True\n)\nmodel_inputs = tokenizer([text], return_tensors=\"pt\").to(model.device)\n\ngenerated_ids = model.generate(\n    **model_inputs,\n    max_new_tokens=512\n)\ngenerated_ids = [\n    output_ids[len(input_ids):] for input_ids, output_ids in zip(model_inputs.input_ids, generated_ids)\n]\n\nresponse = tokenizer.batch_decode(generated_ids, skip_special_tokens=True)[0]\n```",
+          "versionId": 166247,
+          "versionNumber": 1,
+          "url": "https://www.kaggle.com/models/qwen-lm/qwen2.5/Transformers/3b-instruct",
+          "licenseName": "Other (specified in description)",
+          "totalUncompressedBytes": 6183464935
+        },
+        {
+          "id": 141544,
+          "slug": "3b-instruct-awq",
+          "framework": "transformers",
+          "overview": "License Details: [qwen-research](https://www.kaggle.com/models/qwen-lm/qwen2.5/transformers/3b-instruct-awq?select=LICENSE)",
+          "usage": "## Quickstart\n\nHere provides a code snippet with `apply_chat_template` to show you how to load the tokenizer and model and how to generate contents.\n\n```python\nfrom transformers import AutoModelForCausalLM, AutoTokenizer\n\nmodel_name = \"/kaggle/input/qwen2.5/transformers/3b-instruct-awq/1\"\n\nmodel = AutoModelForCausalLM.from_pretrained(\n    model_name,\n    torch_dtype=\"auto\",\n    device_map=\"auto\"\n)\ntokenizer = AutoTokenizer.from_pretrained(model_name)\n\nprompt = \"Give me a short introduction to large language model.\"\nmessages = [\n    {\"role\": \"system\", \"content\": \"You are Qwen, created by Alibaba Cloud. You are a helpful assistant.\"},\n    {\"role\": \"user\", \"content\": prompt}\n]\ntext = tokenizer.apply_chat_template(\n    messages,\n    tokenize=False,\n    add_generation_prompt=True\n)\nmodel_inputs = tokenizer([text], return_tensors=\"pt\").to(model.device)\n\ngenerated_ids = model.generate(\n    **model_inputs,\n    max_new_tokens=512\n)\ngenerated_ids = [\n    output_ids[len(input_ids):] for input_ids, output_ids in zip(model_inputs.input_ids, generated_ids)\n]\n\nresponse = tokenizer.batch_decode(generated_ids, skip_special_tokens=True)[0]\n```",
+          "versionId": 166346,
+          "versionNumber": 1,
+          "url": "https://www.kaggle.com/models/qwen-lm/qwen2.5/Transformers/3b-instruct-awq",
+          "licenseName": "Other (specified in description)",
+          "totalUncompressedBytes": 2698207527
+        },
+        {
+          "id": 146096,
+          "slug": "3b-instruct-gptq-int4",
+          "framework": "transformers",
+          "usage": "## Quickstart\n\nHere provides a code snippet with `apply_chat_template` to show you how to load the tokenizer and model and how to generate contents.\n\n```python\nfrom transformers import AutoModelForCausalLM, AutoTokenizer\n\nmodel_name = \"/kaggle/input/qwen2.5/transformers/3b-instruct-gptq-int4/1\"\n\nmodel = AutoModelForCausalLM.from_pretrained(\n    model_name,\n    torch_dtype=\"auto\",\n    device_map=\"auto\"\n)\ntokenizer = AutoTokenizer.from_pretrained(model_name)\n\nprompt = \"Give me a short introduction to large language model.\"\nmessages = [\n    {\"role\": \"system\", \"content\": \"You are Qwen, created by Alibaba Cloud. You are a helpful assistant.\"},\n    {\"role\": \"user\", \"content\": prompt}\n]\ntext = tokenizer.apply_chat_template(\n    messages,\n    tokenize=False,\n    add_generation_prompt=True\n)\nmodel_inputs = tokenizer([text], return_tensors=\"pt\").to(model.device)\n\ngenerated_ids = model.generate(\n    **model_inputs,\n    max_new_tokens=512\n)\ngenerated_ids = [\n    output_ids[len(input_ids):] for input_ids, output_ids in zip(model_inputs.input_ids, generated_ids)\n]\n\nresponse = tokenizer.batch_decode(generated_ids, skip_special_tokens=True)[0]\n```",
+          "versionId": 171650,
+          "versionNumber": 1,
+          "url": "https://www.kaggle.com/models/qwen-lm/qwen2.5/Transformers/3b-instruct-gptq-int4",
+          "licenseName": "Other (specified in description)",
+          "totalUncompressedBytes": 2079259807
+        },
+        {
+          "id": 146099,
+          "slug": "3b-instruct-gptq-int8",
+          "framework": "transformers",
+          "usage": "## Quickstart\n\nHere provides a code snippet with `apply_chat_template` to show you how to load the tokenizer and model and how to generate contents.\n\n```python\nfrom transformers import AutoModelForCausalLM, AutoTokenizer\n\nmodel_name = \"/kaggle/input/qwen2.5/transformers/3b-instruct-gptq-int8/1\"\n\nmodel = AutoModelForCausalLM.from_pretrained(\n    model_name,\n    torch_dtype=\"auto\",\n    device_map=\"auto\"\n)\ntokenizer = AutoTokenizer.from_pretrained(model_name)\n\nprompt = \"Give me a short introduction to large language model.\"\nmessages = [\n    {\"role\": \"system\", \"content\": \"You are Qwen, created by Alibaba Cloud. You are a helpful assistant.\"},\n    {\"role\": \"user\", \"content\": prompt}\n]\ntext = tokenizer.apply_chat_template(\n    messages,\n    tokenize=False,\n    add_generation_prompt=True\n)\nmodel_inputs = tokenizer([text], return_tensors=\"pt\").to(model.device)\n\ngenerated_ids = model.generate(\n    **model_inputs,\n    max_new_tokens=512\n)\ngenerated_ids = [\n    output_ids[len(input_ids):] for input_ids, output_ids in zip(model_inputs.input_ids, generated_ids)\n]\n\nresponse = tokenizer.batch_decode(generated_ids, skip_special_tokens=True)[0]\n```",
+          "versionId": 171653,
+          "versionNumber": 1,
+          "url": "https://www.kaggle.com/models/qwen-lm/qwen2.5/Transformers/3b-instruct-gptq-int8",
+          "licenseName": "Other (specified in description)",
+          "totalUncompressedBytes": 3477364463
+        },
+        {
+          "id": 145157,
+          "slug": "72b",
+          "framework": "transformers",
+          "fineTunable": true,
+          "overview": "License Details: [qwen](https://www.kaggle.com/models/qwen-lm/qwen2.5/transformers/72b?select=LICENSE)",
+          "versionId": 170604,
+          "versionNumber": 1,
+          "url": "https://www.kaggle.com/models/qwen-lm/qwen2.5/Transformers/72b",
+          "licenseName": "Other (specified in description)",
+          "totalUncompressedBytes": 145424097058
+        },
+        {
+          "id": 145159,
+          "slug": "72b-instruct",
+          "framework": "transformers",
+          "fineTunable": true,
+          "overview": "License Details: [qwen](https://www.kaggle.com/models/qwen-lm/qwen2.5/transformers/72b-instruct?select=LICENSE)",
+          "versionId": 170606,
+          "versionNumber": 1,
+          "url": "https://www.kaggle.com/models/qwen-lm/qwen2.5/Transformers/72b-instruct",
+          "licenseName": "Other (specified in description)",
+          "totalUncompressedBytes": 145424099850
+        },
+        {
+          "id": 141580,
+          "slug": "72b-instruct-awq",
+          "framework": "transformers",
+          "overview": "License Details: [qwen](https://www.kaggle.com/models/qwen-lm/qwen2.5/transformers/72b-instruct-awq?select=LICENSE)",
+          "usage": "## Quickstart\n\nHere provides a code snippet with `apply_chat_template` to show you how to load the tokenizer and model and how to generate contents.\n\n```python\nfrom transformers import AutoModelForCausalLM, AutoTokenizer\n\nmodel_name = \"/kaggle/input/qwen2.5/transformers/72b-instruct-awq/1\"\n\nmodel = AutoModelForCausalLM.from_pretrained(\n    model_name,\n    torch_dtype=\"auto\",\n    device_map=\"auto\"\n)\ntokenizer = AutoTokenizer.from_pretrained(model_name)\n\nprompt = \"Give me a short introduction to large language model.\"\nmessages = [\n    {\"role\": \"system\", \"content\": \"You are Qwen, created by Alibaba Cloud. You are a helpful assistant.\"},\n    {\"role\": \"user\", \"content\": prompt}\n]\ntext = tokenizer.apply_chat_template(\n    messages,\n    tokenize=False,\n    add_generation_prompt=True\n)\nmodel_inputs = tokenizer([text], return_tensors=\"pt\").to(model.device)\n\ngenerated_ids = model.generate(\n    **model_inputs,\n    max_new_tokens=512\n)\ngenerated_ids = [\n    output_ids[len(input_ids):] for input_ids, output_ids in zip(model_inputs.input_ids, generated_ids)\n]\n\nresponse = tokenizer.batch_decode(generated_ids, skip_special_tokens=True)[0]\n```",
+          "versionId": 166386,
+          "versionNumber": 1,
+          "url": "https://www.kaggle.com/models/qwen-lm/qwen2.5/Transformers/72b-instruct-awq",
+          "licenseName": "Other (specified in description)",
+          "totalUncompressedBytes": 41607438677
+        },
+        {
+          "id": 145984,
+          "slug": "72b-instruct-gptq-int4",
+          "framework": "transformers",
+          "overview": "License Details: [qwen](https://www.kaggle.com/models/qwen-lm/qwen2.5/transformers/72b-instruct-gptq-int4?select=LICENSE)",
+          "usage": "## Quickstart\n\nHere provides a code snippet with `apply_chat_template` to show you how to load the tokenizer and model and how to generate contents.\n\n```python\nfrom transformers import AutoModelForCausalLM, AutoTokenizer\n\nmodel_name = \"/kaggle/input/qwen2.5/transformers/72b-instruct-gptq-int4/1\"\n\nmodel = AutoModelForCausalLM.from_pretrained(\n    model_name,\n    torch_dtype=\"auto\",\n    device_map=\"auto\"\n)\ntokenizer = AutoTokenizer.from_pretrained(model_name)\n\nprompt = \"Give me a short introduction to large language model.\"\nmessages = [\n    {\"role\": \"system\", \"content\": \"You are Qwen, created by Alibaba Cloud. You are a helpful assistant.\"},\n    {\"role\": \"user\", \"content\": prompt}\n]\ntext = tokenizer.apply_chat_template(\n    messages,\n    tokenize=False,\n    add_generation_prompt=True\n)\nmodel_inputs = tokenizer([text], return_tensors=\"pt\").to(model.device)\n\ngenerated_ids = model.generate(\n    **model_inputs,\n    max_new_tokens=512\n)\ngenerated_ids = [\n    output_ids[len(input_ids):] for input_ids, output_ids in zip(model_inputs.input_ids, generated_ids)\n]\n\nresponse = tokenizer.batch_decode(generated_ids, skip_special_tokens=True)[0]\n```",
+          "versionId": 171524,
+          "versionNumber": 1,
+          "url": "https://www.kaggle.com/models/qwen-lm/qwen2.5/Transformers/72b-instruct-gptq-int4",
+          "licenseName": "Other (specified in description)",
+          "totalUncompressedBytes": 41632768275
+        },
+        {
+          "id": 145995,
+          "slug": "72b-instruct-gptq-int8",
+          "framework": "transformers",
+          "overview": "License Details: [qwen](https://www.kaggle.com/models/qwen-lm/qwen2.5/transformers/72b-instruct-gptq-int8?select=LICENSE)",
+          "usage": "## Quickstart\n\nHere provides a code snippet with `apply_chat_template` to show you how to load the tokenizer and model and how to generate contents.\n\n```python\nfrom transformers import AutoModelForCausalLM, AutoTokenizer\n\nmodel_name = \"/kaggle/input/qwen2.5/transformers/72b-instruct-gptq-int8/1\"\n\nmodel = AutoModelForCausalLM.from_pretrained(\n    model_name,\n    torch_dtype=\"auto\",\n    device_map=\"auto\"\n)\ntokenizer = AutoTokenizer.from_pretrained(model_name)\n\nprompt = \"Give me a short introduction to large language model.\"\nmessages = [\n    {\"role\": \"system\", \"content\": \"You are Qwen, created by Alibaba Cloud. You are a helpful assistant.\"},\n    {\"role\": \"user\", \"content\": prompt}\n]\ntext = tokenizer.apply_chat_template(\n    messages,\n    tokenize=False,\n    add_generation_prompt=True\n)\nmodel_inputs = tokenizer([text], return_tensors=\"pt\").to(model.device)\n\ngenerated_ids = model.generate(\n    **model_inputs,\n    max_new_tokens=512\n)\ngenerated_ids = [\n    output_ids[len(input_ids):] for input_ids, output_ids in zip(model_inputs.input_ids, generated_ids)\n]\n\nresponse = tokenizer.batch_decode(generated_ids, skip_special_tokens=True)[0]\n```",
+          "versionId": 171536,
+          "versionNumber": 1,
+          "url": "https://www.kaggle.com/models/qwen-lm/qwen2.5/Transformers/72b-instruct-gptq-int8",
+          "licenseName": "Other (specified in description)",
+          "totalUncompressedBytes": 77140173459
+        },
+        {
+          "id": 141466,
+          "slug": "7b",
+          "framework": "transformers",
+          "versionId": 166254,
+          "versionNumber": 1,
+          "url": "https://www.kaggle.com/models/qwen-lm/qwen2.5/Transformers/7b",
+          "licenseName": "Apache 2.0",
+          "totalUncompressedBytes": 15242804690
+        },
+        {
+          "id": 141469,
+          "slug": "7b-instruct",
+          "framework": "transformers",
+          "usage": "## Quickstart\n\nHere provides a code snippet with `apply_chat_template` to show you how to load the tokenizer and model and how to generate contents.\n\n```python\nfrom transformers import AutoModelForCausalLM, AutoTokenizer\n\nmodel_name = \"/kaggle/input/qwen2.5/transformers/7b-instruct/1\"\n\nmodel = AutoModelForCausalLM.from_pretrained(\n    model_name,\n    torch_dtype=\"auto\",\n    device_map=\"auto\"\n)\ntokenizer = AutoTokenizer.from_pretrained(model_name)\n\nprompt = \"Give me a short introduction to large language model.\"\nmessages = [\n    {\"role\": \"system\", \"content\": \"You are Qwen, created by Alibaba Cloud. You are a helpful assistant.\"},\n    {\"role\": \"user\", \"content\": prompt}\n]\ntext = tokenizer.apply_chat_template(\n    messages,\n    tokenize=False,\n    add_generation_prompt=True\n)\nmodel_inputs = tokenizer([text], return_tensors=\"pt\").to(model.device)\n\ngenerated_ids = model.generate(\n    **model_inputs,\n    max_new_tokens=512\n)\ngenerated_ids = [\n    output_ids[len(input_ids):] for input_ids, output_ids in zip(model_inputs.input_ids, generated_ids)\n]\n\nresponse = tokenizer.batch_decode(generated_ids, skip_special_tokens=True)[0]\n```",
+          "versionId": 166258,
+          "versionNumber": 1,
+          "url": "https://www.kaggle.com/models/qwen-lm/qwen2.5/Transformers/7b-instruct",
+          "licenseName": "Apache 2.0",
+          "totalUncompressedBytes": 15242807035
+        },
+        {
+          "id": 141552,
+          "slug": "7b-instruct-awq",
+          "framework": "transformers",
+          "usage": "## Quickstart\n\nHere provides a code snippet with `apply_chat_template` to show you how to load the tokenizer and model and how to generate contents.\n\n```python\nfrom transformers import AutoModelForCausalLM, AutoTokenizer\n\nmodel_name = \"/kaggle/input/qwen2.5/transformers/7b-instruct-awq/1\"\n\nmodel = AutoModelForCausalLM.from_pretrained(\n    model_name,\n    torch_dtype=\"auto\",\n    device_map=\"auto\"\n)\ntokenizer = AutoTokenizer.from_pretrained(model_name)\n\nprompt = \"Give me a short introduction to large language model.\"\nmessages = [\n    {\"role\": \"system\", \"content\": \"You are Qwen, created by Alibaba Cloud. You are a helpful assistant.\"},\n    {\"role\": \"user\", \"content\": prompt}\n]\ntext = tokenizer.apply_chat_template(\n    messages,\n    tokenize=False,\n    add_generation_prompt=True\n)\nmodel_inputs = tokenizer([text], return_tensors=\"pt\").to(model.device)\n\ngenerated_ids = model.generate(\n    **model_inputs,\n    max_new_tokens=512\n)\ngenerated_ids = [\n    output_ids[len(input_ids):] for input_ids, output_ids in zip(model_inputs.input_ids, generated_ids)\n]\n\nresponse = tokenizer.batch_decode(generated_ids, skip_special_tokens=True)[0]\n```",
+          "versionId": 166355,
+          "versionNumber": 1,
+          "url": "https://www.kaggle.com/models/qwen-lm/qwen2.5/Transformers/7b-instruct-awq",
+          "licenseName": "Apache 2.0",
+          "totalUncompressedBytes": 5582400357
+        },
+        {
+          "id": 145958,
+          "slug": "7b-instruct-gptq-int4",
+          "framework": "transformers",
+          "usage": "## Quickstart\n\nHere provides a code snippet with `apply_chat_template` to show you how to load the tokenizer and model and how to generate contents.\n\n```python\nfrom transformers import AutoModelForCausalLM, AutoTokenizer\n\nmodel_name = \"/kaggle/input/qwen2.5/transformers/7b-instruct-gptq-int4/1\"\n\nmodel = AutoModelForCausalLM.from_pretrained(\n    model_name,\n    torch_dtype=\"auto\",\n    device_map=\"auto\"\n)\ntokenizer = AutoTokenizer.from_pretrained(model_name)\n\nprompt = \"Give me a short introduction to large language model.\"\nmessages = [\n    {\"role\": \"system\", \"content\": \"You are Qwen, created by Alibaba Cloud. You are a helpful assistant.\"},\n    {\"role\": \"user\", \"content\": prompt}\n]\ntext = tokenizer.apply_chat_template(\n    messages,\n    tokenize=False,\n    add_generation_prompt=True\n)\nmodel_inputs = tokenizer([text], return_tensors=\"pt\").to(model.device)\n\ngenerated_ids = model.generate(\n    **model_inputs,\n    max_new_tokens=512\n)\ngenerated_ids = [\n    output_ids[len(input_ids):] for input_ids, output_ids in zip(model_inputs.input_ids, generated_ids)\n]\n\nresponse = tokenizer.batch_decode(generated_ids, skip_special_tokens=True)[0]\n```",
+          "versionId": 171493,
+          "versionNumber": 1,
+          "url": "https://www.kaggle.com/models/qwen-lm/qwen2.5/Transformers/7b-instruct-gptq-int4",
+          "licenseName": "Apache 2.0",
+          "totalUncompressedBytes": 5586964999
+        },
+        {
+          "id": 145962,
+          "slug": "7b-instruct-gptq-int8",
+          "framework": "transformers",
+          "usage": "## Quickstart\n\nHere provides a code snippet with `apply_chat_template` to show you how to load the tokenizer and model and how to generate contents.\n\n```python\nfrom transformers import AutoModelForCausalLM, AutoTokenizer\n\nmodel_name = \"/kaggle/input/qwen2.5/transformers/7b-instruct-gptq-int8/1\"\n\nmodel = AutoModelForCausalLM.from_pretrained(\n    model_name,\n    torch_dtype=\"auto\",\n    device_map=\"auto\"\n)\ntokenizer = AutoTokenizer.from_pretrained(model_name)\n\nprompt = \"Give me a short introduction to large language model.\"\nmessages = [\n    {\"role\": \"system\", \"content\": \"You are Qwen, created by Alibaba Cloud. You are a helpful assistant.\"},\n    {\"role\": \"user\", \"content\": prompt}\n]\ntext = tokenizer.apply_chat_template(\n    messages,\n    tokenize=False,\n    add_generation_prompt=True\n)\nmodel_inputs = tokenizer([text], return_tensors=\"pt\").to(model.device)\n\ngenerated_ids = model.generate(\n    **model_inputs,\n    max_new_tokens=512\n)\ngenerated_ids = [\n    output_ids[len(input_ids):] for input_ids, output_ids in zip(model_inputs.input_ids, generated_ids)\n]\n\nresponse = tokenizer.batch_decode(generated_ids, skip_special_tokens=True)[0]\n```",
+          "versionId": 171498,
+          "versionNumber": 1,
+          "url": "https://www.kaggle.com/models/qwen-lm/qwen2.5/Transformers/7b-instruct-gptq-int8",
+          "licenseName": "Apache 2.0",
+          "totalUncompressedBytes": 8875098903
+        },
+        {
+          "id": 141477,
+          "slug": "0.5b-instruct",
+          "framework": "gguf",
+          "usage": "## Quickstart\n\nHere provides a code snippet with `apply_chat_template` to show you how to load the tokenizer and model and how to generate contents.\n\n```python\nfrom transformers import AutoModelForCausalLM, AutoTokenizer\n\nmodel_name = \"/kaggle/input/qwen2.5/gguf/0.5b-instruct/1\"\n\nmodel = AutoModelForCausalLM.from_pretrained(\n    model_name,\n    torch_dtype=\"auto\",\n    device_map=\"auto\"\n)\ntokenizer = AutoTokenizer.from_pretrained(model_name)\n\nprompt = \"Give me a short introduction to large language model.\"\nmessages = [\n    {\"role\": \"system\", \"content\": \"You are Qwen, created by Alibaba Cloud. You are a helpful assistant.\"},\n    {\"role\": \"user\", \"content\": prompt}\n]\ntext = tokenizer.apply_chat_template(\n    messages,\n    tokenize=False,\n    add_generation_prompt=True\n)\nmodel_inputs = tokenizer([text], return_tensors=\"pt\").to(model.device)\n\ngenerated_ids = model.generate(\n    **model_inputs,\n    max_new_tokens=512\n)\ngenerated_ids = [\n    output_ids[len(input_ids):] for input_ids, output_ids in zip(model_inputs.input_ids, generated_ids)\n]\n\nresponse = tokenizer.batch_decode(generated_ids, skip_special_tokens=True)[0]\n```",
+          "versionId": 166266,
+          "versionNumber": 1,
+          "url": "https://www.kaggle.com/models/qwen-lm/qwen2.5/Gguf/0.5b-instruct",
+          "licenseName": "Apache 2.0",
+          "totalUncompressedBytes": 5372550080
+        },
+        {
+          "id": 141486,
+          "slug": "1.5b-instruct",
+          "framework": "gguf",
+          "usage": "## Quickstart\n\nHere provides a code snippet with `apply_chat_template` to show you how to load the tokenizer and model and how to generate contents.\n\n```python\nfrom transformers import AutoModelForCausalLM, AutoTokenizer\n\nmodel_name = \"/kaggle/input/qwen2.5/gguf/1.5b-instruct/1\"\n\nmodel = AutoModelForCausalLM.from_pretrained(\n    model_name,\n    torch_dtype=\"auto\",\n    device_map=\"auto\"\n)\ntokenizer = AutoTokenizer.from_pretrained(model_name)\n\nprompt = \"Give me a short introduction to large language model.\"\nmessages = [\n    {\"role\": \"system\", \"content\": \"You are Qwen, created by Alibaba Cloud. You are a helpful assistant.\"},\n    {\"role\": \"user\", \"content\": prompt}\n]\ntext = tokenizer.apply_chat_template(\n    messages,\n    tokenize=False,\n    add_generation_prompt=True\n)\nmodel_inputs = tokenizer([text], return_tensors=\"pt\").to(model.device)\n\ngenerated_ids = model.generate(\n    **model_inputs,\n    max_new_tokens=512\n)\ngenerated_ids = [\n    output_ids[len(input_ids):] for input_ids, output_ids in zip(model_inputs.input_ids, generated_ids)\n]\n\nresponse = tokenizer.batch_decode(generated_ids, skip_special_tokens=True)[0]\n```",
+          "versionId": 166276,
+          "versionNumber": 1,
+          "url": "https://www.kaggle.com/models/qwen-lm/qwen2.5/Gguf/1.5b-instruct",
+          "licenseName": "Apache 2.0",
+          "totalUncompressedBytes": 13324696704
+        },
+        {
+          "id": 141605,
+          "slug": "14b-instruct",
+          "framework": "gguf",
+          "usage": "## Quickstart\n\nHere provides a code snippet with `apply_chat_template` to show you how to load the tokenizer and model and how to generate contents.\n\n```python\nfrom transformers import AutoModelForCausalLM, AutoTokenizer\n\nmodel_name = \"/kaggle/input/qwen2.5/gguf/14b-instruct/1\"\n\nmodel = AutoModelForCausalLM.from_pretrained(\n    model_name,\n    torch_dtype=\"auto\",\n    device_map=\"auto\"\n)\ntokenizer = AutoTokenizer.from_pretrained(model_name)\n\nprompt = \"Give me a short introduction to large language model.\"\nmessages = [\n    {\"role\": \"system\", \"content\": \"You are Qwen, created by Alibaba Cloud. You are a helpful assistant.\"},\n    {\"role\": \"user\", \"content\": prompt}\n]\ntext = tokenizer.apply_chat_template(\n    messages,\n    tokenize=False,\n    add_generation_prompt=True\n)\nmodel_inputs = tokenizer([text], return_tensors=\"pt\").to(model.device)\n\ngenerated_ids = model.generate(\n    **model_inputs,\n    max_new_tokens=512\n)\ngenerated_ids = [\n    output_ids[len(input_ids):] for input_ids, output_ids in zip(model_inputs.input_ids, generated_ids)\n]\n\nresponse = tokenizer.batch_decode(generated_ids, skip_special_tokens=True)[0]\n```",
+          "versionId": 166414,
+          "versionNumber": 1,
+          "url": "https://www.kaggle.com/models/qwen-lm/qwen2.5/Gguf/14b-instruct",
+          "licenseName": "Apache 2.0",
+          "totalUncompressedBytes": 108764982994
+        },
+        {
+          "id": 141598,
+          "slug": "32b-instruct",
+          "framework": "gguf",
+          "usage": "## Quickstart\n\nHere provides a code snippet with `apply_chat_template` to show you how to load the tokenizer and model and how to generate contents.\n\n```python\nfrom transformers import AutoModelForCausalLM, AutoTokenizer\n\nmodel_name = \"/kaggle/input/qwen2.5/gguf/32b-instruct/1\"\n\nmodel = AutoModelForCausalLM.from_pretrained(\n    model_name,\n    torch_dtype=\"auto\",\n    device_map=\"auto\"\n)\ntokenizer = AutoTokenizer.from_pretrained(model_name)\n\nprompt = \"Give me a short introduction to large language model.\"\nmessages = [\n    {\"role\": \"system\", \"content\": \"You are Qwen, created by Alibaba Cloud. You are a helpful assistant.\"},\n    {\"role\": \"user\", \"content\": prompt}\n]\ntext = tokenizer.apply_chat_template(\n    messages,\n    tokenize=False,\n    add_generation_prompt=True\n)\nmodel_inputs = tokenizer([text], return_tensors=\"pt\").to(model.device)\n\ngenerated_ids = model.generate(\n    **model_inputs,\n    max_new_tokens=512\n)\ngenerated_ids = [\n    output_ids[len(input_ids):] for input_ids, output_ids in zip(model_inputs.input_ids, generated_ids)\n]\n\nresponse = tokenizer.batch_decode(generated_ids, skip_special_tokens=True)[0]\n```",
+          "versionId": 166407,
+          "versionNumber": 1,
+          "url": "https://www.kaggle.com/models/qwen-lm/qwen2.5/Gguf/32b-instruct",
+          "licenseName": "Apache 2.0",
+          "totalUncompressedBytes": 158570703442
+        },
+        {
+          "id": 141497,
+          "slug": "3b-instruct",
+          "framework": "gguf",
+          "overview": "License Details: [qwen-research](https://www.kaggle.com/models/qwen-lm/qwen2.5/gguf/3b-instruct?select=LICENSE)",
+          "usage": "## Quickstart\n\nHere provides a code snippet with `apply_chat_template` to show you how to load the tokenizer and model and how to generate contents.\n\n```python\nfrom transformers import AutoModelForCausalLM, AutoTokenizer\n\nmodel_name = \"/kaggle/input/qwen2.5/gguf/3b-instruct/1\"\n\nmodel = AutoModelForCausalLM.from_pretrained(\n    model_name,\n    torch_dtype=\"auto\",\n    device_map=\"auto\"\n)\ntokenizer = AutoTokenizer.from_pretrained(model_name)\n\nprompt = \"Give me a short introduction to large language model.\"\nmessages = [\n    {\"role\": \"system\", \"content\": \"You are Qwen, created by Alibaba Cloud. You are a helpful assistant.\"},\n    {\"role\": \"user\", \"content\": prompt}\n]\ntext = tokenizer.apply_chat_template(\n    messages,\n    tokenize=False,\n    add_generation_prompt=True\n)\nmodel_inputs = tokenizer([text], return_tensors=\"pt\").to(model.device)\n\ngenerated_ids = model.generate(\n    **model_inputs,\n    max_new_tokens=512\n)\ngenerated_ids = [\n    output_ids[len(input_ids):] for input_ids, output_ids in zip(model_inputs.input_ids, generated_ids)\n]\n\nresponse = tokenizer.batch_decode(generated_ids, skip_special_tokens=True)[0]\n```",
+          "versionId": 166287,
+          "versionNumber": 1,
+          "url": "https://www.kaggle.com/models/qwen-lm/qwen2.5/Gguf/3b-instruct",
+          "licenseName": "Other (specified in description)",
+          "totalUncompressedBytes": 25236340088
+        },
+        {
+          "id": 141601,
+          "slug": "72b-instruct",
+          "framework": "gguf",
+          "overview": "License Details: [qwen](https://www.kaggle.com/models/qwen-lm/qwen2.5/gguf/72b-instruct?select=LICENSE)",
+          "usage": "## Quickstart\n\nHere provides a code snippet with `apply_chat_template` to show you how to load the tokenizer and model and how to generate contents.\n\n```python\nfrom transformers import AutoModelForCausalLM, AutoTokenizer\n\nmodel_name = \"/kaggle/input/qwen2.5/gguf/72b-instruct/1\"\n\nmodel = AutoModelForCausalLM.from_pretrained(\n    model_name,\n    torch_dtype=\"auto\",\n    device_map=\"auto\"\n)\ntokenizer = AutoTokenizer.from_pretrained(model_name)\n\nprompt = \"Give me a short introduction to large language model.\"\nmessages = [\n    {\"role\": \"system\", \"content\": \"You are Qwen, created by Alibaba Cloud. You are a helpful assistant.\"},\n    {\"role\": \"user\", \"content\": prompt}\n]\ntext = tokenizer.apply_chat_template(\n    messages,\n    tokenize=False,\n    add_generation_prompt=True\n)\nmodel_inputs = tokenizer([text], return_tensors=\"pt\").to(model.device)\n\ngenerated_ids = model.generate(\n    **model_inputs,\n    max_new_tokens=512\n)\ngenerated_ids = [\n    output_ids[len(input_ids):] for input_ids, output_ids in zip(model_inputs.input_ids, generated_ids)\n]\n\nresponse = tokenizer.batch_decode(generated_ids, skip_special_tokens=True)[0]\n```",
+          "versionId": 166410,
+          "versionNumber": 1,
+          "url": "https://www.kaggle.com/models/qwen-lm/qwen2.5/Gguf/72b-instruct",
+          "licenseName": "Other (specified in description)",
+          "totalUncompressedBytes": 162498185909
+        },
+        {
+          "id": 141514,
+          "slug": "7b-instruct",
+          "framework": "gguf",
+          "overview": "## Quickstart\n\nHere provides a code snippet with `apply_chat_template` to show you how to load the tokenizer and model and how to generate contents.\n\n```python\nfrom transformers import AutoModelForCausalLM, AutoTokenizer\n\nmodel_name = \"/kaggle/input/qwen2.5/gguf/7b-instruct/1\"\n\nmodel = AutoModelForCausalLM.from_pretrained(\n    model_name,\n    torch_dtype=\"auto\",\n    device_map=\"auto\"\n)\ntokenizer = AutoTokenizer.from_pretrained(model_name)\n\nprompt = \"Give me a short introduction to large language model.\"\nmessages = [\n    {\"role\": \"system\", \"content\": \"You are Qwen, created by Alibaba Cloud. You are a helpful assistant.\"},\n    {\"role\": \"user\", \"content\": prompt}\n]\ntext = tokenizer.apply_chat_template(\n    messages,\n    tokenize=False,\n    add_generation_prompt=True\n)\nmodel_inputs = tokenizer([text], return_tensors=\"pt\").to(model.device)\n\ngenerated_ids = model.generate(\n    **model_inputs,\n    max_new_tokens=512\n)\ngenerated_ids = [\n    output_ids[len(input_ids):] for input_ids, output_ids in zip(model_inputs.input_ids, generated_ids)\n]\n\nresponse = tokenizer.batch_decode(generated_ids, skip_special_tokens=True)[0]\n```",
+          "versionId": 166305,
+          "versionNumber": 1,
+          "url": "https://www.kaggle.com/models/qwen-lm/qwen2.5/Gguf/7b-instruct",
+          "licenseName": "Apache 2.0",
+          "totalUncompressedBytes": 56289399849
+        }
+      ],
+      "tags": [
+        {
+          "ref": "transformers",
+          "name": "transformers",
+          "description": "",
+          "fullPath": "packages > transformers",
+          "competitionCount": 5,
+          "datasetCount": 466,
+          "scriptCount": 2752,
+          "totalCount": 3223
+        },
+        {
+          "ref": "text generation",
+          "name": "text generation",
+          "description": "",
+          "fullPath": "task > text-generation",
+          "competitionCount": 23,
+          "datasetCount": 426,
+          "scriptCount": 550,
+          "totalCount": 999
+        }
+      ],
+      "provenanceSources": "- https://github.com/QwenLM/Qwen2.5/blob/main/README.md\n- https://huggingface.co/collections/Qwen/qwen25-66e81a666513e518adb90d9e",
+      "url": "https://www.kaggle.com/models/qwen-lm/qwen2.5",
+      "input_name": "Qwen2.5",
+      "owner": "qwen-lm"
+    },
+    {
+      "id": 437846,
+      "ref": "google/vaultgemma",
+      "title": "VaultGemma",
+      "subtitle": "VaultGemma is a variant of the Gemma family of lightweight, state-of-the-art open models from Google",
+      "author": "Google",
+      "slug": "vaultgemma",
+      "description": "# VaultGemma model card\n\n**Model Page**: [VaultGemma](https://www.kaggle.com/models/google/vaultgemma)\n\n**Resources and Technical Documentation**:\n\n*   [VaultGemma Technical Report](https://services.google.com/fh/files/blogs/vaultgemma_tech_report.pdf)\n*   [Responsible Generative AI Toolkit][rai-toolkit]\n*   [VaultGemma on Kaggle][kaggle-gemma]\n\n**Terms of Use**: [Terms][terms]\n\n**Authors**: Google\n\n## Model Information\n\nSummary description and brief definition of inputs and outputs.\n\n### Description\n\nVaultGemma is a variant of the Gemma family of lightweight, state-of-the-art open models from Google. It is pre-trained from the ground up using Differential Privacy (DP). This provides strong, mathematically-backed privacy guarantees for its training data, limiting the extent to which the model's outputs can reveal information about any single training example.\n\nVaultGemma uses a similar architecture as Gemma 2. VaultGemma is a pretrained model that can be instruction tuned for a variety of language understanding and generation tasks. Its relatively small size (&lt; 1B parameters) makes it possible to deploy in environments with limited resources, democratizing access to state-of-the-art AI models that are built with privacy at their core.\n\n### Inputs and outputs\n\n-   **Input:**\n    -   Text string, such as a question, a prompt, or a document to be summarized.\n    -   Total input context of 1K (1,024) tokens.\n\n-   **Output:**\n    -   Generated text in response to the input, such as an answer to a question or a summary or categorization.\n\n## Model Data\n\nData used for model training and how the data was processed.\n\n### Training Dataset\n\nThe model was trained from scratch with differential privacy on a large-scale dataset of English-language text data from a variety of sources, including:\n\n-   Web Documents: A diverse collection of web text ensures the model is exposed to a broad range of linguistic styles, topics, and vocabulary.\n-   Code: Exposing the model to code helps it to learn the syntax and patterns of programming languages, which improves its ability to generate code and understand code-related questions.\n-   Mathematics: Training on mathematical text helps the model learn logical reasoning and symbolic representation to address mathematical queries.\n\nThe defining feature of this model is that the entire pre-training process was conducted using Differentially Private Stochastic Gradient Descent (DP-SGD) with a privacy budget of ε≤2.0, δ≤1.1e-10. DP-SGD provides a formal guarantee that the model's core knowledge base is itself private with respect to the individual examples in the training set.\n\n### Data Preprocessing\n\nIn addition to the inherent privacy protections of differential privacy, the following data cleaning and filtering methods used with Gemma 2 were applied to the training data:\n\n-   CSAM Filtering: Rigorous CSAM (Child Sexual Abuse Material) filtering was applied at multiple stages in the data preparation process to ensure the exclusion of harmful and illegal content.\n-   Sensitive Data Filtering: As part of making Gemma pre-trained models safe and reliable, automated techniques were used to filter out certain personal information and other sensitive data from training sets.\n-   Additional methods: Filtering based on content quality and safety in line with [our policies][safety-policies].\n\n## Implementation Information\n\nDetails about the model internals.\n\n### Hardware\n\nVaultGemma was trained using [Tensor Processing Unit (TPU)][tpu] hardware TPUv6e. Training large language models with the significant computational overhead of differential privacy requires specialized hardware. TPUs are designed to handle the massive computations involved, offering the performance, memory, and scalability necessary to train models like VaultGemma efficiently and sustainably.\n\n### Software\n\nTraining was done using [JAX][jax] and [ML Pathways][ml-pathways]. The core of the training implementation relied on specialized algorithms for privacy-preserving machine learning at scale:\n\n-   [Differentially Private Stochastic Gradient Descent (DP-SGD)][dp-sgd]: The optimization algorithm used to train the model while providing formal privacy guarantees.\n-   [Truncated Poisson Subsampling][poisson-subsampling]: A computationally efficient method used to enable large-scale DP training with fixed-size batches, which is critical for performance on modern accelerators.\n-   [DP Scaling Laws][dp-scaling-laws]: The training configuration (model size, batch size, iterations) was determined by a novel set of scaling laws developed specifically for differentially private training, ensuring the optimal use of the compute and privacy budgets.\n\n## Evaluation\n\nModel evaluation metrics and results.\n\n### Benchmark Results\n\nThe model was evaluated on a range of standard academic benchmarks. As expected, there is a utility trade-off for the strong privacy guarantees offered by the model. The table below shows the performance of the 1B pre-trained (PT) VaultGemma model.\n\n| **Benchmark**            |  **n-shot**   | **VaultGemma 1B PT** |\n| :----------------------- | :-----------: | -------------------: |\n| [HellaSwag][hellaswag]   |    10-shot    |                39.09 |\n| [BoolQ][boolq]           |    0-shot     |                62.04 |\n| [PIQA][piqa]             |    0-shot     |                68.00 |\n| [SocialIQA][socialiqa]   |    0-shot     |                46.16 |\n| [TriviaQA][triviaqa]     |    5-shot     |                11.24 |\n| [ARC-c][arc]             |    25-shot    |                26.45 |\n| [ARC-e][arc]             |    0-shot     |                51.78 |\n\n### Empirical Memorization Analysis\n\nWe also conducted empirical tests to measure the model's \"memorization rate\"—its tendency to reproduce sequences from its training data. We followed the established methodology in the [Gemma 3 technical report][g3-tech-report]. The model was prompted with 50-token prefixes extracted from the training corpus to determine if it would generate the corresponding 50-token suffixes. The evaluation specifically tested for:\n\n-   Exact Memorization: Verbatim reproduction of the suffix.\n-   Approximate Memorization: Reproduction of the suffix with up to a 10% error rate.\n\nVaultGemma exhibited **no detectable memorization** (neither exact nor approximate) in these tests. This empirical finding strongly validates the effectiveness of the Differentially Private Stochastic Gradient Descent (DP-SGD) pre-training process in preventing the retention of individual training examples.\n\n## Ethics and Safety\n\nWe use the same data mixture as Gemma 2, and utilize differential privacy during the training process to ensure the model's parameters do not memorize individual training examples, providing a formal privacy guarantee for the training data. Further we are only providing a pre-trained model.\n\n## Usage and Limitations\n\nThese models have certain limitations that users should be aware of.\n\n### Intended Usage\n\nVaultGemma is intended for a wide range of natural language processing (NLP) applications. The purpose of this list is to provide contextual information about possible use cases that the model creators considered.\n\n-   Privacy-Preserving NLP Research: Serve as a strong baseline for researchers to experiment with privacy-preserving techniques, develop new algorithms, and fine-tune models on sensitive data.\n-   Applications with Sensitive Data: Can be fine-tuned on private or sensitive datasets (e.g., in healthcare, finance) where it is critical that the base model itself does not carry risks from public pre-training data.\n-   Content Creation and Communication: Generate creative text, power chatbots, and summarize documents in scenarios where data privacy is a primary concern.\n\n### Limitations\n\n-   Utility Gap for Privacy: There is an inherent trade-off between the strength of the privacy guarantee and model utility. As shown in the evaluation benchmarks, VaultGemma may underperform compared to non-private models of a similar size.\n-   Training Data: The quality and diversity of the training data influence the model's capabilities. Biases or gaps in the training data can lead to limitations in the model's responses.\n-   Factual Accuracy: The model generates responses based on patterns from its training data but is not a knowledge base. It may generate incorrect or outdated factual statements.\n-   Language Nuance: The model may struggle to grasp subtle nuances, sarcasm, or figurative language.\n\n### Ethical Considerations and Risks\n\nThe development of language models raises several ethical concerns. In creating this open model, we have carefully considered the following:\n\n-   Bias and Fairness: Models trained on large-scale data can reflect socio-cultural biases from the training material.\n-   Misinformation and Misuse: Models can be misused to generate text that is false, misleading, or harmful. Guidelines are provided for responsible use in the [Responsible Generative AI Toolkit][rai-toolkit].\n-   Transparency and Accountability: This model card summarizes details on the model's architecture, capabilities, limitations, and evaluation processes\n\nRisks identified and mitigations:\n\n-   **Perpetuation of biases**: It's encouraged to perform continuous monitoring (using evaluation metrics, human review) and the exploration of de-biasing techniques during model training, fine-tuning, and other use cases.\n-   **Generation of harmful content**: Mechanisms and guidelines for content safety are essential. Developers are encouraged to exercise caution and implement appropriate content safety safeguards based on their specific product policies and application use cases.\n-   **Misuse for malicious purposes**: Technical limitations and developer and end-user education can help mitigate against malicious applications of VLMs. Educational resources and reporting mechanisms for users to flag misuse are provided. Prohibited uses of Gemma models are outlined in the [Gemma Prohibited Use Policy][prohibited-use].\n-   **Privacy violations**: Models were trained on data filtered for removal of certain personal information and other sensitive data. Further, we use differential privacy during pre-training, with ε≤2.0, δ≤1.1e-10. Developers are encouraged to adhere to privacy regulations with privacy-preserving techniques.\n\n### Benefits\n\nAt the time of release to the best of our knowledge, this model is the largest and highest-performing open language model pretrained from the ground up with formal differential privacy. Its primary benefit is providing strong, mathematically-backed privacy guarantees for its training data, making it uniquely suited for applications and research where training data privacy is a critical concern.\n\n[tech-report]: # \"Link to VaultGemma Technical Report\"\n[rai-toolkit]: https://ai.google.dev/responsible\n[kaggle-gemma]: https://www.kaggle.com/models/google/vaultgemma\n[terms]: https://ai.google.dev/gemma/terms\n[safety-policies]: https://ai.google/static/documents/ai-responsibility-update-published-february-2025.pdf\n[prohibited-use]: https://ai.google.dev/gemma/prohibited_use_policy\n[tpu]: https://cloud.google.com/tpu/docs/intro-to-tpu\n[jax]: https://github.com/jax-ml/jax\n[ml-pathways]: https://blog.google/technology/ai/introducing-pathways-next-generation-ai-architecture/\n[dp-sgd]: https://arxiv.org/abs/1607.00133\n[poisson-subsampling]: https://arxiv.org/abs/2411.04205\n[dp-scaling-laws]: https://arxiv.org/pdf/2501.18914\n[g3-tech-report]: https://arxiv.org/pdf/2503.19786\n\n[hellaswag]: https://arxiv.org/abs/1905.07830\n[boolq]: https://arxiv.org/abs/1905.10044\n[piqa]: https://arxiv.org/abs/1911.11641\n[socialiqa]: https://arxiv.org/abs/1904.09728\n[triviaqa]: https://arxiv.org/abs/1705.03551\n[arc]: https://arxiv.org/abs/1911.01547",
+      "instances": [
+        {
+          "id": 429228,
+          "slug": "1b",
+          "framework": "transformers",
+          "fineTunable": true,
+          "overview": "VaultGemma is a variant of the Gemma family of lightweight, state-of-the-art open models from Google. It is pre-trained from the ground up using Differential Privacy (DP). This provides strong, mathematically-backed privacy guarantees for its training data, limiting the extent to which the model's outputs can reveal information about any single training example.",
+          "usage": "### To use in Kaggle notebooks:\n\n```python\n!pip install git+https://github.com/huggingface/transformers@v4.56.1-Vault-Gemma-preview\n\nimport kagglehub\nfrom transformers import AutoTokenizer, AutoModelForCausalLM\n\nMODEL_PATH = kagglehub.model_download(\"google/vaultgemma/transformers/1b\")\ntokenizer = AutoTokenizer.from_pretrained(MODEL_PATH)\nmodel = AutoModelForCausalLM.from_pretrained(MODEL_PATH, device_map=\"auto\", dtype=\"auto\")\n\ntext = \"Tell me an unknown interesting biology fact about the brain.\"\ninput_ids = tokenizer(text, return_tensors=\"pt\").to(model.device)\n\noutputs = model.generate(**input_ids, max_new_tokens=256)\nprint(tokenizer.decode(outputs[0]))\n```",
+          "versionId": 571373,
+          "versionNumber": 1,
+          "url": "https://www.kaggle.com/models/google/vaultgemma/Transformers/1b",
+          "licenseName": "Gemma",
+          "totalUncompressedBytes": 2082458705
+        }
+      ],
+      "tags": [
+        {
+          "ref": "text generation",
+          "name": "text generation",
+          "description": "",
+          "fullPath": "task > text-generation",
+          "competitionCount": 23,
+          "datasetCount": 426,
+          "scriptCount": 550,
+          "totalCount": 999
+        },
+        {
+          "ref": "english",
+          "name": "english",
+          "description": "",
+          "fullPath": "language > english",
+          "competitionCount": 24,
+          "datasetCount": 3801,
+          "scriptCount": 1239,
+          "totalCount": 5064
+        }
+      ],
+      "provenanceSources": "* [VaultGemma Technical Report](https://services.google.com/fh/files/blogs/vaultgemma_tech_report.pdf)",
+      "url": "https://www.kaggle.com/models/google/vaultgemma",
+      "input_name": "VaultGemma",
+      "owner": "google"
+    }
+  ]
+}

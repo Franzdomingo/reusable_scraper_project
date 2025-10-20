@@ -1,0 +1,998 @@
+{
+  "models": [
+    {
+      "id": 10172,
+      "ref": "keras/mistral",
+      "title": "Mistral",
+      "subtitle": "MistralAI's 7-billion parameter LLM",
+      "author": "Keras",
+      "slug": "mistral",
+      "description": "Mistral is a set of large language models published by the Mistral AI team. Both pretrained and instruction tuned models are available with 7 billion parameters. See the model card below for benchmarks, data sources, and intended use cases.\n\nBoth weights and Keras model code is released under the [Apache 2 License](https://github.com/keras-team/keras-hub/blob/master/LICENSE).\n\n## Links\n\n* [Mistral 2 Quickstart Notebook](https://www.kaggle.com/code/laxmareddypatlolla/mistral-quickstart)\n* [Mistral 2 API Documentation](https://keras.io/api/keras_hub/models/mistral/)\n* [Mistral 2 Model Card](https://huggingface.co/mistralai/Mistral-7B-v0.1)\n* [KerasHub Beginner Guide](https://keras.io/guides/keras_hub/getting_started/)\n* [KerasHub Model Publishing Guide](https://keras.io/guides/keras_hub/upload/)\n\n## Installation\n\nKeras and KerasHub can be installed with:\n\n```\npip install -U -q keras-hub\npip install -U -q keras\n```\n\nJax, TensorFlow, and Torch come preinstalled in Kaggle Notebooks. For instructions on installing them in another environment see the [Keras Getting Started](https://keras.io/getting_started/) page.\n\n## Presets\n\nThe following model checkpoints are provided by the Keras team. Full code examples for each are available below.\n\n| Preset name           | Parameters | Description   |\n|-----------------------|------------|---------------|\n|` mistral_7b_en`          | 7.24B      | 7B base model |\n| `mistral_instruct_7b_en ` | \t7.24B      | 7B instruction-tuned model |\n| `mistral_0.2_instruct_7b_en ` | \t7.24B      | 7B instruction-tuned model version 0.2 |\n\n## Prompts\n\nMistral \"instruct\" models are instruction tuned on turn by turn conversations and should be prompted with examples that precisely match the training data. Specifically, you must alternate user and assistant turns that begin and end with special tokens. See the following for an example:\n\n```python\nprompt = \"\"\"[INST] Hello! [/INST] Hello! How are you? [INST] I'm great. Could you help me with a task? [/INST]\n\"\"\"\n```\n\nBase models (without instruct in the name) have no specific prompting structure, and should usually be fine-tuned for a specific task.",
+      "instances": [
+        {
+          "id": 16724,
+          "slug": "mistral_0.2_instruct_7b_en",
+          "framework": "keras",
+          "fineTunable": true,
+          "overview": "Mistral 7B V0.2 Instruct model. This variant can be used to create chatbots.",
+          "usage": "```python\nimport keras\nimport keras_hub\nimport numpy as np\n```\n\nUse `generate()` to do text generation.\n```python\nmistral_lm = keras_hub.models.MistralCausalLM.from_preset(\"${VARIATION_SLUG}\", dtype=\"bfloat16\")\nmistral_lm.generate(\"[INST] What is Keras? [/INST]\", max_length=500)\n\n# Generate with batched prompts.\nmistral_lm.generate([\"[INST] What is Keras? [/INST]\", \"[INST] Give me your best brownie recipe. [/INST]\"], max_length=500)\n```\n\nCompile the `generate()` function with a custom sampler.\n```python\nmistral_lm = keras_hub.models.MistralCausalLM.from_preset(\"${VARIATION_SLUG}\", dtype=\"bfloat16\")\nmistral_lm.compile(sampler=\"greedy\")\nmistral_lm.generate(\"I want to say\", max_length=30)\n\nmistral_lm.compile(sampler=keras_hub.samplers.BeamSampler(num_beams=2))\nmistral_lm.generate(\"I want to say\", max_length=30)\n```\n\nUse `generate()` without preprocessing.\n```python\nprompt = {\n    # `1` maps to the start token followed by \"I want to say\".\n    \"token_ids\": np.array([[1, 315, 947, 298, 1315, 0, 0, 0, 0, 0]] * 2),\n    # Use `\"padding_mask\"` to indicate values that should not be overridden.\n    \"padding_mask\": np.array([[1, 1, 1, 1, 1, 0, 0, 0, 0, 0]] * 2),\n}\n\nmistral_lm = keras_hub.models.MistralCausalLM.from_preset(\n    \"${VARIATION_SLUG}\",\n    preprocessor=None,\n    dtype=\"bfloat16\"\n)\nmistral_lm.generate(prompt)\n```\n\nCall `fit()` on a single batch.\n```python\nfeatures = [\"The quick brown fox jumped.\", \"I forgot my homework.\"]\nmistral_lm = keras_hub.models.MistralCausalLM.from_preset(\"${VARIATION_SLUG}\", dtype=\"bfloat16\")\nmistral_lm.fit(x=features, batch_size=2)\n```\n\nCall `fit()` without preprocessing.\n```python\nx = {\n    \"token_ids\": np.array([[1, 315, 947, 298, 1315, 369, 315, 837, 0, 0]] * 2),\n    \"padding_mask\": np.array([[1, 1, 1, 1, 1, 1, 1, 1, 0, 0]] * 2),\n}\ny = np.array([[315, 947, 298, 1315, 369, 315, 837, 0, 0, 0]] * 2)\nsw = np.array([[1, 1, 1, 1, 1, 1, 1, 0, 0, 0]] * 2)\n\nmistral_lm = keras_hub.models.MistralCausalLM.from_preset(\n    \"${VARIATION_SLUG}\",\n    preprocessor=None,\n    dtype=\"bfloat16\"\n)\nmistral_lm.fit(x=x, y=y, sample_weight=sw, batch_size=2)\n```",
+          "downloadUrl": "/models/keras/mistral/Keras/mistral_0.2_instruct_7b_en/3/download",
+          "versionId": 406506,
+          "versionNumber": 3,
+          "url": "https://www.kaggle.com/models/keras/mistral/Keras/mistral_0.2_instruct_7b_en",
+          "licenseName": "Apache 2.0",
+          "modelInstanceType": "base_model",
+          "totalUncompressedBytes": 14485108334
+        },
+        {
+          "id": 360463,
+          "slug": "mistral_0.3_7b_en",
+          "framework": "keras",
+          "usage": "```python\nimport keras\nimport keras_hub\nimport numpy as np\n```\n\nUse `generate()` to do text generation.\n```python\nmistral_lm = keras_hub.models.MistralCausalLM.from_preset(\"${VARIATION_SLUG}\", dtype=\"bfloat16\")\nmistral_lm.generate(\"Keras is a\", max_length=30)\n\n# Generate with batched prompts.\nmistral_lm.generate([\"Keras is a\", \"I want to say\"], max_length=30)\n```\n\nCompile the `generate()` function with a custom sampler.\n```python\nmistral_lm = keras_hub.models.MistralCausalLM.from_preset(\"${VARIATION_SLUG}\", dtype=\"bfloat16\")\nmistral_lm.compile(sampler=\"greedy\")\nmistral_lm.generate(\"I want to say\", max_length=30)\n\nmistral_lm.compile(sampler=keras_hub.samplers.BeamSampler(num_beams=2))\nmistral_lm.generate(\"I want to say\", max_length=30)\n```\n\nUse `generate()` without preprocessing.\n```python\nprompt = {\n    # `1` maps to the start token followed by \"I want to say\".\n    \"token_ids\": np.array([[1, 315, 947, 298, 1315, 0, 0, 0, 0, 0]] * 2),\n    # Use `\"padding_mask\"` to indicate values that should not be overridden.\n    \"padding_mask\": np.array([[1, 1, 1, 1, 1, 0, 0, 0, 0, 0]] * 2),\n}\n\nmistral_lm = keras_hub.models.MistralCausalLM.from_preset(\n    \"${VARIATION_SLUG}\",\n    preprocessor=None,\n    dtype=\"bfloat16\"\n)\nmistral_lm.generate(prompt)\n```\n\nCall `fit()` on a single batch.\n```python\nfeatures = [\"The quick brown fox jumped.\", \"I forgot my homework.\"]\nmistral_lm = keras_hub.models.MistralCausalLM.from_preset(\"${VARIATION_SLUG}\", dtype=\"bfloat16\")\nmistral_lm.fit(x=features, batch_size=2)\n```\n\nCall `fit()` without preprocessing.\n```python\nx = {\n    \"token_ids\": np.array([[1, 315, 947, 298, 1315, 369, 315, 837, 0, 0]] * 2),\n    \"padding_mask\": np.array([[1, 1, 1, 1, 1, 1, 1, 1, 0, 0]] * 2),\n}\ny = np.array([[315, 947, 298, 1315, 369, 315, 837, 0, 0, 0]] * 2)\nsw = np.array([[1, 1, 1, 1, 1, 1, 1, 0, 0, 0]] * 2)\n\nmistral_lm = keras_hub.models.MistralCausalLM.from_preset(\n    \"${VARIATION_SLUG}\",\n    preprocessor=None,\n    dtype=\"bfloat16\"\n)\nmistral_lm.fit(x=x, y=y, sample_weight=sw, batch_size=2)\n```",
+          "downloadUrl": "/models/keras/mistral/Keras/mistral_0.3_7b_en/1/download",
+          "versionId": 443991,
+          "versionNumber": 1,
+          "url": "https://www.kaggle.com/models/keras/mistral/Keras/mistral_0.3_7b_en",
+          "licenseName": "Apache 2.0",
+          "totalUncompressedBytes": 14497781106
+        },
+        {
+          "id": 360475,
+          "slug": "mistral_0.3_instruct_7b_en",
+          "framework": "keras",
+          "usage": "```python\nimport keras\nimport keras_hub\nimport numpy as np\n```\n\nUse `generate()` to do text generation.\n```python\nmistral_lm = keras_hub.models.MistralCausalLM.from_preset(\"${VARIATION_SLUG}\", dtype=\"bfloat16\")\nmistral_lm.generate(\"[INST] What is Keras? [/INST]\", max_length=500)\n\n# Generate with batched prompts.\nmistral_lm.generate([\"[INST] What is Keras? [/INST]\", \"[INST] Give me your best brownie recipe. [/INST]\"], max_length=500)\n```\n\nCompile the `generate()` function with a custom sampler.\n```python\nmistral_lm = keras_hub.models.MistralCausalLM.from_preset(\"${VARIATION_SLUG}\", dtype=\"bfloat16\")\nmistral_lm.compile(sampler=\"greedy\")\nmistral_lm.generate(\"I want to say\", max_length=30)\n\nmistral_lm.compile(sampler=keras_hub.samplers.BeamSampler(num_beams=2))\nmistral_lm.generate(\"I want to say\", max_length=30)\n```\n\nUse `generate()` without preprocessing.\n```python\nprompt = {\n    # `1` maps to the start token followed by \"I want to say\".\n    \"token_ids\": np.array([[1, 315, 947, 298, 1315, 0, 0, 0, 0, 0]] * 2),\n    # Use `\"padding_mask\"` to indicate values that should not be overridden.\n    \"padding_mask\": np.array([[1, 1, 1, 1, 1, 0, 0, 0, 0, 0]] * 2),\n}\n\nmistral_lm = keras_hub.models.MistralCausalLM.from_preset(\n    \"${VARIATION_SLUG}\",\n    preprocessor=None,\n    dtype=\"bfloat16\"\n)\nmistral_lm.generate(prompt)\n```\n\nCall `fit()` on a single batch.\n```python\nfeatures = [\"The quick brown fox jumped.\", \"I forgot my homework.\"]\nmistral_lm = keras_hub.models.MistralCausalLM.from_preset(\"${VARIATION_SLUG}\", dtype=\"bfloat16\")\nmistral_lm.fit(x=features, batch_size=2)\n```\n\nCall `fit()` without preprocessing.\n```python\nx = {\n    \"token_ids\": np.array([[1, 315, 947, 298, 1315, 369, 315, 837, 0, 0]] * 2),\n    \"padding_mask\": np.array([[1, 1, 1, 1, 1, 1, 1, 1, 0, 0]] * 2),\n}\ny = np.array([[315, 947, 298, 1315, 369, 315, 837, 0, 0, 0]] * 2)\nsw = np.array([[1, 1, 1, 1, 1, 1, 1, 0, 0, 0]] * 2)\n\nmistral_lm = keras_hub.models.MistralCausalLM.from_preset(\n    \"${VARIATION_SLUG}\",\n    preprocessor=None,\n    dtype=\"bfloat16\"\n)\nmistral_lm.fit(x=x, y=y, sample_weight=sw, batch_size=2)\n```",
+          "downloadUrl": "/models/keras/mistral/Keras/mistral_0.3_instruct_7b_en/1/download",
+          "versionId": 444003,
+          "versionNumber": 1,
+          "url": "https://www.kaggle.com/models/keras/mistral/Keras/mistral_0.3_instruct_7b_en",
+          "licenseName": "Apache 2.0",
+          "totalUncompressedBytes": 14497781106
+        },
+        {
+          "id": 8386,
+          "slug": "mistral_7b_en",
+          "framework": "keras",
+          "fineTunable": true,
+          "overview": "Mistral 7B V0.1 model.",
+          "usage": "```python\nimport keras\nimport keras_hub\nimport numpy as np\n```\n\nUse `generate()` to do text generation.\n```python\nmistral_lm = keras_hub.models.MistralCausalLM.from_preset(\"${VARIATION_SLUG}\", dtype=\"bfloat16\")\nmistral_lm.generate(\"Keras is a\", max_length=30)\n\n# Generate with batched prompts.\nmistral_lm.generate([\"Keras is a\", \"I want to say\"], max_length=30)\n```\n\nCompile the `generate()` function with a custom sampler.\n```python\nmistral_lm = keras_hub.models.MistralCausalLM.from_preset(\"${VARIATION_SLUG}\", dtype=\"bfloat16\")\nmistral_lm.compile(sampler=\"greedy\")\nmistral_lm.generate(\"I want to say\", max_length=30)\n\nmistral_lm.compile(sampler=keras_hub.samplers.BeamSampler(num_beams=2))\nmistral_lm.generate(\"I want to say\", max_length=30)\n```\n\nUse `generate()` without preprocessing.\n```python\nprompt = {\n    # `1` maps to the start token followed by \"I want to say\".\n    \"token_ids\": np.array([[1, 315, 947, 298, 1315, 0, 0, 0, 0, 0]] * 2),\n    # Use `\"padding_mask\"` to indicate values that should not be overridden.\n    \"padding_mask\": np.array([[1, 1, 1, 1, 1, 0, 0, 0, 0, 0]] * 2),\n}\n\nmistral_lm = keras_hub.models.MistralCausalLM.from_preset(\n    \"${VARIATION_SLUG}\",\n    preprocessor=None,\n    dtype=\"bfloat16\"\n)\nmistral_lm.generate(prompt)\n```\n\nCall `fit()` on a single batch.\n```python\nfeatures = [\"The quick brown fox jumped.\", \"I forgot my homework.\"]\nmistral_lm = keras_hub.models.MistralCausalLM.from_preset(\"${VARIATION_SLUG}\", dtype=\"bfloat16\")\nmistral_lm.fit(x=features, batch_size=2)\n```\n\nCall `fit()` without preprocessing.\n```python\nx = {\n    \"token_ids\": np.array([[1, 315, 947, 298, 1315, 369, 315, 837, 0, 0]] * 2),\n    \"padding_mask\": np.array([[1, 1, 1, 1, 1, 1, 1, 1, 0, 0]] * 2),\n}\ny = np.array([[315, 947, 298, 1315, 369, 315, 837, 0, 0, 0]] * 2)\nsw = np.array([[1, 1, 1, 1, 1, 1, 1, 0, 0, 0]] * 2)\n\nmistral_lm = keras_hub.models.MistralCausalLM.from_preset(\n    \"${VARIATION_SLUG}\",\n    preprocessor=None,\n    dtype=\"bfloat16\"\n)\nmistral_lm.fit(x=x, y=y, sample_weight=sw, batch_size=2)\n```",
+          "downloadUrl": "/models/keras/mistral/Keras/mistral_7b_en/8/download",
+          "versionId": 406335,
+          "versionNumber": 8,
+          "url": "https://www.kaggle.com/models/keras/mistral/Keras/mistral_7b_en",
+          "licenseName": "Apache 2.0",
+          "modelInstanceType": "base_model",
+          "totalUncompressedBytes": 14485108355
+        },
+        {
+          "id": 8388,
+          "slug": "mistral_instruct_7b_en",
+          "framework": "keras",
+          "fineTunable": true,
+          "overview": "Mistral 7B V0.1 Instruct model. This variant can be used to create chatbots.",
+          "usage": "```python\nimport keras\nimport keras_hub\nimport numpy as np\n```\n\nUse `generate()` to do text generation.\n```python\nmistral_lm = keras_hub.models.MistralCausalLM.from_preset(\"${VARIATION_SLUG}\", dtype=\"bfloat16\")\nmistral_lm.generate(\"[INST] What is Keras? [/INST]\", max_length=500)\n\n# Generate with batched prompts.\nmistral_lm.generate([\"[INST] What is Keras? [/INST]\", \"[INST] Give me your best brownie recipe. [/INST]\"], max_length=500)\n```\n\nCompile the `generate()` function with a custom sampler.\n```python\nmistral_lm = keras_hub.models.MistralCausalLM.from_preset(\"${VARIATION_SLUG}\", dtype=\"bfloat16\")\nmistral_lm.compile(sampler=\"greedy\")\nmistral_lm.generate(\"I want to say\", max_length=30)\n\nmistral_lm.compile(sampler=keras_hub.samplers.BeamSampler(num_beams=2))\nmistral_lm.generate(\"I want to say\", max_length=30)\n```\n\nUse `generate()` without preprocessing.\n```python\nprompt = {\n    # `1` maps to the start token followed by \"I want to say\".\n    \"token_ids\": np.array([[1, 315, 947, 298, 1315, 0, 0, 0, 0, 0]] * 2),\n    # Use `\"padding_mask\"` to indicate values that should not be overridden.\n    \"padding_mask\": np.array([[1, 1, 1, 1, 1, 0, 0, 0, 0, 0]] * 2),\n}\n\nmistral_lm = keras_hub.models.MistralCausalLM.from_preset(\n    \"${VARIATION_SLUG}\",\n    preprocessor=None,\n    dtype=\"bfloat16\"\n)\nmistral_lm.generate(prompt)\n```\n\nCall `fit()` on a single batch.\n```python\nfeatures = [\"The quick brown fox jumped.\", \"I forgot my homework.\"]\nmistral_lm = keras_hub.models.MistralCausalLM.from_preset(\"${VARIATION_SLUG}\", dtype=\"bfloat16\")\nmistral_lm.fit(x=features, batch_size=2)\n```\n\nCall `fit()` without preprocessing.\n```python\nx = {\n    \"token_ids\": np.array([[1, 315, 947, 298, 1315, 369, 315, 837, 0, 0]] * 2),\n    \"padding_mask\": np.array([[1, 1, 1, 1, 1, 1, 1, 1, 0, 0]] * 2),\n}\ny = np.array([[315, 947, 298, 1315, 369, 315, 837, 0, 0, 0]] * 2)\nsw = np.array([[1, 1, 1, 1, 1, 1, 1, 0, 0, 0]] * 2)\n\nmistral_lm = keras_hub.models.MistralCausalLM.from_preset(\n    \"${VARIATION_SLUG}\",\n    preprocessor=None,\n    dtype=\"bfloat16\"\n)\nmistral_lm.fit(x=x, y=y, sample_weight=sw, batch_size=2)\n```",
+          "downloadUrl": "/models/keras/mistral/Keras/mistral_instruct_7b_en/8/download",
+          "versionId": 406451,
+          "versionNumber": 8,
+          "url": "https://www.kaggle.com/models/keras/mistral/Keras/mistral_instruct_7b_en",
+          "licenseName": "Apache 2.0",
+          "modelInstanceType": "base_model",
+          "totalUncompressedBytes": 14485108330
+        }
+      ],
+      "tags": [
+        {
+          "ref": "text generation",
+          "name": "text generation",
+          "description": "",
+          "fullPath": "task > text-generation",
+          "competitionCount": 23,
+          "datasetCount": 426,
+          "scriptCount": 550,
+          "totalCount": 999
+        },
+        {
+          "ref": "text conversation",
+          "name": "text conversation",
+          "description": "",
+          "fullPath": "task > text-conversation",
+          "competitionCount": 5,
+          "datasetCount": 83,
+          "scriptCount": 38,
+          "totalCount": 126
+        },
+        {
+          "ref": "english",
+          "name": "english",
+          "description": "",
+          "fullPath": "language > english",
+          "competitionCount": 24,
+          "datasetCount": 3801,
+          "scriptCount": 1239,
+          "totalCount": 5064
+        }
+      ],
+      "provenanceSources": "https://mistral.ai/news/announcing-mistral-7b/",
+      "url": "https://www.kaggle.com/models/keras/mistral"
+    },
+    {
+      "id": 10192,
+      "ref": "cohereforai/aya",
+      "title": "aya",
+      "subtitle": "Aya is an open science project that aims to build a state of art multilingual generative language model; that harnesses the collective wisdom and contributions of people from all over the world.",
+      "author": "CohereForAI",
+      "slug": "aya",
+      "description": "Datasets are foundational to many breakthroughs in modern artificial intelligence. Many recent achievements in the space of natural language processing (NLP) can be attributed to the finetuning of pre-trained models on a diverse set of tasks that enables a large language model (LLM) to respond to instructions. Instruction fine-tuning (IFT) requires specifically constructed and annotated datasets. However, existing datasets are almost all in the English language. In this work, our primary goal is to bridge the language gap by building a human-curated instruction-following dataset spanning 65 languages. We worked with fluent speakers of languages from around the world to collect natural instances of instructions and completions. Furthermore, we create the most extensive multilingual collection to date, comprising 513 million instances through templating and translating existing datasets across 114 languages. In total, we contribute four key resources: we develop and open-source the Aya Annotation Platform, the Aya Dataset, the Aya Collection, and the Aya Evaluation Suite. The Aya initiative also serves as a valuable case study in participatory research, involving collaborators from 119 countries. We see this as a valuable framework for future research collaborations that aim to bridge gaps in resources.\n\n- Source: https://arxiv.org/abs/2402.06619",
+      "instances": [
+        {
+          "id": 8356,
+          "slug": "101",
+          "framework": "transformers",
+          "fineTunable": true,
+          "overview": "https://huggingface.co/CohereForAI/aya-101",
+          "usage": "![](https://www.googleapis.com/download/storage/v1/b/kaggle-user-content/o/inbox%2F3452640%2F84150abfe85531db181db886fe3b8668%2Faya-fig1.png?generation=1708536823652650&alt=media)\n\n## Model Summary\n\nThe Aya model is a massively multilingual generative language model that follows instructions in 101 languages.\nAya outperforms [mT0](https://huggingface.co/bigscience/mt0-xxl) and [BLOOMZ](https://huggingface.co/bigscience/bloomz) a wide variety of automatic and human evaluations despite covering double the number of languages.\nThe Aya model is trained using [xP3x](https://huggingface.co/datasets/CohereForAI/xP3x), [Aya Dataset](https://huggingface.co/datasets/CohereForAI/aya_dataset), [Aya Collection](https://huggingface.co/datasets/CohereForAI/aya_collection), a subset of [DataProvenance collection](https://huggingface.co/datasets/DataProvenanceInitiative/Commercially-Verified-Licenses) and ShareGPT-Command.\nWe release the checkpoints under a Apache-2.0 license to further our mission of multilingual technologies empowering a\nmultilingual world.\n\n- **Developed by:** [Cohere For AI]((https://cohere.for.ai))\n- **Model type:** a Transformer style autoregressive massively multilingual language model.\n- **Paper**: [Aya Model: An Instruction Finetuned Open-Access Multilingual Language Model](https://arxiv.org/abs/2402.07827)\n- **Point of Contact**: Cohere For AI: [cohere.for.ai](https://cohere.for.ai)\n- **Languages**: Refer to the list of languages in the `language` section of this model card.\n- **License**: Apache-2.0\n- **Model**: [Aya-101](https://www.kaggle.com/models/cohereforai/aya)\n- **Model Size**: 13 billion parameters\n- **Datasets**: [xP3x](https://huggingface.co/datasets/CohereForAI/xP3x), [Aya Dataset](https://huggingface.co/datasets/CohereForAI/aya_dataset), [Aya Collection](https://huggingface.co/datasets/CohereForAI/aya_collection), [DataProvenance collection](https://huggingface.co/datasets/DataProvenanceInitiative/Commercially-Verified-Licenses), ShareGPT-Command.\n\n## Use\n\n```python\nfrom transformers import AutoModelForSeq2SeqLM, AutoTokenizer\n\ntokenizer = AutoTokenizer.from_pretrained('/kaggle/input/aya/transformers/101/1')\naya_model = AutoModelForSeq2SeqLM.from_pretrained('/kaggle/input/aya/transformers/101/1')\n\n# Turkish to English translation\ntur_inputs = tokenizer.encode(\"Translate to English: Aya cok dilli bir dil modelidir.\", return_tensors=\"pt\")\ntur_outputs = aya_model.generate(tur_inputs, max_new_tokens=128)\nprint(tokenizer.decode(tur_outputs[0]))\n# Aya is a multi-lingual language model\n\n# Q: Why are there so many languages in India?\nhin_inputs = tokenizer.encode(\"भारत में इतनी सारी भाषाएँ क्यों हैं?\", return_tensors=\"pt\")\nhin_outputs = aya_model.generate(hin_inputs, max_new_tokens=128)\nprint(tokenizer.decode(hin_outputs[0]))\n# Expected output: भारत में कई भाषाएँ हैं और विभिन्न भाषाओं के बोली जाने वाले लोग हैं। यह विभिन्नता भाषाई विविधता और सांस्कृतिक विविधता का परिणाम है। Translates to \"India has many languages and people speaking different languages. This diversity is the result of linguistic diversity and cultural diversity.\"\n\n```\n\n## Model Details\n\n### Finetuning\n\n- Architecture: Same as [mt5-xxl](https://huggingface.co/google/mt5-xxl)\n- Number of Samples seen during Finetuning: 25M\n- Batch size: 256\n- Hardware: TPUv4-128\n- Software: T5X, Jax\n\n### Data Sources\n\nThe Aya model is trained on the following datasets:\n\n- [xP3x](https://huggingface.co/datasets/CohereForAI/xP3x)\n- [Aya Dataset](https://huggingface.co/datasets/CohereForAI/aya_dataset)\n- [Aya Collection](https://huggingface.co/datasets/CohereForAI/aya_collection)\n- [DataProvenance collection](https://huggingface.co/datasets/DataProvenanceInitiative/Commercially-Verified-Licenses)\n- ShareGPT-Command\n\nAll datasets are subset to the 101 languages supported by [mT5](https://huggingface.co/google/mt5-xxl). See the [paper](https://arxiv.org/abs/2402.07827) for details about filtering and pruning.\n\n## Evaluation\n\nWe refer to Section 5 from our paper for multilingual eval across 99 languages – including discriminative and generative tasks, human evaluation, and simulated win rates that cover both held-out tasks and in-distribution performance.\n\n## Bias, Risks, and Limitations\n\n\nFor a detailed overview of our effort at safety mitigation and benchmarking toxicity and bias across multiple languages, we refer to Sections 6 and 7 of our paper: [Aya Model: An Instruction Finetuned Open-Access Multilingual Language Model](https://arxiv.org/abs/2402.07827).\n\nWe hope that the release of the Aya model will make community-based redteaming efforts possible, by exposing an open-source massively-multilingual model for community research.\n\n## Citation\n\n**BibTeX:**\n\n```\n@article{üstün2024aya,\n  title={Aya Model: An Instruction Finetuned Open-Access Multilingual Language Model},\n  author={Ahmet Üstün and Viraat Aryabumi and Zheng-Xin Yong and Wei-Yin Ko and Daniel D'souza and Gbemileke Onilude and Neel Bhandari and Shivalika Singh and Hui-Lee Ooi and Amr Kayid and Freddie Vargus and Phil Blunsom and Shayne Longpre and Niklas Muennighoff and Marzieh Fadaee and Julia Kreutzer and Sara Hooker},\n  journal={arXiv preprint arXiv:2402.07827},\n  year={2024}\n}\n```\n\n## Languages Covered\n\nBelow is the list of languages used in finetuning the Aya Model. We group languages into higher-, mid-, and lower-resourcedness based on a language classification by [Joshi et. al, 2020](https://microsoft.github.io/linguisticdiversity/). For further details, we refer to our [paper](https://arxiv.org/abs/2402.07827)\n\n| ISO Code | Language Name   |    Script    |     Family      |    Subgrouping    | Resourcedness |\n| :------- | :-------------- | :----------: | :-------------: | :---------------: | :-----------: |\n| afr      | Afrikaans       |    Latin     |  Indo-European  |     Germanic      |      Mid      |\n| amh      | Amharic         |    Ge'ez     |  Afro-Asiatic   |      Semitic      |      Low      |\n| ara      | Arabic          |    Arabic    |  Afro-Asiatic   |      Semitic      |     High      |\n| aze      | Azerbaijani     | Arabic/Latin |     Turkic      |   Common Turkic   |      Low      |\n| bel      | Belarusian      |   Cyrillic   |  Indo-European  |   Balto-Slavic    |      Mid      |\n| ben      | Bengali         |   Bengali    |  Indo-European  |    Indo-Aryan     |      Mid      |\n| bul      | Bulgarian       |   Cyrillic   |  Indo-European  |   Balto-Slavic    |      Mid      |\n| cat      | Catalan         |    Latin     |  Indo-European  |      Italic       |     High      |\n| ceb      | Cebuano         |    Latin     |  Austronesian   | Malayo-Polynesian |      Mid      |\n| ces      | Czech           |    Latin     |  Indo-European  |   Balto-Slavic    |     High      |\n| cym      | Welsh           |    Latin     |  Indo-European  |      Celtic       |      Low      |\n| dan      | Danish          |    Latin     |  Indo-European  |     Germanic      |      Mid      |\n| deu      | German          |    Latin     |  Indo-European  |     Germanic      |     High      |\n| ell      | Greek           |    Greek     |  Indo-European  |  Graeco-Phrygian  |      Mid      |\n| eng      | English         |    Latin     |  Indo-European  |     Germanic      |     High      |\n| epo      | Esperanto       |    Latin     |   Constructed   |    Esperantic     |      Low      |\n| est      | Estonian        |    Latin     |     Uralic      |      Finnic       |      Mid      |\n| eus      | Basque          |    Latin     |     Basque      |         -         |     High      |\n| fin      | Finnish         |    Latin     |     Uralic      |      Finnic       |     High      |\n| fil      | Tagalog         |    Latin     |  Austronesian   | Malayo-Polynesian |      Mid      |\n| fra      | French          |    Latin     |  Indo-European  |      Italic       |     High      |\n| fry      | Western Frisian |    Latin     |  Indo-European  |     Germanic      |      Low      |\n| gla      | Scottish Gaelic |    Latin     |  Indo-European  |      Celtic       |      Low      |\n| gle      | Irish           |    Latin     |  Indo-European  |      Celtic       |      Low      |\n| glg      | Galician        |    Latin     |  Indo-European  |      Italic       |      Mid      |\n| guj      | Gujarati        |   Gujarati   |  Indo-European  |    Indo-Aryan     |      Low      |\n| hat      | Haitian Creole  |    Latin     |  Indo-European  |      Italic       |      Low      |\n| hau      | Hausa           |    Latin     |  Afro-Asiatic   |      Chadic       |      Low      |\n| heb      | Hebrew          |    Hebrew    |  Afro-Asiatic   |      Semitic      |      Mid      |\n| hin      | Hindi           |  Devanagari  |  Indo-European  |    Indo-Aryan     |     High      |\n| hun      | Hungarian       |    Latin     |     Uralic      |         -         |     High      |\n| hye      | Armenian        |   Armenian   |  Indo-European  |      Armenic      |      Low      |\n| ibo      | Igbo            |    Latin     | Atlantic-Congo  |    Benue-Congo    |      Low      |\n| ind      | Indonesian      |    Latin     |  Austronesian   | Malayo-Polynesian |      Mid      |\n| isl      | Icelandic       |    Latin     |  Indo-European  |     Germanic      |      Low      |\n| ita      | Italian         |    Latin     |  Indo-European  |      Italic       |     High      |\n| jav      | Javanese        |    Latin     |  Austronesian   | Malayo-Polynesian |      Low      |\n| jpn      | Japanese        |   Japanese   |     Japonic     |     Japanesic     |     High      |\n| kan      | Kannada         |   Kannada    |    Dravidian    |  South Dravidian  |      Low      |\n| kat      | Georgian        |   Georgian   |   Kartvelian    |   Georgian-Zan    |      Mid      |\n| kaz      | Kazakh          |   Cyrillic   |     Turkic      |   Common Turkic   |      Mid      |\n| khm      | Khmer           |    Khmer     |  Austroasiatic  |      Khmeric      |      Low      |\n| kir      | Kyrgyz          |   Cyrillic   |     Turkic      |   Common Turkic   |      Low      |\n| kor      | Korean          |    Hangul    |    Koreanic     |      Korean       |     High      |\n| kur      | Kurdish         |    Latin     |  Indo-European  |      Iranian      |      Low      |\n| lao      | Lao             |     Lao      |    Tai-Kadai    |      Kam-Tai      |      Low      |\n| lav      | Latvian         |    Latin     |  Indo-European  |   Balto-Slavic    |      Mid      |\n| lat      | Latin           |    Latin     |  Indo-European  |      Italic       |      Mid      |\n| lit      | Lithuanian      |    Latin     |  Indo-European  |   Balto-Slavic    |      Mid      |\n| ltz      | Luxembourgish   |    Latin     |  Indo-European  |     Germanic      |      Low      |\n| mal      | Malayalam       |  Malayalam   |    Dravidian    |  South Dravidian  |      Low      |\n| mar      | Marathi         |  Devanagari  |  Indo-European  |    Indo-Aryan     |      Low      |\n| mkd      | Macedonian      |   Cyrillic   |  Indo-European  |   Balto-Slavic    |      Low      |\n| mlg      | Malagasy        |    Latin     |  Austronesian   | Malayo-Polynesian |      Low      |\n| mlt      | Maltese         |    Latin     |  Afro-Asiatic   |      Semitic      |      Low      |\n| mon      | Mongolian       |   Cyrillic   | Mongolic-Khitan |     Mongolic      |      Low      |\n| mri      | Maori           |    Latin     |  Austronesian   | Malayo-Polynesian |      Low      |\n| msa      | Malay           |    Latin     |  Austronesian   | Malayo-Polynesian |      Mid      |\n| mya      | Burmese         |   Myanmar    |  Sino-Tibetan   |   Burmo-Qiangic   |      Low      |\n| nep      | Nepali          |  Devanagari  |  Indo-European  |    Indo-Aryan     |      Low      |\n| nld      | Dutch           |    Latin     |  Indo-European  |     Germanic      |     High      |\n| nor      | Norwegian       |    Latin     |  Indo-European  |     Germanic      |      Low      |\n| nso      | Northern Sotho  |    Latin     | Atlantic-Congo  |    Benue-Congo    |      Low      |\n| nya      | Chichewa        |    Latin     | Atlantic-Congo  |    Benue-Congo    |      Low      |\n| ory      | Oriya           |    Oriya     |  Indo-European  |    Indo-Aryan     |      Low      |\n| pan      | Punjabi         |   Gurmukhi   |  Indo-European  |    Indo-Aryan     |      Low      |\n| pes      | Persian         |    Arabic    |  Indo-European  |      Iranian      |     High      |\n| pol      | Polish          |    Latin     |  Indo-European  |   Balto-Slavic    |     High      |\n| por      | Portuguese      |    Latin     |  Indo-European  |      Italic       |     High      |\n| pus      | Pashto          |    Arabic    |  Indo-European  |      Iranian      |      Low      |\n| ron      | Romanian        |    Latin     |  Indo-European  |      Italic       |      Mid      |\n| rus      | Russian         |   Cyrillic   |  Indo-European  |   Balto-Slavic    |     High      |\n| sin      | Sinhala         |   Sinhala    |  Indo-European  |    Indo-Aryan     |      Low      |\n| slk      | Slovak          |    Latin     |  Indo-European  |   Balto-Slavic    |      Mid      |\n| slv      | Slovenian       |    Latin     |  Indo-European  |   Balto-Slavic    |      Mid      |\n| smo      | Samoan          |    Latin     |  Austronesian   | Malayo-Polynesian |      Low      |\n| sna      | Shona           |    Latin     |  Indo-European  |    Indo-Aryan     |      Low      |\n| snd      | Sindhi          |    Arabic    |  Indo-European  |    Indo-Aryan     |      Low      |\n| som      | Somali          |    Latin     |  Afro-Asiatic   |     Cushitic      |      Low      |\n| sot      | Southern Sotho  |    Latin     | Atlantic-Congo  |    Benue-Congo    |      Low      |\n| spa      | Spanish         |    Latin     |  Indo-European  |      Italic       |     High      |\n| sqi      | Albanian        |    Latin     |  Indo-European  |     Albanian      |      Low      |\n| srp      | Serbian         |   Cyrillic   |  Indo-European  |   Balto-Slavic    |     High      |\n| sun      | Sundanese       |    Latin     |  Austronesian   | Malayo-Polynesian |      Low      |\n| swa      | Swahili         |    Latin     | Atlantic-Congo  |    Benue-Congo    |      Low      |\n| swe      | Swedish         |    Latin     |  Indo-European  |     Germanic      |     High      |\n| tam      | Tamil           |    Tamil     |    Dravidian    |  South Dravidian  |      Mid      |\n| tel      | Telugu          |    Telugu    |    Dravidian    |  South Dravidian  |      Low      |\n| tgk      | Tajik           |   Cyrillic   |  Indo-European  |      Iranian      |      Low      |\n| tha      | Thai            |     Thai     |    Tai-Kadai    |      Kam-Tai      |      Mid      |\n| tur      | Turkish         |    Latin     |     Turkic      |   Common Turkic   |     High      |\n| twi      | Twi             |    Latin     | Atlantic-Congo  |    Niger-Congo    |      Low      |\n| ukr      | Ukrainian       |   Cyrillic   |  Indo-European  |   Balto-Slavic    |      Mid      |\n| urd      | Urdu            |    Arabic    |  Indo-European  |    Indo-Aryan     |      Mid      |\n| uzb      | Uzbek           |    Latin     |     Turkic      |   Common Turkic   |      Mid      |\n| vie      | Vietnamese      |    Latin     |  Austroasiatic  |      Vietic       |     High      |\n| xho      | Xhosa           |    Latin     | Atlantic-Congo  |    Benue-Congo    |      Low      |\n| yid      | Yiddish         |    Hebrew    |  Indo-European  |     Germanic      |      Low      |\n| yor      | Yoruba          |    Latin     | Atlantic-Congo  |    Benue-Congo    |      Low      |\n| zho      | Chinese         |     Han      |  Sino-Tibetan   |      Sinitic      |     High      |\n| zul      | Zulu            |    Latin     | Atlantic-Congo  |    Benue-Congo    |      Low      |",
+          "downloadUrl": "/models/cohereforai/aya/Transformers/101/1/download",
+          "versionId": 10285,
+          "versionNumber": 1,
+          "trainingData": [
+            "https://huggingface.co/CohereForAI/aya-101"
+          ],
+          "url": "https://www.kaggle.com/models/cohereforai/aya/Transformers/101",
+          "licenseName": "Apache 2.0",
+          "totalUncompressedBytes": 51701912568
+        }
+      ],
+      "tags": [
+        {
+          "ref": "nlp",
+          "name": "nlp",
+          "description": "Natural Language Processing gives a computer program the ability to extract meaning human language. Applications include sentiment analysis, translation, and speech recognition.",
+          "fullPath": "analysis > nlp",
+          "competitionCount": 111,
+          "datasetCount": 5175,
+          "scriptCount": 9167,
+          "totalCount": 14453
+        }
+      ],
+      "publishTime": "2024-02-13T00:00:00.000Z",
+      "provenanceSources": "- https://arxiv.org/abs/2402.07827\n- https://huggingface.co/CohereForAI/aya-101",
+      "url": "https://www.kaggle.com/models/cohereforai/aya"
+    },
+    {
+      "id": 16434,
+      "ref": "keras/falcon",
+      "title": "Falcon",
+      "subtitle": "Falcon: Advanced LLMs with Multigroup Attention and Rotary Positional Embeddings for Efficient Inference",
+      "author": "Keras",
+      "slug": "falcon",
+      "description": "# Model Summary\n\nFalcon-RW-1B is a 1B parameters causal decoder-only model built by [TII](https://www.tii.ae/) and trained on 350B tokens of [RefinedWeb](https://huggingface.co/datasets/tiiuae/falcon-refinedweb). The architecture of the model is adopted from the GPT-3 paper ([Brown et al., 2020](https://arxiv.org/abs/2005.14165)) but it uses ALiBi.\n\n## Links\n\n* [Falcon Quickstart Notebook](https://www.kaggle.com/code/laxmareddypatlolla/falcon-quickstart-notebook)\n* [Falcon API Documentation](https://keras.io/keras_hub/api/models/falcon/)\n* [Falcon Model Card](https://huggingface.co/docs/transformers/en/model_doc/falcon)\n* [KerasHub Beginner Guide](https://keras.io/guides/keras_hub/getting_started/)\n* [KerasHub Model Publishing Guide](https://keras.io/guides/keras_hub/upload/)\n\n## Presets\n\nThe following model checkpoints are provided by the Keras team. Full code examples for each are available below.\n| Preset name    | Parameters | Description                                      |\n|----------------|------------|--------------------------------------------------|\n| falcon_refinedweb_1b_en |   1.31B  | 24-layer Falcon model (Falcon with 1B parameters), trained on 350B tokens of RefinedWeb dataset.|\n\n\n## Use\n\n### Direct Use\nResearch on large language models, specifically the influence of adequately filtered and deduplicated web data on the properties of large language models (fairness, safety, limitations, capabilities, etc.).\n\n### Out-of-scope Use\nProduction use without adequate assessment of risks and mitigation; any use cases which may be considered irresponsible or harmful.\n\n## Bias, Risks, and Limitations\n\nFalcon-RW-1B is trained on English data only, and will not generalize appropriately to other languages. Furthermore, as it is trained on a large-scale corpora representative of the web, it will carry the stereotypes and biases commonly encountered online.\n\n## Recommendations\n\nWe recommend users of Falcon-RW-1B to consider finetuning it for the specific set of tasks of interest, and for guardrails and appropriate precautions to be taken for any production use.\n\n## Training Details\n\n### Training Data\nFalcon-RW-1B was trained on 350B tokens of RefinedWeb, a high-quality filtered and deduplicated web dataset. The data was tokenized with the GPT-2 tokenizer.\n\n### Training Procedure\nFalcon-RW-1B was trained on 32 A100 40GB GPUs, using only data parallelism with ZeRO.\n\n### Training Hyperparameters\nHyperparameters were adapted from the GPT-3 paper ([Brown et al., 2020](https://arxiv.org/abs/2005.14165)).\n\n| Hyperparameter | Value    | Comment                                   |\n|----------------|----------|-------------------------------------------|\n| Precision      | bfloat16 |                                           |\n| Optimizer      | AdamW    |                                           |\n| Learning rate  | 2e-4     | 500M tokens warm-up, cosine decay to 2e-5 |\n| Weight decay   | 1e-1     |                                           |\n| Batch size     | 512      | 4B tokens ramp-up                         |\n\n### Speeds, Sizes, Times\nTraining happened in early December 2022 and took about six days.\n\n### Evaluation\nSee the [paper on arXiv](https://arxiv.org/abs/2306.01116) for in-depth evaluation.\n\n## Technical Specifications\n\n### Model Architecture and Objective\nFalcon-RW-1B is a causal decoder-only model trained on a causal language modeling task (i.e., predict the next token).\n\nThe architecture is adapted from the GPT-3 paper ([Brown et al., 2020](https://arxiv.org/abs/2005.14165)), but uses ALiBi ([Ofir et al., 2021](https://arxiv.org/abs/2108.12409)).\n\n| **Hyperparameter** | **Value** |\n|:------------------:|:---------:|\n| Layers             | 24        |\n| d_model            | 2048      |\n| head_dim           | 64        |\n| Vocabulary         | 50304     |\n| Sequence length    | 2048      |\n\n## Citation\n```\n@article{refinedweb,\n  title={The {R}efined{W}eb dataset for {F}alcon {LLM}: outperforming curated corpora with web data, and web data only},\n  author={Guilherme Penedo and Quentin Malartic and Daniel Hesslow and Ruxandra Cojocaru and Alessandro Cappelli and Hamza Alobeidli and Baptiste Pannier and Ebtesam Almazrouei and Julien Launay},\n  journal={arXiv preprint arXiv:2306.01116},\n  eprint={2306.01116},\n  eprinttype = {arXiv},\n  url={https://arxiv.org/abs/2306.01116},\n  year={2023}\n}\n```",
+      "instances": [
+        {
+          "id": 11873,
+          "slug": "falcon_refinedweb_1b_en",
+          "framework": "keras",
+          "fineTunable": true,
+          "usage": "```Python\n\nimport os\n\nos.environ[\"KERAS_BACKEND\"] = \"jax\"\n\nimport keras\nimport keras_hub\n\n# When running only inference, bfloat16 saves memory usage significantly.\nkeras.config.set_floatx(\"bfloat16\")\n\ncausal_lm = keras_hub.models.FalconCausalLM.from_preset(\n    \"${VARIATION_SLUG}\"\n)\ncausal_lm.summary()\n\noutputs = causal_lm.generate([\n    \"What is Jax?\",\n    \"Give me your best brownie recipe.\",\n], max_length=512)\n\n```",
+          "downloadUrl": "/models/keras/falcon/Keras/falcon_refinedweb_1b_en/2/download",
+          "versionId": 205057,
+          "versionNumber": 2,
+          "url": "https://www.kaggle.com/models/keras/falcon/Keras/falcon_refinedweb_1b_en",
+          "licenseName": "Apache 2.0",
+          "totalUncompressedBytes": 5248773589
+        }
+      ],
+      "tags": [
+        {
+          "ref": "text generation",
+          "name": "text generation",
+          "description": "",
+          "fullPath": "task > text-generation",
+          "competitionCount": 23,
+          "datasetCount": 426,
+          "scriptCount": 550,
+          "totalCount": 999
+        }
+      ],
+      "url": "https://www.kaggle.com/models/keras/falcon"
+    },
+    {
+      "id": 6135,
+      "ref": "itsnobita/bloomz560m-urdutranslation",
+      "title": "bloomz560m-UrduTranslation",
+      "subtitle": "Transaltion , Urdu-to-English , GPT , Generative Pre trained Models , Fine tuning",
+      "author": "M Ahmad",
+      "slug": "bloomz560m-urdutranslation",
+      "description": "# Model Summary\n\nThis model is a finetuned version of the smallest variant of a GPT model Bloomz on the custom data for English to Urdu Translation. \n\n## Usage\n\nthis model can be used for translation task and can further fine tuned for more accuracy \n\n## System\n\nThis model is finetuned on 2xT4 GPUs taking 30GB VRam\n\n# Model Characteristics\n\n## Model initialization\n\nThis  model is finetuned from a pre-trained model Bloomz-560m\n\n# Data Overview\n\nThe data used in training of model is gathered from News sites. The dataset consist of parallel corpus of English and Urdu News\n\n## Training data\n\nThe data was gathered from different news channels website which contain news in both Urdu and English Language",
+      "instances": [
+        {
+          "id": 6017,
+          "slug": "ver1",
+          "framework": "py_torch",
+          "fineTunable": true,
+          "overview": "The first variant trained of 5000 samples only. Can be further finetuned for more accuracy",
+          "usage": "from transformers import AutoModelForCausalLM, AutoTokenizer,pipeline\nmodel_ckpt = \"/kaggle/input/bloomz560m-urdutranslation/pytorch/ver1/1\"\ntokenizer = AutoTokenizer.from_pretrained(model_ckpt)\nmodel = AutoModelForCausalLM.from_pretrained(\"/kaggle/input/bloomz560m-urdutranslation/pytorch/ver1/1\").to('cuda:0').half()",
+          "downloadUrl": "/models/itsnobita/bloomz560m-urdutranslation/PyTorch/ver1/1/download",
+          "versionId": 7653,
+          "versionNumber": 1,
+          "url": "https://www.kaggle.com/models/itsnobita/bloomz560m-urdutranslation/PyTorch/ver1",
+          "licenseName": "CC BY-NC-SA 4.0",
+          "modelInstanceType": "external_variant",
+          "externalBaseModelUrl": "https://huggingface.co/bigscience/bloomz-560m",
+          "totalUncompressedBytes": 2251399470
+        }
+      ],
+      "tags": [
+        {
+          "ref": "languages",
+          "name": "languages",
+          "description": "Language is a method of communication that consists of using words arranged into meaningful patterns. This is a good place to find natural language processing datasets and kernels to study languages and train your chat bots.",
+          "fullPath": "subject > culture and humanities > languages",
+          "competitionCount": 10,
+          "datasetCount": 946,
+          "scriptCount": 359,
+          "totalCount": 1315
+        },
+        {
+          "ref": "transfer learning",
+          "name": "transfer learning",
+          "description": "",
+          "fullPath": "technique > transfer learning",
+          "competitionCount": 8,
+          "datasetCount": 520,
+          "scriptCount": 2235,
+          "totalCount": 2763
+        },
+        {
+          "ref": "text generation",
+          "name": "text generation",
+          "description": "",
+          "fullPath": "task > text-generation",
+          "competitionCount": 23,
+          "datasetCount": 426,
+          "scriptCount": 550,
+          "totalCount": 999
+        },
+        {
+          "ref": "translation",
+          "name": "translation",
+          "description": "",
+          "fullPath": "task > translation",
+          "competitionCount": 4,
+          "datasetCount": 113,
+          "scriptCount": 84,
+          "totalCount": 201
+        },
+        {
+          "ref": "gpt2",
+          "name": "gpt2",
+          "description": "",
+          "fullPath": "architecture > gpt2",
+          "datasetCount": 23,
+          "scriptCount": 82,
+          "totalCount": 105
+        }
+      ],
+      "provenanceSources": "News Websites",
+      "url": "https://www.kaggle.com/models/itsnobita/bloomz560m-urdutranslation"
+    },
+    {
+      "id": 9362,
+      "ref": "keras/clip",
+      "title": "CLIP",
+      "subtitle": "Contrastive Language-Image Pre-training (CLIP) for zero-shot image classification, search, and robust visual understanding.",
+      "author": "Keras",
+      "slug": "clip",
+      "description": "# Model Summary\n\nThis model is a CLIP (Contrastive Language-Image Pre-training) neural network. CLIP revolutionizes image understanding by learning visual concepts from natural language descriptions found online.  It's been trained on a massive dataset of image-text pairs, allowing it to excel at tasks like zero-shot image classification, image search based on text queries, and robust visual understanding. With CLIP, you can explore the power of aligning image and text representations within a shared embedding space.\n\n\nWeights are released under the [MIT License](https://opensource.org/license/mit). Keras model code is released under the [Apache 2 License](https://github.com/keras-team/keras-nlp/blob/master/LICENSE).\n\n## Links\n\n* [CLIP Quickstart Notebook](https://www.kaggle.com/code/laxmareddypatlolla/clip-quickstart-notebook)\n* [CLIP API Documentation](https://keras.io/keras_hub/api/models/clip/)\n* [CLIP Model Card](https://huggingface.co/docs/transformers/en/model_doc/clip)\n* [KerasHub Beginner Guide](https://keras.io/guides/keras_hub/getting_started/)\n* [KerasHub Model Publishing Guide](https://keras.io/guides/keras_hub/upload/)\n\n## Installation\n\nKeras and KerasHub can be installed with:\n\n```\npip install -U -q keras-hub\npip install -U -q keras\n\n```\n\nJax, TensorFlow, and Torch come preinstalled in Kaggle Notebooks. For instructions on installing them in another environment see the [Keras Getting Started](https://keras.io/getting_started/) page.\n\n## Presets\n\nThe following model checkpoints are provided by the Keras team. Full code examples for each are available below.\n| Preset name                | Parameters | Description                                                                                                                                                                                                                                                                                                       |\n|----------------------------|------------|-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|\n| clip-vit-base-patch16      | 149.62M    | The model uses a ViT-B/16 Transformer architecture as an image encoder and uses a masked self-attention Transformer as a text encoder. These encoders are trained to maximize the similarity of (image, text) pairs via a contrastive loss. The model uses a patch size of 16 and input images of size (224, 224) |\n| clip-vit-base-patch32      | 151.28M    | The model uses a ViT-B/32 Transformer architecture as an image encoder and uses a masked self-attention Transformer as a text encoder. These encoders are trained to maximize the similarity of (image, text) pairs via a contrastive loss.The model uses a patch size of 32 and input images of size (224, 224)  |\n| clip-vit-large-patch14     | 427.62M    | The model uses a ViT-L/14 Transformer architecture as an image encoder and uses a masked self-attention Transformer as a text encoder. These encoders are trained to maximize the similarity of (image, text) pairs via a contrastive loss.The model uses a patch size of 14 and input images of size (224, 224)  |\n| clip-vit-large-patch14-336 | 427.94M    | The model uses a ViT-L/14 Transformer architecture as an image encoder and uses a masked self-attention Transformer as a text encoder. These encoders are trained to maximize the similarity of (image, text) pairs via a contrastive loss.The model uses a patch size of 14 and input images of size (336, 336)  |\n|  clip_vit_b_32_laion2b_s34b_b79k    | 151.28M    | 151 million parameter, 12-layer for vision and 12-layer for text, patch size of 32, Open CLIP model. |\n|  clip_vit_h_14_laion2b_s32b_b79k    | 986.11M    | 986 million parameter, 32-layer for vision and 24-layer for text, patch size of 14, Open CLIP model. |\n|  clip_vit_g_14_laion2b_s12b_b42k    | 1.37B   | 1.4 billion parameter, 40-layer for vision and 24-layer for text, patch size of 14, Open CLIP model. |\n|  clip_vit_bigg_14_laion2b_39b_b160k   | 2.54B   | 2.5 billion parameter, 48-layer for vision and 32-layer for text, patch size of 14, Open CLIP model. |",
+      "instances": [
+        {
+          "id": 142271,
+          "slug": "clip_vit_b_32_laion2b_s34b_b79k",
+          "framework": "keras",
+          "usage": "```python\nimport keras\nimport numpy as np\nimport matplotlib.pyplot as plt\nfrom keras_hub.models import CLIPBackbone, CLIPTokenizer\nfrom keras_hub.layers import CLIPImageConverter\n\n# instantiate the model and preprocessing tools\nclip = CLIPBackbone.from_preset(\"${VARIATION_SLUG}\")\ntokenizer = CLIPTokenizer.from_preset(\"${VARIATION_SLUG}\",\nsequence_length=5)\nimage_converter = CLIPImageConverter.from_preset(\"${VARIATION_SLUG}\")\n\n# obtain tokens for some input text\ntokens = tokenizer.tokenize([\"mountains\", \"cat on tortoise\", \"house\"])\n\n# preprocess image and text\nimage = keras.utils.load_img(\"cat.jpg\")\nimage = image_converter(np.array([image]).astype(float))\n\n# query the model for similarities\nclip({\n     \"images\": image,\n     \"token_ids\": tokens,\n})\n```",
+          "downloadUrl": "/models/keras/clip/Keras/clip_vit_b_32_laion2b_s34b_b79k/3/download",
+          "versionId": 581151,
+          "versionNumber": 3,
+          "url": "https://www.kaggle.com/models/keras/clip/Keras/clip_vit_b_32_laion2b_s34b_b79k",
+          "licenseName": "MIT",
+          "totalUncompressedBytes": 607450103
+        },
+        {
+          "id": 142265,
+          "slug": "clip_vit_base_patch16",
+          "framework": "keras",
+          "usage": "```python\nimport keras\nimport numpy as np\nimport matplotlib.pyplot as plt\nfrom keras_hub.models import CLIPBackbone, CLIPTokenizer\nfrom keras_hub.layers import CLIPImageConverter\n\n# instantiate the model and preprocessing tools\nclip = CLIPBackbone.from_preset(\"${VARIATION_SLUG}\")\ntokenizer = CLIPTokenizer.from_preset(\"${VARIATION_SLUG}\",\nsequence_length=5)\nimage_converter = CLIPImageConverter.from_preset(\"${VARIATION_SLUG}\")\n\n# obtain tokens for some input text\ntokens = tokenizer.tokenize([\"mountains\", \"cat on tortoise\", \"house\"])\n\n# preprocess image and text\nimage = keras.utils.load_img(\"cat.jpg\")\nimage = image_converter(np.array([image]).astype(float))\n\n# query the model for similarities\nclip({\n     \"images\": image,\n     \"token_ids\": tokens,\n})\n```",
+          "downloadUrl": "/models/keras/clip/Keras/clip_vit_base_patch16/3/download",
+          "versionId": 581148,
+          "versionNumber": 3,
+          "url": "https://www.kaggle.com/models/keras/clip/Keras/clip_vit_base_patch16",
+          "licenseName": "MIT",
+          "totalUncompressedBytes": 600823811
+        },
+        {
+          "id": 142266,
+          "slug": "clip_vit_base_patch32",
+          "framework": "keras",
+          "usage": "```python\nimport keras\nimport numpy as np\nimport matplotlib.pyplot as plt\nfrom keras_hub.models import CLIPBackbone, CLIPTokenizer\nfrom keras_hub.layers import CLIPImageConverter\n\n# instantiate the model and preprocessing tools\nclip = CLIPBackbone.from_preset(\"${VARIATION_SLUG}\")\ntokenizer = CLIPTokenizer.from_preset(\"${VARIATION_SLUG}\",\nsequence_length=5)\nimage_converter = CLIPImageConverter.from_preset(\"${VARIATION_SLUG}\")\n\n# obtain tokens for some input text\ntokens = tokenizer.tokenize([\"mountains\", \"cat on tortoise\", \"house\"])\n\n# preprocess image and text\nimage = keras.utils.load_img(\"cat.jpg\")\nimage = image_converter(np.array([image]).astype(float))\n\n# query the model for similarities\nclip({\n     \"images\": image,\n     \"token_ids\": tokens,\n})\n```",
+          "downloadUrl": "/models/keras/clip/Keras/clip_vit_base_patch32/3/download",
+          "versionId": 581149,
+          "versionNumber": 3,
+          "url": "https://www.kaggle.com/models/keras/clip/Keras/clip_vit_base_patch32",
+          "licenseName": "MIT",
+          "totalUncompressedBytes": 607450115
+        },
+        {
+          "id": 174170,
+          "slug": "clip_vit_bigg_14_laion2b_39b_b160k",
+          "framework": "keras",
+          "fineTunable": true,
+          "usage": "```python\nimport keras\nimport numpy as np\nimport matplotlib.pyplot as plt\nfrom keras_hub.models import CLIPBackbone, CLIPTokenizer\nfrom keras_hub.layers import CLIPImageConverter\n\n# instantiate the model and preprocessing tools\nclip = CLIPBackbone.from_preset(\"${VARIATION_SLUG}\")\ntokenizer = CLIPTokenizer.from_preset(\"${VARIATION_SLUG}\",\nsequence_length=5)\nimage_converter = CLIPImageConverter.from_preset(\"${VARIATION_SLUG}\")\n\n# obtain tokens for some input text\ntokens = tokenizer.tokenize([\"mountains\", \"cat on tortoise\", \"house\"])\n\n# preprocess image and text\nimage = keras.utils.load_img(\"cat.jpg\")\nimage = image_converter(np.array([image]).astype(float))\n\n# query the model for similarities\nclip({\n     \"images\": image,\n     \"token_ids\": tokens,\n})\n```",
+          "downloadUrl": "/models/keras/clip/Keras/clip_vit_bigg_14_laion2b_39b_b160k/3/download",
+          "versionId": 581159,
+          "versionNumber": 3,
+          "url": "https://www.kaggle.com/models/keras/clip/Keras/clip_vit_bigg_14_laion2b_39b_b160k",
+          "licenseName": "MIT",
+          "totalUncompressedBytes": 10162375965
+        },
+        {
+          "id": 142273,
+          "slug": "clip_vit_g_14_laion2b_s12b_b42k",
+          "framework": "keras",
+          "usage": "```python\nimport keras\nimport numpy as np\nimport matplotlib.pyplot as plt\nfrom keras_hub.models import CLIPBackbone, CLIPTokenizer\nfrom keras_hub.layers import CLIPImageConverter\n\n# instantiate the model and preprocessing tools\nclip = CLIPBackbone.from_preset(\"${VARIATION_SLUG}\")\ntokenizer = CLIPTokenizer.from_preset(\"${VARIATION_SLUG}\",\nsequence_length=5)\nimage_converter = CLIPImageConverter.from_preset(\"${VARIATION_SLUG}\")\n\n# obtain tokens for some input text\ntokens = tokenizer.tokenize([\"mountains\", \"cat on tortoise\", \"house\"])\n\n# preprocess image and text\nimage = keras.utils.load_img(\"cat.jpg\")\nimage = image_converter(np.array([image]).astype(float))\n\n# query the model for similarities\nclip({\n     \"images\": image,\n     \"token_ids\": tokens,\n})\n```",
+          "downloadUrl": "/models/keras/clip/Keras/clip_vit_g_14_laion2b_s12b_b42k/3/download",
+          "versionId": 581156,
+          "versionNumber": 3,
+          "url": "https://www.kaggle.com/models/keras/clip/Keras/clip_vit_g_14_laion2b_s12b_b42k",
+          "licenseName": "MIT",
+          "totalUncompressedBytes": 5470318285
+        },
+        {
+          "id": 142272,
+          "slug": "clip_vit_h_14_laion2b_s32b_b79k",
+          "framework": "keras",
+          "usage": "```python\nimport keras\nimport numpy as np\nimport matplotlib.pyplot as plt\nfrom keras_hub.models import CLIPBackbone, CLIPTokenizer\nfrom keras_hub.layers import CLIPImageConverter\n\n# instantiate the model and preprocessing tools\nclip = CLIPBackbone.from_preset(\"${VARIATION_SLUG}\")\ntokenizer = CLIPTokenizer.from_preset(\"${VARIATION_SLUG}\",\nsequence_length=5)\nimage_converter = CLIPImageConverter.from_preset(\"${VARIATION_SLUG}\")\n\n# obtain tokens for some input text\ntokens = tokenizer.tokenize([\"mountains\", \"cat on tortoise\", \"house\"])\n\n# preprocess image and text\nimage = keras.utils.load_img(\"cat.jpg\")\nimage = image_converter(np.array([image]).astype(float))\n\n# query the model for similarities\nclip({\n     \"images\": image,\n     \"token_ids\": tokens,\n})\n```",
+          "downloadUrl": "/models/keras/clip/Keras/clip_vit_h_14_laion2b_s32b_b79k/3/download",
+          "versionId": 581152,
+          "versionNumber": 3,
+          "url": "https://www.kaggle.com/models/keras/clip/Keras/clip_vit_h_14_laion2b_s32b_b79k",
+          "licenseName": "MIT",
+          "totalUncompressedBytes": 3947789756
+        },
+        {
+          "id": 142268,
+          "slug": "clip_vit_large_patch14",
+          "framework": "keras",
+          "usage": "```python\nimport keras\nimport numpy as np\nimport matplotlib.pyplot as plt\nfrom keras_hub.models import CLIPBackbone, CLIPTokenizer\nfrom keras_hub.layers import CLIPImageConverter\n\n# instantiate the model and preprocessing tools\nclip = CLIPBackbone.from_preset(\"${VARIATION_SLUG}\")\ntokenizer = CLIPTokenizer.from_preset(\"${VARIATION_SLUG}\",\nsequence_length=5)\nimage_converter = CLIPImageConverter.from_preset(\"${VARIATION_SLUG}\")\n\n# obtain tokens for some input text\ntokens = tokenizer.tokenize([\"mountains\", \"cat on tortoise\", \"house\"])\n\n# preprocess image and text\nimage = keras.utils.load_img(\"cat.jpg\")\nimage = image_converter(np.array([image]).astype(float))\n\n# query the model for similarities\nclip({\n     \"images\": image,\n     \"token_ids\": tokens,\n})\n```",
+          "downloadUrl": "/models/keras/clip/Keras/clip_vit_large_patch14/3/download",
+          "versionId": 581150,
+          "versionNumber": 3,
+          "url": "https://www.kaggle.com/models/keras/clip/Keras/clip_vit_large_patch14",
+          "licenseName": "MIT",
+          "totalUncompressedBytes": 1713186725
+        },
+        {
+          "id": 142270,
+          "slug": "clip_vit_large_patch14_336",
+          "framework": "keras",
+          "usage": "```python\nimport keras\nimport numpy as np\nimport matplotlib.pyplot as plt\nfrom keras_hub.models import CLIPBackbone, CLIPTokenizer\nfrom keras_hub.layers import CLIPImageConverter\n\n# instantiate the model and preprocessing tools\nclip = CLIPBackbone.from_preset(\"${VARIATION_SLUG}\")\ntokenizer = CLIPTokenizer.from_preset(\"${VARIATION_SLUG}\",\nsequence_length=5)\nimage_converter = CLIPImageConverter.from_preset(\"${VARIATION_SLUG}\")\n\n# obtain tokens for some input text\ntokens = tokenizer.tokenize([\"mountains\", \"cat on tortoise\", \"house\"])\n\n# preprocess image and text\nimage = keras.utils.load_img(\"cat.jpg\")\nimage = image_converter(np.array([image]).astype(float))\n\n# query the model for similarities\nclip({\n     \"images\": image,\n     \"token_ids\": tokens,\n})\n```",
+          "downloadUrl": "/models/keras/clip/Keras/clip_vit_large_patch14_336/3/download",
+          "versionId": 581141,
+          "versionNumber": 3,
+          "url": "https://www.kaggle.com/models/keras/clip/Keras/clip_vit_large_patch14_336",
+          "licenseName": "MIT",
+          "totalUncompressedBytes": 1714500005
+        },
+        {
+          "id": 8019,
+          "slug": "clip-vit-base-patch16",
+          "framework": "keras",
+          "fineTunable": true,
+          "overview": "The model uses a ViT-B/16 Transformer architecture as an image encoder and uses a masked self-attention Transformer as a text encoder. These encoders are trained to maximize the similarity of (image, text) pairs via a contrastive loss. The model uses a patch size of 16 and input images of size (224, 224)",
+          "usage": "# Model Summary\n\nThis model is a CLIP (Contrastive Language-Image Pre-training) neural network. CLIP revolutionizes image understanding by learning visual concepts from natural language descriptions found online.  It's been trained on a massive dataset of image-text pairs, allowing it to excel at tasks like zero-shot image classification, image search based on text queries, and robust visual understanding. With CLIP, you can explore the power of aligning image and text representations within a shared embedding space.\n\n## Usage\n```\nfrom keras import ops\nimport keras\nfrom keras_cv.models.feature_extractor.clip import CLIPProcessor\nfrom keras_cv.models import CLIP\n\nprocessor = CLIPProcessor(\"vocab.json\", \"merges.txt\")\ntokens = processor([\"mountains\", \"cat on tortoise\", \"house\"])\nmodel = CLIP.from_preset(\"clip-vit-base-patch16\")\noutput = model({\n                \"images\": processed_image,\n                \"token_ids\": tokens['token_ids'],\n                \"padding_mask\": tokens['padding_mask']})\n\n\n\ndef transform_image(image_path, input_resolution):\n    mean = ops.array([0.48145466, 0.4578275, 0.40821073])\n    std = ops.array([0.26862954, 0.26130258, 0.27577711])\n\n    image = keras.utils.load_img(image_path)\n    image = keras.utils.img_to_array(image)\n    image = (\n        ops.image.resize(\n            image,\n            (input_resolution, input_resolution),\n            interpolation=\"bicubic\",\n        )\n        / 255.0\n    )\n    central_fraction = input_resolution / image.shape[0]\n    width, height = image.shape[0], image.shape[1]\n    left = ops.cast((width - width * central_fraction) / 2, dtype=\"int32\")\n    top = ops.cast((height - height * central_fraction) / 2, dtype=\"int32\")\n    right = ops.cast((width + width * central_fraction) / 2, dtype=\"int32\")\n    bottom = ops.cast(\n        (height + height * central_fraction) / 2, dtype=\"int32\"\n    )\n\n    image = ops.slice(\n        image, [left, top, 0], [right - left, bottom - top, 3]\n    )\n\n    image = (image - mean) / std\n    return ops.expand_dims(image, axis=0)\n```",
+          "downloadUrl": "/models/keras/clip/Keras/clip-vit-base-patch16/7/download",
+          "versionId": 27884,
+          "versionNumber": 7,
+          "url": "https://www.kaggle.com/models/keras/clip/Keras/clip-vit-base-patch16",
+          "licenseName": "MIT",
+          "modelInstanceType": "base_model",
+          "totalUncompressedBytes": 599158306
+        },
+        {
+          "id": 8020,
+          "slug": "clip-vit-base-patch32",
+          "framework": "keras",
+          "fineTunable": true,
+          "overview": "The model uses a ViT-B/16 Transformer architecture as an image encoder and uses a masked self-attention Transformer as a text encoder. These encoders are trained to maximize the similarity of (image, text) pairs via a contrastive loss. The model uses a patch size of 32 and input images of size (224, 224)",
+          "usage": "# Model Summary\n\nThis model is a CLIP (Contrastive Language-Image Pre-training) neural network. CLIP revolutionizes image understanding by learning visual concepts from natural language descriptions found online.  It's been trained on a massive dataset of image-text pairs, allowing it to excel at tasks like zero-shot image classification, image search based on text queries, and robust visual understanding. With CLIP, you can explore the power of aligning image and text representations within a shared embedding space.\n\n## Usage\n```\nfrom keras import ops\nimport keras\nfrom keras_cv.models.feature_extractor.clip import CLIPProcessor\nfrom keras_cv.models import CLIP\n\nprocessor = CLIPProcessor(\"vocab.json\", \"merges.txt\")\n# processed_image = transform_image(\"cat.jpg\", 224)\ntokens = processor([\"mountains\", \"cat on tortoise\", \"house\"])\nmodel = CLIP.from_preset(\"clip-vit-base-patch32\")\noutput = model({\n                \"images\": processed_image,\n                \"token_ids\": tokens['token_ids'],\n                \"padding_mask\": tokens['padding_mask']})\n\n\n# optional if you need to pre process image\ndef transform_image(image_path, input_resolution):\n    mean = ops.array([0.48145466, 0.4578275, 0.40821073])\n    std = ops.array([0.26862954, 0.26130258, 0.27577711])\n\n    image = keras.utils.load_img(image_path)\n    image = keras.utils.img_to_array(image)\n    image = (\n        ops.image.resize(\n            image,\n            (input_resolution, input_resolution),\n            interpolation=\"bicubic\",\n        )\n        / 255.0\n    )\n    central_fraction = input_resolution / image.shape[0]\n    width, height = image.shape[0], image.shape[1]\n    left = ops.cast((width - width * central_fraction) / 2, dtype=\"int32\")\n    top = ops.cast((height - height * central_fraction) / 2, dtype=\"int32\")\n    right = ops.cast((width + width * central_fraction) / 2, dtype=\"int32\")\n    bottom = ops.cast(\n        (height + height * central_fraction) / 2, dtype=\"int32\"\n    )\n\n    image = ops.slice(\n        image, [left, top, 0], [right - left, bottom - top, 3]\n    )\n\n    image = (image - mean) / std\n    return ops.expand_dims(image, axis=0)\n```",
+          "downloadUrl": "/models/keras/clip/Keras/clip-vit-base-patch32/6/download",
+          "versionId": 27885,
+          "versionNumber": 6,
+          "url": "https://www.kaggle.com/models/keras/clip/Keras/clip-vit-base-patch32",
+          "licenseName": "MIT",
+          "modelInstanceType": "base_model",
+          "totalUncompressedBytes": 605784610
+        },
+        {
+          "id": 8023,
+          "slug": "clip-vit-large-patch14",
+          "framework": "keras",
+          "fineTunable": true,
+          "overview": "The model uses a ViT-L/14 Transformer architecture as an image encoder and uses a masked self-attention Transformer as a text encoder. These encoders are trained to maximize the similarity of (image, text) pairs via a contrastive loss.The model uses a patch size of 14 and input images of size (224, 224)",
+          "usage": "# Model Summary\n\nThis model is a CLIP (Contrastive Language-Image Pre-training) neural network. CLIP revolutionizes image understanding by learning visual concepts from natural language descriptions found online.  It's been trained on a massive dataset of image-text pairs, allowing it to excel at tasks like zero-shot image classification, image search based on text queries, and robust visual understanding. With CLIP, you can explore the power of aligning image and text representations within a shared embedding space.\n\n## Usage\n```\nfrom keras import ops\nimport keras\nfrom keras_cv.models.feature_extractor.clip import CLIPProcessor\nfrom keras_cv.models import CLIP\n\nprocessor = CLIPProcessor(\"vocab.json\", \"merges.txt\")\n# processed_image = transform_image(\"cat.jpg\", 224)\ntokens = processor([\"mountains\", \"cat on tortoise\", \"house\"])\nmodel = CLIP.from_preset(\"clip-vit-large-patch14\")\noutput = model({\n                \"images\": processed_image,\n                \"token_ids\": tokens['token_ids'],\n                \"padding_mask\": tokens['padding_mask']})\n\n\n# optional if you need to pre process image\ndef transform_image(image_path, input_resolution):\n    mean = ops.array([0.48145466, 0.4578275, 0.40821073])\n    std = ops.array([0.26862954, 0.26130258, 0.27577711])\n\n    image = keras.utils.load_img(image_path)\n    image = keras.utils.img_to_array(image)\n    image = (\n        ops.image.resize(\n            image,\n            (input_resolution, input_resolution),\n            interpolation=\"bicubic\",\n        )\n        / 255.0\n    )\n    central_fraction = input_resolution / image.shape[0]\n    width, height = image.shape[0], image.shape[1]\n    left = ops.cast((width - width * central_fraction) / 2, dtype=\"int32\")\n    top = ops.cast((height - height * central_fraction) / 2, dtype=\"int32\")\n    right = ops.cast((width + width * central_fraction) / 2, dtype=\"int32\")\n    bottom = ops.cast(\n        (height + height * central_fraction) / 2, dtype=\"int32\"\n    )\n\n    image = ops.slice(\n        image, [left, top, 0], [right - left, bottom - top, 3]\n    )\n\n    image = (image - mean) / std\n    return ops.expand_dims(image, axis=0)\n```",
+          "downloadUrl": "/models/keras/clip/Keras/clip-vit-large-patch14/6/download",
+          "versionId": 27886,
+          "versionNumber": 6,
+          "url": "https://www.kaggle.com/models/keras/clip/Keras/clip-vit-large-patch14",
+          "licenseName": "MIT",
+          "modelInstanceType": "base_model",
+          "totalUncompressedBytes": 1711457268
+        },
+        {
+          "id": 8024,
+          "slug": "clip-vit-large-patch14-336",
+          "framework": "keras",
+          "fineTunable": true,
+          "overview": "The model uses a ViT-L/14 Transformer architecture as an image encoder and uses a masked self-attention Transformer as a text encoder. These encoders are trained to maximize the similarity of (image, text) pairs via a contrastive loss.The model uses a patch size of 14 and input images of size (336, 336)",
+          "usage": "# Model Summary\n\nThis model is a CLIP (Contrastive Language-Image Pre-training) neural network. CLIP revolutionizes image understanding by learning visual concepts from natural language descriptions found online.  It's been trained on a massive dataset of image-text pairs, allowing it to excel at tasks like zero-shot image classification, image search based on text queries, and robust visual understanding. With CLIP, you can explore the power of aligning image and text representations within a shared embedding space.\n\n## Usage\n```\nfrom keras import ops\nimport keras\nfrom keras_cv.models.feature_extractor.clip import CLIPProcessor\nfrom keras_cv.models import CLIP\n\nprocessor = CLIPProcessor(\"vocab.json\", \"merges.txt\")\n# processed_image = transform_image(\"cat.jpg\", 224)\ntokens = processor([\"mountains\", \"cat on tortoise\", \"house\"])\nmodel = CLIP.from_preset(\"clip-vit-large-patch14-336\")\noutput = model({\n                \"images\": processed_image,\n                \"token_ids\": tokens['token_ids'],\n                \"padding_mask\": tokens['padding_mask']})\n\n\n# optional if you need to pre process image\ndef transform_image(image_path, input_resolution):\n    mean = ops.array([0.48145466, 0.4578275, 0.40821073])\n    std = ops.array([0.26862954, 0.26130258, 0.27577711])\n\n    image = keras.utils.load_img(image_path)\n    image = keras.utils.img_to_array(image)\n    image = (\n        ops.image.resize(\n            image,\n            (input_resolution, input_resolution),\n            interpolation=\"bicubic\",\n        )\n        / 255.0\n    )\n    central_fraction = input_resolution / image.shape[0]\n    width, height = image.shape[0], image.shape[1]\n    left = ops.cast((width - width * central_fraction) / 2, dtype=\"int32\")\n    top = ops.cast((height - height * central_fraction) / 2, dtype=\"int32\")\n    right = ops.cast((width + width * central_fraction) / 2, dtype=\"int32\")\n    bottom = ops.cast(\n        (height + height * central_fraction) / 2, dtype=\"int32\"\n    )\n\n    image = ops.slice(\n        image, [left, top, 0], [right - left, bottom - top, 3]\n    )\n\n    image = (image - mean) / std\n    return ops.expand_dims(image, axis=0)\n```",
+          "downloadUrl": "/models/keras/clip/Keras/clip-vit-large-patch14-336/6/download",
+          "versionId": 27887,
+          "versionNumber": 6,
+          "url": "https://www.kaggle.com/models/keras/clip/Keras/clip-vit-large-patch14-336",
+          "licenseName": "MIT",
+          "modelInstanceType": "base_model",
+          "totalUncompressedBytes": 1712767988
+        }
+      ],
+      "url": "https://www.kaggle.com/models/keras/clip"
+    },
+    {
+      "id": 23040,
+      "ref": "menouarazib/pygemma-2b",
+      "title": "PyGemma-2b",
+      "subtitle": "PyGemma is constructed using the Gemma model. It is designed to assist developers by providing answers to common questions about the Python programming language.",
+      "author": "Menouar Azib",
+      "slug": "pygemma-2b",
+      "description": "# Model Summary\n\n🐍💬🤖\n\n**pygemma-2b** is a fine-tuned version of [google/gemma-2b](https://www.kaggle.com/models/google/gemma/frameworks/transformers/variations/2b) on a publicly available Python dataset. It was designed as conversational model which can answer common questions about the Python programming language.\n\n- **Model type:** A 2B parameter GPT-like model fine-tuned on a publicly available, synthetic dataset.\n- **Language(s) (NLP):** Primarily English\n- **License:** [Gemma Terms of Use](https://ai.google.dev/gemma/terms)\n\n\n## Inputs and Outputs\n\n- Input: A text string, which could be a question, a prompt, or Python code.\n- Output: Generated English-language text and/or Python code in Markdown format in response to the input.\n\n\n## Usage\n\n\nTo utilize the `pygemma-2b` model, which is hosted on Kaggle, in your notebook, you need to first add it as an input. After it has been added, you can load and use the model by specifying its path as follows:\n\n```python\nkaggle_path = \"/kaggle/input/pygemma-2b/transformers/v1/2\"\n```\nThis path directs to the location where the `pygemma-2b` model is stored. \n\n### Running the model on a CPU\n\n```python\nfrom transformers import AutoTokenizer, AutoModelForCausalLM\n\nkaggle_path = \"/kaggle/input/pygemma-2b/transformers/v1/2\"\n\npygemma_tokenizer = AutoTokenizer.from_pretrained(kaggle_path, local_files_only=True)\npygemma_model = AutoModelForCausalLM.from_pretrained(kaggle_path, local_files_only=True)\n\nconversation = [\n    {\n        \"role\": \"system\",\n        \"content\": \"\"\"Welcome to PyGemma, your AI-powered Python assistant. I'm here to help you answer common \n        questions about the Python programming language. Let's dive into Python!\"\"\"\n    },\n    {\n        \"role\": \"user\",\n        \"content\": \"What is the difference between a list and a tuple in Python?\"\n    }\n]\n\ninput_ids = pygemma_tokenizer.apply_chat_template(conversation, return_tensors=\"pt\", add_generation_prompt=True)\n\noutputs = pygemma_model.generate(input_ids, max_new_tokens=512)\n\nencoded_response = outputs[0][input_ids.shape[-1]:]\n\nresponse = pygemma_tokenizer.decode(encoded_response, skip_special_tokens=True)\n```\n\n### Running the model on a single / multi GPU\n\n\n```python\n# pip install accelerate\nfrom transformers import AutoTokenizer, AutoModelForCausalLM\n\nkaggle_path = \"/kaggle/input/pygemma-2b/transformers/v1/2\"\n\npygemma_tokenizer = AutoTokenizer.from_pretrained(kaggle_path, local_files_only=True)\npygemma_model = AutoModelForCausalLM.from_pretrained(kaggle_path, local_files_only=True, device_map=\"auto\")\n\nconversation = [\n    {\n        \"role\": \"system\",\n        \"content\": \"\"\"Welcome to PyGemma, your AI-powered Python assistant. I'm here to help you answer common \n        questions about the Python programming language. Let's dive into Python!\"\"\"\n    },\n    {\n        \"role\": \"user\",\n        \"content\": \"What is the difference between a list and a tuple in Python?\"\n    }\n]\n\ninput_ids = pygemma_tokenizer.apply_chat_template(conversation, return_tensors=\"pt\", add_generation_prompt=True).to(\"cuda\")\n\noutputs = pygemma_model.generate(input_ids, max_new_tokens=512)\n\nencoded_response = outputs[0][input_ids.shape[-1]:]\n\nresponse = pygemma_tokenizer.decode(encoded_response, skip_special_tokens=True)\n```\n\n### Running the model on a GPU using different precisions\n\n* _Using `torch.float16`_\n\n```python\n# pip install accelerate\nfrom transformers import AutoTokenizer, AutoModelForCausalLM\nimport torch\n\npygemma_tokenizer = AutoTokenizer.from_pretrained(kaggle_path, local_files_only=True)\npygemma_model = AutoModelForCausalLM.from_pretrained(kaggle_path, local_files_only=True, device_map=\"auto\", torch_dtype=torch.float16)\n...\n```\n\n* _Using `torch.bfloat16`_\n\n```python\n# pip install accelerate\nfrom transformers import AutoTokenizer, AutoModelForCausalLM\nimport torch\n\npygemma_tokenizer = AutoTokenizer.from_pretrained(kaggle_path, local_files_only=True)\npygemma_model = AutoModelForCausalLM.from_pretrained(kaggle_path, local_files_only=True, device_map=\"auto\", torch_dtype=torch.bfloat16)\n...\n```\n\n### Quantized Versions through `bitsandbytes`\n\n* _Using 8-bit precision (int8)_\n\n```python\n# pip install bitsandbytes accelerate\nfrom transformers import AutoTokenizer, AutoModelForCausalLM, BitsAndBytesConfig\n\nquantization_config = BitsAndBytesConfig(load_in_8bit=True)\n\npygemma_tokenizer = AutoTokenizer.from_pretrained(kaggle_path, local_files_only=True)\npygemma_model = AutoModelForCausalLM.from_pretrained(kaggle_path, local_files_only=True,  quantization_config=quantization_config)\n...\n```\n\n\n## Implementation requirements\n\n`pygemma` was trained for 13.63 hr using GPU A100 (40 GB). \nTraining was done using the follwing libraries:\n- transformers\n- trl\n- peft\n- accelerate\n\n\n# Model Characteristics\n\n## Model initialization\n\nIt is a finetuned version of [google/gemma-2b](https://www.kaggle.com/models/google/gemma/frameworks/transformers/variations/2b).\n\n## Model stats\n\nThe size of the model is 2B Params.\n\n## Other details\n\nWe used the `bitsandbytes` library to quantize the model.\n\n```python\n# BitsAndBytesConfig\nbnb_config = BitsAndBytesConfig(\n    load_in_4bit=True, bnb_4bit_use_double_quant=True,\n    bnb_4bit_quant_type=\"nf4\", bnb_4bit_compute_dtype=torch.bfloat16\n)\n```\n\nWe used also [FlashAttention](https://github.com/Dao-AILab/flash-attention/tree/main) which is an efficient and precise attention mechanism, significantly reducing the computational cost of our model.\n\nAs peft method we used `LoRA` (Low-Rank Adaptation), a technique to reduce the memory footprint of the model during fine-tuning. `LoRA` achieves this without sacrificing performance by training low-rank adapters (two matrices `A` and `B`) while freezing the weights of the base model. If you want to learn more about `LoRA` and how it works, check out [Making LLMs even more accessible with bitsandbytes, 4-bit quantization and `LoRA` blog post](https://huggingface.co/blog/4bit-transformers-bitsandbytes). \n\n# Data Overview\n\nProvide more details about the data used to train this model.\n\n## Training data\n\nThe model was finetuned on publicly available dataset\n[Vezora/Tested-143k-Python-Alpaca](https://huggingface.co/datasets/Vezora/Tested-143k-Python-Alpaca). This dataset comprises Python code snippets paired with their corresponding instruction descriptions. It’s an ideal resource for training our AI assistant to understand and respond to Python-related queries.\n\n### Formatting the Dataset\n\nAs we aim to create an AI Assistant, it's necessary to format our training data into conversations. The conversational format used is as follows:\n\n- Conversational Format\n\n```python\n{\"messages\": [{\"role\": \"system\", \"content\": \"Welcome to PyGemma, ..\"},\n\n{\"role\": \"user\", \"content\": \"Create a function to calculate the sum of a sequence of integers\"},\n\n{\"role\": \"assistant\", \"content\": \"...\"}, ...]}\n```\n\nIn this format, each conversation is represented as a dictionary with a key `messages` that maps to a list of message dictionaries. Each message dictionary has a `role` (which can be 'system', 'user', or 'assistant') and `content` (which contains the actual content of the message). This format allows the model to understand the flow of the conversation and learn to generate appropriate responses.\n\nThe dataset contains three columns: ‘instruction’, ‘input’, and ‘output’. The ‘input’ column is empty, so we only need to use the ‘instruction’ and ‘output’ columns.\n\n## Evaluation data\n\nDue to the limited Hardware, I did not evaluate the model on test set.\n\n\n## Usage limitations\nThe model have certain limitations that users should be aware of.\n\n### Intended Usage\n\n- Python Code Generation: The model can be used to generate creative Python code.\n- Chatbots and Conversational AI: The model can be use AI Assistant to power conversational interfaces that are designed to answer Python-related questions.\n\n### Limitations\n\n#### Training Data\nThe quality and diversity of the training data significantly influence the model's capabilities. Biases or gaps in the training data can lead to limitations in the model's responses.\nThe scope of the training dataset determines the subject areas the model can handle effectively.\n\nIt's essential to note that even when writing syntactically correct code, this model don't have access to up-to-date Python and API documentation. As a result, code generated by this model may contain errors stemming from outdated calls or methods.\n\nCheck more on [Gemma Limitations](https://www.kaggle.com/models/google/gemma/frameworks/transformers/variations/2b)\n\n## Ethics\n\nCheck more [Gemma Ethics and Safety](https://www.kaggle.com/models/google/gemma/frameworks/transformers/variations/2b)",
+      "instances": [
+        {
+          "id": 15189,
+          "slug": "v1",
+          "framework": "transformers",
+          "overview": "This variation (v1) contains the initial version **pygemma-2b** model.",
+          "usage": "## Usage\n\n\nTo utilize the `pygemma-2b` model, which is hosted on Kaggle, in your notebook, you need to first add it as an input. After it has been added, you can load and use the model by specifying its path as follows:\n\n```python\nkaggle_path = \"/kaggle/input/pygemma-2b/transformers/v1/2\"\n```\nThis path directs to the location where the `pygemma-2b` model is stored. \n\n\n### Running the model on a CPU\n\n```python\n!pip install -q transformers\n```\n\n```python\nfrom transformers import AutoTokenizer, AutoModelForCausalLM\n\nkaggle_path = \"/kaggle/input/pygemma-2b/transformers/v1/2\"\n\npygemma_tokenizer = AutoTokenizer.from_pretrained(kaggle_path, local_files_only=True)\npygemma_model = AutoModelForCausalLM.from_pretrained(kaggle_path, local_files_only=True)\n\nconversation = [\n    {\n        \"role\": \"system\",\n        \"content\": \"\"\"Welcome to PyGemma, your AI-powered Python assistant. I'm here to help you answer common \n        questions about the Python programming language. Let's dive into Python!\"\"\"\n    },\n    {\n        \"role\": \"user\",\n        \"content\": \"What is the difference between a list and a tuple in Python?\"\n    }\n]\n\ninput_ids = pygemma_tokenizer.apply_chat_template(conversation, return_tensors=\"pt\", add_generation_prompt=True)\n\noutputs = pygemma_model.generate(input_ids, max_new_tokens=512)\n\nencoded_response = outputs[0][input_ids.shape[-1]:]\n\nresponse = pygemma_tokenizer.decode(encoded_response, skip_special_tokens=True)\n```\n\n### Running the model on a single / multi GPU\n\n```python\n!pip install -q transformers\n!pip install -q accelerate\n```\n\n```python\nfrom transformers import AutoTokenizer, AutoModelForCausalLM\n\nkaggle_path = \"/kaggle/input/pygemma-2b/transformers/v1/2\"\n\npygemma_tokenizer = AutoTokenizer.from_pretrained(kaggle_path, local_files_only=True)\npygemma_model = AutoModelForCausalLM.from_pretrained(kaggle_path, local_files_only=True, device_map=\"auto\")\n\nconversation = [\n    {\n        \"role\": \"system\",\n        \"content\": \"\"\"Welcome to PyGemma, your AI-powered Python assistant. I'm here to help you answer common \n        questions about the Python programming language. Let's dive into Python!\"\"\"\n    },\n    {\n        \"role\": \"user\",\n        \"content\": \"What is the difference between a list and a tuple in Python?\"\n    }\n]\n\ninput_ids = pygemma_tokenizer.apply_chat_template(conversation, return_tensors=\"pt\", add_generation_prompt=True).to(\"cuda\")\n\noutputs = pygemma_model.generate(input_ids, max_new_tokens=512)\n\nencoded_response = outputs[0][input_ids.shape[-1]:]\n\nresponse = pygemma_tokenizer.decode(encoded_response, skip_special_tokens=True)\n```",
+          "downloadUrl": "/models/menouarazib/pygemma-2b/Transformers/v1/2/download",
+          "versionId": 21179,
+          "versionNumber": 2,
+          "url": "https://www.kaggle.com/models/menouarazib/pygemma-2b/Transformers/v1",
+          "licenseName": "Other (specified in description)",
+          "modelInstanceType": "external_variant",
+          "externalBaseModelUrl": "https://www.kaggle.com/models/google/gemma/frameworks/transformers/variations/2b",
+          "totalUncompressedBytes": 5029857893
+        }
+      ],
+      "tags": [
+        {
+          "ref": "artificial intelligence",
+          "name": "artificial intelligence",
+          "description": "This tag has datasets and kernels where people come together and use cutting-edge research to train models on pictures of cats.",
+          "fullPath": "subject > science and technology > computer science > artificial intelligence",
+          "competitionCount": 64,
+          "datasetCount": 3209,
+          "scriptCount": 3116,
+          "totalCount": 6389
+        },
+        {
+          "ref": "intermediate",
+          "name": "intermediate",
+          "description": "",
+          "fullPath": "audience > intermediate",
+          "competitionCount": 79,
+          "datasetCount": 5480,
+          "scriptCount": 6216,
+          "totalCount": 11775
+        },
+        {
+          "ref": "nlp",
+          "name": "nlp",
+          "description": "Natural Language Processing gives a computer program the ability to extract meaning human language. Applications include sentiment analysis, translation, and speech recognition.",
+          "fullPath": "analysis > nlp",
+          "competitionCount": 111,
+          "datasetCount": 5175,
+          "scriptCount": 9167,
+          "totalCount": 14453
+        },
+        {
+          "ref": "deep learning",
+          "name": "deep learning",
+          "description": "",
+          "fullPath": "technique > deep learning",
+          "competitionCount": 77,
+          "datasetCount": 4673,
+          "scriptCount": 17928,
+          "totalCount": 22678
+        },
+        {
+          "ref": "text",
+          "name": "text",
+          "description": "",
+          "fullPath": "data type > text",
+          "competitionCount": 158,
+          "datasetCount": 8976,
+          "scriptCount": 4663,
+          "totalCount": 13797
+        },
+        {
+          "ref": "transfer learning",
+          "name": "transfer learning",
+          "description": "",
+          "fullPath": "technique > transfer learning",
+          "competitionCount": 8,
+          "datasetCount": 520,
+          "scriptCount": 2235,
+          "totalCount": 2763
+        },
+        {
+          "ref": "pytorch",
+          "name": "pytorch",
+          "description": "",
+          "fullPath": "packages > pytorch",
+          "competitionCount": 11,
+          "datasetCount": 705,
+          "scriptCount": 4575,
+          "totalCount": 5291
+        },
+        {
+          "ref": "transformers",
+          "name": "transformers",
+          "description": "",
+          "fullPath": "packages > transformers",
+          "competitionCount": 5,
+          "datasetCount": 466,
+          "scriptCount": 2752,
+          "totalCount": 3223
+        },
+        {
+          "ref": "text generation",
+          "name": "text generation",
+          "description": "",
+          "fullPath": "task > text-generation",
+          "competitionCount": 23,
+          "datasetCount": 426,
+          "scriptCount": 550,
+          "totalCount": 999
+        },
+        {
+          "ref": "text conversation",
+          "name": "text conversation",
+          "description": "",
+          "fullPath": "task > text-conversation",
+          "competitionCount": 5,
+          "datasetCount": 83,
+          "scriptCount": 38,
+          "totalCount": 126
+        },
+        {
+          "ref": "transformer",
+          "name": "transformer",
+          "description": "",
+          "fullPath": "architecture > transformer",
+          "competitionCount": 1,
+          "datasetCount": 85,
+          "scriptCount": 187,
+          "totalCount": 273
+        },
+        {
+          "ref": "english",
+          "name": "english",
+          "description": "",
+          "fullPath": "language > english",
+          "competitionCount": 24,
+          "datasetCount": 3801,
+          "scriptCount": 1239,
+          "totalCount": 5064
+        }
+      ],
+      "provenanceSources": "The model was created by me (Menouar Azib) by using supervised fine-tuning of google/gemma-2b on the publicly available Python dataset: Vezora/Tested-143k-Python-Alpaca. This dataset comprises Python code snippets paired with their corresponding instruction descriptions.",
+      "url": "https://www.kaggle.com/models/menouarazib/pygemma-2b"
+    },
+    {
+      "id": 23065,
+      "ref": "abdullahmeda/detect-ai-gpt2",
+      "title": "detect-ai-gpt2",
+      "subtitle": "Lighting fast ML model that can accurately detect whether an essay was written by a student or an LLM",
+      "author": "Abdullah Meda",
+      "slug": "detect-ai-gpt2",
+      "description": "# Model Summary\n\nThis model is a VotingClassifier that combines linguistic features from GPT-2 language models, open-sourced by openai, to detect whether a given text was written by a human or generated by a large language model (LLM). The key features used are perplexity (PPL) and Giant Language Model Test Room (GLTR) statistics, which measure how well the text conforms to common language patterns and structures learned by the GPT-2 models during training. The model was trained on an [starblasters8/human-vs-llm-text-corpus](https://www.kaggle.com/datasets/starblasters8/human-vs-llm-text-corpus) and achieved an ROC AUC score of 0.956 on the private leaderboard of the competition.\n\n## Usage\n\n``` python\nimport torch\nimport joblib\n\nimport numpy as np\nimport pandas as pd\nimport gradio as gr\n\nfrom nltk.data import load as nltk_load\nfrom transformers import AutoTokenizer, AutoModelForCausalLM\n\n\nprint(\"Loading model & Tokenizer...\")\nmodel_id  = 'openai-community/{}' # one of ['gpt2', 'gpt2-medium', 'gpt2-large']\ntokenizer = AutoTokenizer.from_pretrained(model_id)\nmodel     = AutoModelForCausalLM.from_pretrained(model_id)\n\nprint(\"Loading NLTL & and scikit-learn model...\")\nNLTK = nltk_load('data/english.pickle')\nsent_cut_en = NLTK.tokenize\nclf = joblib.load(f'data/gpt2-small-model')\n\nCROSS_ENTROPY = torch.nn.CrossEntropyLoss(reduction='none')\n\ndef gpt2_features(text, tokenizer, model, sent_cut):\n    # Tokenize\n    input_max_length = tokenizer.model_max_length - 2\n    token_ids, offsets = list(), list()\n    sentences = sent_cut(text)\n    for s in sentences:\n        tokens = tokenizer.tokenize(s)\n        ids = tokenizer.convert_tokens_to_ids(tokens)\n        difference = len(token_ids) + len(ids) - input_max_length\n        if difference &gt; 0:\n            ids = ids[:-difference]\n        offsets.append((len(token_ids), len(token_ids) + len(ids)))\n        token_ids.extend(ids)\n        if difference &gt;= 0:\n            break\n\n    input_ids = torch.tensor([tokenizer.bos_token_id] + token_ids)\n    logits = model(input_ids).logits\n    # Shift so that n-1 predict n\n    shift_logits = logits[:-1].contiguous()\n    shift_target = input_ids[1:].contiguous()\n    loss = CROSS_ENTROPY(shift_logits, shift_target)\n\n    all_probs = torch.softmax(shift_logits, dim=-1)\n    sorted_ids = torch.argsort(all_probs, dim=-1, descending=True)  # stable=True\n    expanded_tokens = shift_target.unsqueeze(-1).expand_as(sorted_ids)\n    indices = torch.where(sorted_ids == expanded_tokens)\n    rank = indices[-1]\n    counter = [\n        rank &lt; 10,\n        (rank &gt;= 10) & (rank &lt; 100),\n        (rank &gt;= 100) & (rank &lt; 1000),\n        rank &gt;= 1000\n    ]\n    counter = [c.long().sum(-1).item() for c in counter]\n\n\n    # compute different-level ppl\n    text_ppl = loss.mean().exp().item()\n    sent_ppl = list()\n    for start, end in offsets:\n        nll = loss[start: end].sum() / (end - start)\n        sent_ppl.append(nll.exp().item())\n    max_sent_ppl = max(sent_ppl)\n    sent_ppl_avg = sum(sent_ppl) / len(sent_ppl)\n    if len(sent_ppl) &gt; 1:\n        sent_ppl_std = torch.std(torch.tensor(sent_ppl)).item()\n    else:\n        sent_ppl_std = 0\n\n    mask = torch.tensor([1] * loss.size(0))\n    step_ppl = loss.cumsum(dim=-1).div(mask.cumsum(dim=-1)).exp()\n    max_step_ppl = step_ppl.max(dim=-1)[0].item()\n    step_ppl_avg = step_ppl.sum(dim=-1).div(loss.size(0)).item()\n    if step_ppl.size(0) &gt; 1:\n        step_ppl_std = step_ppl.std().item()\n    else:\n        step_ppl_std = 0\n    ppls = [\n        text_ppl, max_sent_ppl, sent_ppl_avg, sent_ppl_std,\n        max_step_ppl, step_ppl_avg, step_ppl_std\n    ]\n    return ppls + counter  # type: ignore\n\n\ndef predict_out(features, classifier, id_to_label):\n    x = np.asarray([features])\n    pred = classifier.predict(x)[0]\n    prob = classifier.predict_proba(x)[0, pred]\n    return [id_to_label[pred], prob]\n\n\ndef predict(text):\n    with torch.no_grad():\n        feats = gpt2_features(text, tokenizer, model, sent_cut_en)\n    out = predict_out(feats, clf, ['Human Written', 'LLM Generated'])\n    return out\n\npredict('Hello there!')\n```\n\n## System\n\nThis is a standalone model that takes a text input and outputs a binary prediction. It requires the pre-trained GPT-2 models and the trained VotingClassifier to be loaded before making predictions. There are no downstream dependencies when using the model outputs.\n\n## Implementation requirements\n\nThe model was trained using Python and the scikit-learn library for the VotingClassifier. The pre-trained GPT-2 models were loaded using the Hugging Face Transformers library. The training of the VotingClassifier was done on CPU, therefore inference is lightning fast even on CPU. However, the extraction of GPT-2 features were done on GPU, but this can be done on CPU too.\n\n# Model Characteristics\n\n## Model initialization\n\nThe VotingClassifier was trained from scratch using the PPL and GLTR features computed from the pre-trained GPT-2 models (small, medium, and large).\n\n## Model stats\n\nThe size of the VotingClassifier itself is small, but it relies on the pre-trained GPT-2 models for feature extraction, which have the following sizes:\n\n- GPT-2 Small: 124M parameters\n- GPT-2 Medium: 355M parameters\n- GPT-2 Large: 774M parameters\n\n## Other details\n\nThe model is not pruned or quantized. No techniques were used to preserve differential privacy.\n\n# Data Overview\n\n## Training data\n\nThe model was trained on [starblasters8/human-vs-llm-text-corpus](https://www.kaggle.com/datasets/starblasters8/human-vs-llm-text-corpus). The dataset consists of 800,000 text samples labeled as either human-written or LLM-generated. No specific pre-processing was done\n\n## Evaluation data\n\nThe model was trained on the entire dataset and tested on the hidden test set from the competition\n\n# Evaluation Results\n\n## Summary\n\nThe model achieved an ROC AUC score of 0.938 on the public leaderboard and 0.956 on the private leaderboard of the competition. These results can be viewed on the [leaderboard page](https://www.kaggle.com/competitions/llm-detect-ai-generated-text/leaderboard)\n\n## Usage limitations\n\nNone\n\n## Ethics\n\nThe model is designed to be unbiased and to avoid harmful, unethical, racist, sexist, toxic, dangerous, or illegal content.",
+      "instances": [
+        {
+          "id": 15196,
+          "slug": "large",
+          "framework": "scikit_learn",
+          "overview": "This model is a VotingClassifier that combines linguistic features from the GPT-2 large model, open-sourced by openai, to detect whether a given text was written by a human or generated by a large language model (LLM). The key features used are perplexity (PPL) and Giant Language Model Test Room (GLTR) statistics, which measure how well the text conforms to common language patterns and structures learned by the GPT-2 models during training.",
+          "usage": "```\nimport os\nimport torch\nimport joblib\nimport warnings\n\nimport numpy as np\nimport pandas as pd\n\nfrom tqdm.auto import tqdm\nfrom nltk.data import load as nltk_load\nfrom transformers import AutoTokenizer, AutoModelForCausalLM\n\ntqdm.pandas()\nwarnings.simplefilter('ignore')\nos.environ['TOKENIZERS_PARALLELISM'] = 'false'\n\nmodel_id  = 'openai-community/gpt2-large'    # one of ['gpt2', 'gpt2-medium', 'gpt2-large']\ntokenizer = AutoTokenizer.from_pretrained(model_id)\nmodel     = AutoModelForCausalLM.from_pretrained(model_id)\n\nCROSS_ENTROPY = torch.nn.CrossEntropyLoss(reduction='none')\nNLTK          = nltk_load('/kaggle/input/punkt/punkt/english.pickle')\nCLF           = joblib.load('/kaggle/input/detect-ai-gpt2/scikitlearn/large/1/gpt2-large-model')\n\nsent_cut_en = NLTK.tokenize\n\ndef gpt2_features(text, tokenizer, model, sent_cut):\n    # Tokenize\n    input_max_length = tokenizer.model_max_length - 2\n    token_ids, offsets = list(), list()\n    sentences = sent_cut(text)\n    for s in sentences:\n        tokens = tokenizer.tokenize(s)\n        ids = tokenizer.convert_tokens_to_ids(tokens)\n        difference = len(token_ids) + len(ids) - input_max_length\n        if difference &gt; 0:\n            ids = ids[:-difference]\n        offsets.append((len(token_ids), len(token_ids) + len(ids)))\n        token_ids.extend(ids)\n        if difference &gt;= 0:\n            break\n\n    input_ids = torch.tensor([tokenizer.bos_token_id] + token_ids)\n    logits = model(input_ids).logits\n    # Shift so that n-1 predict n\n    shift_logits = logits[:-1].contiguous()\n    shift_target = input_ids[1:].contiguous()\n    loss = CROSS_ENTROPY(shift_logits, shift_target)\n\n    all_probs = torch.softmax(shift_logits, dim=-1)\n    sorted_ids = torch.argsort(all_probs, dim=-1, descending=True)  # stable=True\n    expanded_tokens = shift_target.unsqueeze(-1).expand_as(sorted_ids)\n    indices = torch.where(sorted_ids == expanded_tokens)\n    rank = indices[-1]\n    counter = [\n        rank &lt; 10,\n        (rank &gt;= 10) & (rank &lt; 100),\n        (rank &gt;= 100) & (rank &lt; 1000),\n        rank &gt;= 1000\n    ]\n    counter = [c.long().sum(-1).item() for c in counter]\n\n\n    # compute different-level ppl\n    text_ppl = loss.mean().exp().item()\n    sent_ppl = list()\n    for start, end in offsets:\n        nll = loss[start: end].sum() / (end - start)\n        sent_ppl.append(nll.exp().item())\n    max_sent_ppl = max(sent_ppl)\n    sent_ppl_avg = sum(sent_ppl) / len(sent_ppl)\n    if len(sent_ppl) &gt; 1:\n        sent_ppl_std = torch.std(torch.tensor(sent_ppl)).item()\n    else:\n        sent_ppl_std = 0\n\n    mask = torch.tensor([1] * loss.size(0))\n    step_ppl = loss.cumsum(dim=-1).div(mask.cumsum(dim=-1)).exp()\n    max_step_ppl = step_ppl.max(dim=-1)[0].item()\n    step_ppl_avg = step_ppl.sum(dim=-1).div(loss.size(0)).item()\n    if step_ppl.size(0) &gt; 1:\n        step_ppl_std = step_ppl.std().item()\n    else:\n        step_ppl_std = 0\n    ppls = [\n        text_ppl, max_sent_ppl, sent_ppl_avg, sent_ppl_std,\n        max_step_ppl, step_ppl_avg, step_ppl_std\n    ]\n    return ppls + counter  # type: ignore\n\ndef predict_out(features, classifier, id_to_label):\n    x = np.asarray([features])\n    pred = classifier.predict(x)[0]\n    prob = classifier.predict_proba(x)[0, pred]\n    return [id_to_label[pred], prob]\n\ndef predict(text):\n    with torch.no_grad():\n        feats = gpt2_features(text, tokenizer, model, sent_cut_en)\n    out = predict_out(feats, CLF, ['Human Written', 'LLM Generated'])\n    return out\n\npredict('Hello, it works!')\n```",
+          "downloadUrl": "/models/abdullahmeda/detect-ai-gpt2/ScikitLearn/large/1/download",
+          "versionId": 18291,
+          "versionNumber": 1,
+          "url": "https://www.kaggle.com/models/abdullahmeda/detect-ai-gpt2/ScikitLearn/large",
+          "licenseName": "Apache 2.0",
+          "totalUncompressedBytes": 918235392
+        },
+        {
+          "id": 15199,
+          "slug": "medium",
+          "framework": "scikit_learn",
+          "fineTunable": true,
+          "overview": "This model is a VotingClassifier that combines linguistic features from the GPT-2 medium model, open-sourced by openai, to detect whether a given text was written by a human or generated by a large language model (LLM). The key features used are perplexity (PPL) and Giant Language Model Test Room (GLTR) statistics, which measure how well the text conforms to common language patterns and structures learned by the GPT-2 models during training.",
+          "usage": "```\nimport os\nimport torch\nimport joblib\nimport warnings\n\nimport numpy as np\nimport pandas as pd\n\nfrom tqdm.auto import tqdm\nfrom nltk.data import load as nltk_load\nfrom transformers import AutoTokenizer, AutoModelForCausalLM\n\ntqdm.pandas()\nwarnings.simplefilter('ignore')\nos.environ['TOKENIZERS_PARALLELISM'] = 'false'\n\nmodel_id  = 'openai-community/gpt2-medium'    # one of ['gpt2', 'gpt2-medium', 'gpt2-large']\ntokenizer = AutoTokenizer.from_pretrained(model_id)\nmodel     = AutoModelForCausalLM.from_pretrained(model_id)\n\nCROSS_ENTROPY = torch.nn.CrossEntropyLoss(reduction='none')\nNLTK          = nltk_load('/kaggle/input/punkt/punkt/english.pickle')\nCLF           = joblib.load('/kaggle/input/detect-ai-gpt2/scikitlearn/large/1/gpt2-medium-model')\n\nsent_cut_en = NLTK.tokenize\n\ndef gpt2_features(text, tokenizer, model, sent_cut):\n    # Tokenize\n    input_max_length = tokenizer.model_max_length - 2\n    token_ids, offsets = list(), list()\n    sentences = sent_cut(text)\n    for s in sentences:\n        tokens = tokenizer.tokenize(s)\n        ids = tokenizer.convert_tokens_to_ids(tokens)\n        difference = len(token_ids) + len(ids) - input_max_length\n        if difference &gt; 0:\n            ids = ids[:-difference]\n        offsets.append((len(token_ids), len(token_ids) + len(ids)))\n        token_ids.extend(ids)\n        if difference &gt;= 0:\n            break\n\n    input_ids = torch.tensor([tokenizer.bos_token_id] + token_ids)\n    logits = model(input_ids).logits\n    # Shift so that n-1 predict n\n    shift_logits = logits[:-1].contiguous()\n    shift_target = input_ids[1:].contiguous()\n    loss = CROSS_ENTROPY(shift_logits, shift_target)\n\n    all_probs = torch.softmax(shift_logits, dim=-1)\n    sorted_ids = torch.argsort(all_probs, dim=-1, descending=True)  # stable=True\n    expanded_tokens = shift_target.unsqueeze(-1).expand_as(sorted_ids)\n    indices = torch.where(sorted_ids == expanded_tokens)\n    rank = indices[-1]\n    counter = [\n        rank &lt; 10,\n        (rank &gt;= 10) & (rank &lt; 100),\n        (rank &gt;= 100) & (rank &lt; 1000),\n        rank &gt;= 1000\n    ]\n    counter = [c.long().sum(-1).item() for c in counter]\n\n\n    # compute different-level ppl\n    text_ppl = loss.mean().exp().item()\n    sent_ppl = list()\n    for start, end in offsets:\n        nll = loss[start: end].sum() / (end - start)\n        sent_ppl.append(nll.exp().item())\n    max_sent_ppl = max(sent_ppl)\n    sent_ppl_avg = sum(sent_ppl) / len(sent_ppl)\n    if len(sent_ppl) &gt; 1:\n        sent_ppl_std = torch.std(torch.tensor(sent_ppl)).item()\n    else:\n        sent_ppl_std = 0\n\n    mask = torch.tensor([1] * loss.size(0))\n    step_ppl = loss.cumsum(dim=-1).div(mask.cumsum(dim=-1)).exp()\n    max_step_ppl = step_ppl.max(dim=-1)[0].item()\n    step_ppl_avg = step_ppl.sum(dim=-1).div(loss.size(0)).item()\n    if step_ppl.size(0) &gt; 1:\n        step_ppl_std = step_ppl.std().item()\n    else:\n        step_ppl_std = 0\n    ppls = [\n        text_ppl, max_sent_ppl, sent_ppl_avg, sent_ppl_std,\n        max_step_ppl, step_ppl_avg, step_ppl_std\n    ]\n    return ppls + counter  # type: ignore\n\ndef predict_out(features, classifier, id_to_label):\n    x = np.asarray([features])\n    pred = classifier.predict(x)[0]\n    prob = classifier.predict_proba(x)[0, pred]\n    return [id_to_label[pred], prob]\n\ndef predict(text):\n    with torch.no_grad():\n        feats = gpt2_features(text, tokenizer, model, sent_cut_en)\n    out = predict_out(feats, CLF, ['Human Written', 'LLM Generated'])\n    return out\n\npredict('Hello, it works!')\n```",
+          "downloadUrl": "/models/abdullahmeda/detect-ai-gpt2/ScikitLearn/medium/1/download",
+          "versionId": 18294,
+          "versionNumber": 1,
+          "url": "https://www.kaggle.com/models/abdullahmeda/detect-ai-gpt2/ScikitLearn/medium",
+          "licenseName": "Apache 2.0",
+          "totalUncompressedBytes": 932091008
+        },
+        {
+          "id": 15201,
+          "slug": "small",
+          "framework": "scikit_learn",
+          "fineTunable": true,
+          "overview": "This model is a VotingClassifier that combines linguistic features from the GPT-2 small model, open-sourced by openai, to detect whether a given text was written by a human or generated by a large language model (LLM). The key features used are perplexity (PPL) and Giant Language Model Test Room (GLTR) statistics, which measure how well the text conforms to common language patterns and structures learned by the GPT-2 models during training.",
+          "usage": "```\nimport os\nimport torch\nimport joblib\nimport warnings\n\nimport numpy as np\nimport pandas as pd\n\nfrom tqdm.auto import tqdm\nfrom nltk.data import load as nltk_load\nfrom transformers import AutoTokenizer, AutoModelForCausalLM\n\ntqdm.pandas()\nwarnings.simplefilter('ignore')\nos.environ['TOKENIZERS_PARALLELISM'] = 'false'\n\nmodel_id  = 'openai-community/gpt2'    # one of ['gpt2', 'gpt2-medium', 'gpt2-large']\ntokenizer = AutoTokenizer.from_pretrained(model_id)\nmodel     = AutoModelForCausalLM.from_pretrained(model_id)\n\nCROSS_ENTROPY = torch.nn.CrossEntropyLoss(reduction='none')\nNLTK          = nltk_load('/kaggle/input/punkt/punkt/english.pickle')\nCLF           = joblib.load('/kaggle/input/detect-ai-gpt2/scikitlearn/large/1/gpt2-small-model')\n\nsent_cut_en = NLTK.tokenize\n\ndef gpt2_features(text, tokenizer, model, sent_cut):\n    # Tokenize\n    input_max_length = tokenizer.model_max_length - 2\n    token_ids, offsets = list(), list()\n    sentences = sent_cut(text)\n    for s in sentences:\n        tokens = tokenizer.tokenize(s)\n        ids = tokenizer.convert_tokens_to_ids(tokens)\n        difference = len(token_ids) + len(ids) - input_max_length\n        if difference &gt; 0:\n            ids = ids[:-difference]\n        offsets.append((len(token_ids), len(token_ids) + len(ids)))\n        token_ids.extend(ids)\n        if difference &gt;= 0:\n            break\n\n    input_ids = torch.tensor([tokenizer.bos_token_id] + token_ids)\n    logits = model(input_ids).logits\n    # Shift so that n-1 predict n\n    shift_logits = logits[:-1].contiguous()\n    shift_target = input_ids[1:].contiguous()\n    loss = CROSS_ENTROPY(shift_logits, shift_target)\n\n    all_probs = torch.softmax(shift_logits, dim=-1)\n    sorted_ids = torch.argsort(all_probs, dim=-1, descending=True)  # stable=True\n    expanded_tokens = shift_target.unsqueeze(-1).expand_as(sorted_ids)\n    indices = torch.where(sorted_ids == expanded_tokens)\n    rank = indices[-1]\n    counter = [\n        rank &lt; 10,\n        (rank &gt;= 10) & (rank &lt; 100),\n        (rank &gt;= 100) & (rank &lt; 1000),\n        rank &gt;= 1000\n    ]\n    counter = [c.long().sum(-1).item() for c in counter]\n\n\n    # compute different-level ppl\n    text_ppl = loss.mean().exp().item()\n    sent_ppl = list()\n    for start, end in offsets:\n        nll = loss[start: end].sum() / (end - start)\n        sent_ppl.append(nll.exp().item())\n    max_sent_ppl = max(sent_ppl)\n    sent_ppl_avg = sum(sent_ppl) / len(sent_ppl)\n    if len(sent_ppl) &gt; 1:\n        sent_ppl_std = torch.std(torch.tensor(sent_ppl)).item()\n    else:\n        sent_ppl_std = 0\n\n    mask = torch.tensor([1] * loss.size(0))\n    step_ppl = loss.cumsum(dim=-1).div(mask.cumsum(dim=-1)).exp()\n    max_step_ppl = step_ppl.max(dim=-1)[0].item()\n    step_ppl_avg = step_ppl.sum(dim=-1).div(loss.size(0)).item()\n    if step_ppl.size(0) &gt; 1:\n        step_ppl_std = step_ppl.std().item()\n    else:\n        step_ppl_std = 0\n    ppls = [\n        text_ppl, max_sent_ppl, sent_ppl_avg, sent_ppl_std,\n        max_step_ppl, step_ppl_avg, step_ppl_std\n    ]\n    return ppls + counter  # type: ignore\n\ndef predict_out(features, classifier, id_to_label):\n    x = np.asarray([features])\n    pred = classifier.predict(x)[0]\n    prob = classifier.predict_proba(x)[0, pred]\n    return [id_to_label[pred], prob]\n\ndef predict(text):\n    with torch.no_grad():\n        feats = gpt2_features(text, tokenizer, model, sent_cut_en)\n    out = predict_out(feats, CLF, ['Human Written', 'LLM Generated'])\n    return out\n\npredict('Hello, it works!')\n```",
+          "downloadUrl": "/models/abdullahmeda/detect-ai-gpt2/ScikitLearn/small/1/download",
+          "versionId": 18296,
+          "versionNumber": 1,
+          "url": "https://www.kaggle.com/models/abdullahmeda/detect-ai-gpt2/ScikitLearn/small",
+          "licenseName": "Apache 2.0",
+          "totalUncompressedBytes": 976393968
+        }
+      ],
+      "tags": [
+        {
+          "ref": "beginner",
+          "name": "beginner",
+          "description": "New to data science? Explore tips, tricks, and beginner friendly work from other Kagglers.",
+          "fullPath": "audience > beginner",
+          "competitionCount": 13755,
+          "datasetCount": 9463,
+          "scriptCount": 43300,
+          "totalCount": 66518
+        },
+        {
+          "ref": "intermediate",
+          "name": "intermediate",
+          "description": "",
+          "fullPath": "audience > intermediate",
+          "competitionCount": 79,
+          "datasetCount": 5480,
+          "scriptCount": 6216,
+          "totalCount": 11775
+        },
+        {
+          "ref": "advanced",
+          "name": "advanced",
+          "description": "",
+          "fullPath": "audience > advanced",
+          "competitionCount": 19,
+          "datasetCount": 1952,
+          "scriptCount": 2384,
+          "totalCount": 4355
+        },
+        {
+          "ref": "nlp",
+          "name": "nlp",
+          "description": "Natural Language Processing gives a computer program the ability to extract meaning human language. Applications include sentiment analysis, translation, and speech recognition.",
+          "fullPath": "analysis > nlp",
+          "competitionCount": 111,
+          "datasetCount": 5175,
+          "scriptCount": 9167,
+          "totalCount": 14453
+        },
+        {
+          "ref": "classification",
+          "name": "classification",
+          "description": "",
+          "fullPath": "task > classification",
+          "competitionCount": 191,
+          "datasetCount": 6189,
+          "scriptCount": 20222,
+          "totalCount": 26602
+        },
+        {
+          "ref": "ensembling",
+          "name": "ensembling",
+          "description": "",
+          "fullPath": "technique > ensembling",
+          "competitionCount": 1,
+          "datasetCount": 148,
+          "scriptCount": 2994,
+          "totalCount": 3143
+        },
+        {
+          "ref": "feature engineering",
+          "name": "feature engineering",
+          "description": "",
+          "fullPath": "technique > feature engineering",
+          "competitionCount": 22,
+          "datasetCount": 933,
+          "scriptCount": 9079,
+          "totalCount": 10034
+        },
+        {
+          "ref": "deep learning",
+          "name": "deep learning",
+          "description": "",
+          "fullPath": "technique > deep learning",
+          "competitionCount": 77,
+          "datasetCount": 4673,
+          "scriptCount": 17928,
+          "totalCount": 22678
+        },
+        {
+          "ref": "gradient boosting",
+          "name": "gradient boosting",
+          "description": "",
+          "fullPath": "technique > gradient boosting",
+          "competitionCount": 4,
+          "datasetCount": 135,
+          "scriptCount": 2650,
+          "totalCount": 2789
+        },
+        {
+          "ref": "text",
+          "name": "text",
+          "description": "",
+          "fullPath": "data type > text",
+          "competitionCount": 158,
+          "datasetCount": 8976,
+          "scriptCount": 4663,
+          "totalCount": 13797
+        },
+        {
+          "ref": "model explainability",
+          "name": "model explainability",
+          "description": "Some see machine learning models as \"black boxes\" that are difficult to interpret and explain. For this challenge, you're encouraged to use concepts such as feature importance, perturbation importance, and partial dependence plots to explain the predictions of an ML model.",
+          "fullPath": "technique > model explainability",
+          "competitionCount": 3,
+          "datasetCount": 104,
+          "scriptCount": 2185,
+          "totalCount": 2292
+        },
+        {
+          "ref": "lightgbm",
+          "name": "lightgbm",
+          "description": "",
+          "fullPath": "packages > lightgbm",
+          "competitionCount": 2,
+          "datasetCount": 67,
+          "scriptCount": 3598,
+          "totalCount": 3667
+        },
+        {
+          "ref": "nltk",
+          "name": "nltk",
+          "description": "",
+          "fullPath": "packages > nltk",
+          "competitionCount": 1,
+          "datasetCount": 218,
+          "scriptCount": 3592,
+          "totalCount": 3811
+        },
+        {
+          "ref": "sklearn",
+          "name": "sklearn",
+          "description": "",
+          "fullPath": "packages > sklearn",
+          "competitionCount": 6,
+          "datasetCount": 441,
+          "scriptCount": 15704,
+          "totalCount": 16151
+        },
+        {
+          "ref": "pytorch",
+          "name": "pytorch",
+          "description": "",
+          "fullPath": "packages > pytorch",
+          "competitionCount": 11,
+          "datasetCount": 705,
+          "scriptCount": 4575,
+          "totalCount": 5291
+        },
+        {
+          "ref": "text classification",
+          "name": "text classification",
+          "description": "",
+          "fullPath": "task > text-classification",
+          "competitionCount": 34,
+          "datasetCount": 783,
+          "scriptCount": 797,
+          "totalCount": 1614
+        },
+        {
+          "ref": "feature extraction",
+          "name": "feature extraction",
+          "description": "",
+          "fullPath": "task > feature-extraction",
+          "competitionCount": 18,
+          "datasetCount": 328,
+          "scriptCount": 447,
+          "totalCount": 793
+        },
+        {
+          "ref": "english",
+          "name": "english",
+          "description": "",
+          "fullPath": "language > english",
+          "competitionCount": 24,
+          "datasetCount": 3801,
+          "scriptCount": 1239,
+          "totalCount": 5064
+        },
+        {
+          "ref": "hugging face",
+          "name": "hugging face",
+          "description": "",
+          "fullPath": "packages > hugging face",
+          "datasetCount": 89,
+          "scriptCount": 451,
+          "totalCount": 540
+        },
+        {
+          "ref": "gpt2",
+          "name": "gpt2",
+          "description": "",
+          "fullPath": "architecture > gpt2",
+          "datasetCount": 23,
+          "scriptCount": 82,
+          "totalCount": 105
+        }
+      ],
+      "provenanceSources": "The model is a variant of the GPT-2 series of models, developed and open-sourced by OpenAI. It was fine-tuned for this specific task, as part of a competition on Kaggle. The fine-tuning process involved training the model on a dataset of 800k samples provided by @starblasters8. The model was not trained from scratch but was initialized with weights from the pre-trained GPT-2 Large model",
+      "url": "https://www.kaggle.com/models/abdullahmeda/detect-ai-gpt2"
+    },
+    {
+      "id": 23790,
+      "ref": "rashmibanthia/llm-detect-roberta-large",
+      "title": "LLM Detect - Roberta Large",
+      "subtitle": "LLM Detect AI Generated text - Roberta Large (13th rank model)",
+      "author": "RB",
+      "slug": "llm-detect-roberta-large",
+      "description": "# Model Summary\n\nRoberta Large Models fine tuned for LLM Detect Competition. These were part of my [13th rank solution](https://www.kaggle.com/competitions/llm-detect-ai-generated-text/discussion/470593). \n\n## Usage\n\nCheck out the inference notebook here - https://www.kaggle.com/code/rashmibanthia/llm-detect-robertalarge\n\n## Model stats\n\nAbout 1.5GB per fold, all layers fine tuned (no freezing Layers) \n\n\n# Data Overview\n\nTODO\n\n## Training data\n\nTODO",
+      "instances": [
+        {
+          "id": 15677,
+          "slug": "5folds",
+          "framework": "py_torch",
+          "fineTunable": true,
+          "overview": "5 fold - Roberta Large models for LLM Detect Competition.",
+          "usage": "5 fold - Roberta Large models for LLM Detect Competition. These were part of my [13th rank solution](https://www.kaggle.com/competitions/llm-detect-ai-generated-text/discussion/470593)\n\nInference notebook here - https://www.kaggle.com/code/rashmibanthia/llm-detect-robertalarge",
+          "downloadUrl": "/models/rashmibanthia/llm-detect-roberta-large/PyTorch/5folds/2/download",
+          "versionId": 19507,
+          "versionNumber": 2,
+          "url": "https://www.kaggle.com/models/rashmibanthia/llm-detect-roberta-large/PyTorch/5folds",
+          "licenseName": "MIT",
+          "modelInstanceType": "external_variant",
+          "externalBaseModelUrl": "https://huggingface.co/FacebookAI/roberta-large",
+          "totalUncompressedBytes": 7108311885
+        }
+      ],
+      "tags": [
+        {
+          "ref": "text",
+          "name": "text",
+          "description": "",
+          "fullPath": "data type > text",
+          "competitionCount": 158,
+          "datasetCount": 8976,
+          "scriptCount": 4663,
+          "totalCount": 13797
+        },
+        {
+          "ref": "binary classification",
+          "name": "binary classification",
+          "description": "",
+          "fullPath": "task > binary-classification",
+          "competitionCount": 11460,
+          "datasetCount": 1622,
+          "scriptCount": 7741,
+          "totalCount": 20823
+        },
+        {
+          "ref": "transformers",
+          "name": "transformers",
+          "description": "",
+          "fullPath": "packages > transformers",
+          "competitionCount": 5,
+          "datasetCount": 466,
+          "scriptCount": 2752,
+          "totalCount": 3223
+        },
+        {
+          "ref": "text classification",
+          "name": "text classification",
+          "description": "",
+          "fullPath": "task > text-classification",
+          "competitionCount": 34,
+          "datasetCount": 783,
+          "scriptCount": 797,
+          "totalCount": 1614
+        },
+        {
+          "ref": "bert",
+          "name": "bert",
+          "description": "",
+          "fullPath": "architecture > bert",
+          "competitionCount": 2,
+          "datasetCount": 157,
+          "scriptCount": 424,
+          "totalCount": 583
+        }
+      ],
+      "provenanceSources": "https://huggingface.co/FacebookAI/roberta-large",
+      "url": "https://www.kaggle.com/models/rashmibanthia/llm-detect-roberta-large"
+    },
+    {
+      "id": 23923,
+      "ref": "ubamba98/llm-daigt-single-best-mistral-7b-lora",
+      "title": "LLM - DAIGT: Mistral 7B LoRA",
+      "subtitle": "Single best Model for LLM - Detect AI Generated Text Competition",
+      "author": "Udbhav Bamba",
+      "slug": "llm-daigt-single-best-mistral-7b-lora",
+      "description": "# Model Summary\n\nThe model achieved a private score of 0.984 on the Kaggle competition 'LLM - Detect AI Generated Text'. It utilizes LoRA (Low-Rank Adaptation) weights trained on top of the mistralai/Mistral-7B-v0.1 model.\n\n## Usage\n\n```python\nbnb_config = BitsAndBytesConfig(\n        load_in_4bit=True,\n        bnb_4bit_quant_type=\"nf4\",\n        bnb_4bit_use_double_quant=True,\n        bnb_4bit_compute_dtype=torch.float16\n    )\n\nmodel = AutoModelForSequenceClassification.from_pretrained(\n       \"mistralai/Mistral-7B-v0.1\",\n        num_labels=1,\n        quantization_config=bnb_config,\n        trust_remote_code=True,\n        low_cpu_mem_usage=True\n    )\nmodel.config.pretraining_tp = 1\nmodel.config.pad_token_id = tokenizer.pad_token_id\nmodel = PeftModel.from_pretrained(model, LORA_PATH)\n```\n\nFor further details please refer to following notebook: [[Private Score: 0.984] Single LLM](https://www.kaggle.com/code/ubamba98/private-score-0-984-single-llm/notebook)\n\n## Implementation requirements\n\nThe model was trained on a custom Datamix curated for LLM - Detect AI Generated Text. Further details can be found at [Comprehensive 1st Place Write-Up](https://www.kaggle.com/competitions/llm-detect-ai-generated-text/discussion/473295)\n\n# Model Characteristics\n\n## Model initialization\n\n[mistralai/Mistral-7B-v0.1](https://huggingface.co/mistralai/Mistral-7B-v0.1) should be used to initialise these LoRA weights\n\n## Model stats\n\nThis is a 7B parameter large language model",
+      "instances": [
+        {
+          "id": 15771,
+          "slug": "v1",
+          "framework": "transformers",
+          "fineTunable": true,
+          "overview": "The model was trained on a custom Datamix curated for LLM - Detect AI Generated Text. Using following LoRA Config.\n\n```\npeft_config = LoraConfig(\n        r=64,\n        lora_alpha=16,\n        lora_dropout=0.1,\n        bias=\"none\",\n        task_type=TaskType.SEQ_CLS,\n        inference_mode=False,\n        target_modules=[“q_proj”, “k_proj”, “v_proj”, “o_proj”]\n    )\n```\nFurther details can be found at [Comprehensive 1st Place Write-Up](https://www.kaggle.com/competitions/llm-detect-ai-generated-text/discussion/473295)",
+          "usage": "Model can be loaded with help of PEFT library\n\n```python\nbnb_config = BitsAndBytesConfig(\n        load_in_4bit=True,\n        bnb_4bit_quant_type=\"nf4\",\n        bnb_4bit_use_double_quant=True,\n        bnb_4bit_compute_dtype=torch.float16\n    )\n\nmodel = AutoModelForSequenceClassification.from_pretrained(\n       \"mistralai/Mistral-7B-v0.1\",\n        num_labels=1,\n        quantization_config=bnb_config,\n        trust_remote_code=True,\n        low_cpu_mem_usage=True\n    )\nmodel.config.pretraining_tp = 1\nmodel.config.pad_token_id = tokenizer.pad_token_id\nmodel = PeftModel.from_pretrained(model, LORA_PATH)\n```\n\nFor further details please refer to following notebook: [[Private Score: 0.984] Single LLM](https://www.kaggle.com/code/ubamba98/private-score-0-984-single-llm/notebook)",
+          "downloadUrl": "/models/ubamba98/llm-daigt-single-best-mistral-7b-lora/Transformers/v1/1/download",
+          "versionId": 19016,
+          "versionNumber": 1,
+          "url": "https://www.kaggle.com/models/ubamba98/llm-daigt-single-best-mistral-7b-lora/Transformers/v1",
+          "licenseName": "Apache 2.0",
+          "modelInstanceType": "kaggle_variant",
+          "baseModelInstanceInformation": {
+            "id": 3899,
+            "owner": {
+              "id": 3875,
+              "imageUrl": "https://storage.googleapis.com/kaggle-organizations/3875/thumbnail.jpg",
+              "isOrganization": true,
+              "name": "Mistral AI",
+              "profileUrl": "/organizations/mistral-ai",
+              "slug": "mistral-ai",
+              "userTier": "STAFF",
+              "allowModelGating": false
+            },
+            "modelSlug": "mistral",
+            "instanceSlug": "7b-v0.1-hf",
+            "framework": "py_torch"
+          },
+          "totalUncompressedBytes": 218147475
+        }
+      ],
+      "tags": [
+        {
+          "ref": "transformers",
+          "name": "transformers",
+          "description": "",
+          "fullPath": "packages > transformers",
+          "competitionCount": 5,
+          "datasetCount": 466,
+          "scriptCount": 2752,
+          "totalCount": 3223
+        },
+        {
+          "ref": "english",
+          "name": "english",
+          "description": "",
+          "fullPath": "language > english",
+          "competitionCount": 24,
+          "datasetCount": 3801,
+          "scriptCount": 1239,
+          "totalCount": 5064
+        }
+      ],
+      "provenanceSources": "The model was trained on a custom Datamix curated for LLM - Detect AI Generated Text. Further details can be found at [Comprehensive 1st Place Write-Up](https://www.kaggle.com/competitions/llm-detect-ai-generated-text/discussion/473295)",
+      "url": "https://www.kaggle.com/models/ubamba98/llm-daigt-single-best-mistral-7b-lora"
+    }
+  ]
+}

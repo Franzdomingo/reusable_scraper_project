@@ -2,12 +2,16 @@ version: '3.8'
 
 services:
   scraper:
-    build: .
+    build:
+      context: ..
+      dockerfile: scrapy_project/Dockerfile
     image: llm-metadata-scraper
     container_name: llm-scraper
     volumes:
       # Mount output directory to persist scraped data
       - ./output:/app/output
+      # Mount api_output directory to persist API data
+      - ../api_output:/app/api_output
     environment:
       # Selenium environment variables
       - DISPLAY=:99
@@ -19,11 +23,14 @@ services:
 
   # Service for running individual spiders
   kaggle-links:
-    build: .
+    build:
+      context: ..
+      dockerfile: scrapy_project/Dockerfile
     image: llm-metadata-scraper
     container_name: kaggle-links-scraper
     volumes:
       - ./output:/app/output
+      - ../api_output:/app/api_output
     environment:
       - DISPLAY=:99
       - CHROME_BIN=/usr/bin/chromium
@@ -33,11 +40,14 @@ services:
       - individual
 
   kaggle-metadata:
-    build: .
+    build:
+      context: ..
+      dockerfile: scrapy_project/Dockerfile
     image: llm-metadata-scraper
     container_name: kaggle-metadata-scraper
     volumes:
       - ./output:/app/output
+      - ../api_output:/app/api_output
     environment:
       - DISPLAY=:99
       - CHROME_BIN=/usr/bin/chromium
@@ -47,11 +57,14 @@ services:
       - individual
 
   nvidia-models:
-    build: .
+    build:
+      context: ..
+      dockerfile: scrapy_project/Dockerfile
     image: llm-metadata-scraper
     container_name: nvidia-models-scraper
     volumes:
       - ./output:/app/output
+      - ../api_output:/app/api_output
     environment:
       - DISPLAY=:99
       - CHROME_BIN=/usr/bin/chromium
@@ -59,3 +72,37 @@ services:
     command: python run.py nvidia_models
     profiles:
       - individual
+
+  # Service for running Kaggle API list models command
+  kaggle-api-list:
+    build:
+      context: ..
+      dockerfile: scrapy_project/Dockerfile
+    image: llm-metadata-scraper
+    container_name: kaggle-api-list
+    volumes:
+      - ../api_output:/app/api_output
+      - ~/.kaggle:/root/.kaggle:ro
+    environment:
+      - KAGGLE_USERNAME=${KAGGLE_USERNAME}
+      - KAGGLE_KEY=${KAGGLE_KEY}
+    command: python -m api.kaggle_api --page-size=20 --max-pages=5 --output=kaggle_models.json
+    profiles:
+      - api
+
+  # Service for running Kaggle API fetch from CSV command
+  kaggle-api-csv:
+    build:
+      context: ..
+      dockerfile: scrapy_project/Dockerfile
+    image: llm-metadata-scraper
+    container_name: kaggle-api-csv
+    volumes:
+      - ../api_output:/app/api_output
+      - ~/.kaggle:/root/.kaggle:ro
+    environment:
+      - KAGGLE_USERNAME=${KAGGLE_USERNAME}
+      - KAGGLE_KEY=${KAGGLE_KEY}
+    command: python -m api.kaggle_api --input-csv=/app/api_output/input.csv --output=models.json
+    profiles:
+      - api
