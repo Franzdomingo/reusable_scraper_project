@@ -24,7 +24,7 @@ docker run -v ./output:/app/output llm-scraper
 
 ### Option 2: Run Individual Spiders
 
-#### Using Docker Compose
+#### Using Docker Compose (with `docker-compose run`)
 
 ```bash
 # Run kaggle_links spider
@@ -35,6 +35,23 @@ docker-compose run scraper python run.py kaggle_metadata
 
 # Run nvidia_models spider
 docker-compose run scraper python run.py nvidia_models
+```
+
+#### Using Docker Compose Services (with profiles)
+
+The docker-compose.yml includes pre-configured services for each spider:
+
+```bash
+# Run individual spider services
+docker-compose --profile individual up kaggle-links
+docker-compose --profile individual up kaggle-metadata
+docker-compose --profile individual up nvidia-models
+
+# Run in detached mode (background)
+docker-compose --profile individual up -d kaggle-links
+
+# Run Kaggle API service
+docker-compose --profile api up kaggle-api-csv
 ```
 
 #### Using Docker Directly
@@ -113,9 +130,43 @@ docker-compose build
 docker build -t llm-scraper .
 ```
 
+## Docker Compose Services
+
+The `docker-compose.yml` file defines multiple services:
+
+1. **scraper** - Main service for running any spider
+2. **kaggle-links** - Pre-configured for Kaggle links spider (profile: individual)
+3. **kaggle-metadata** - Pre-configured for Kaggle metadata spider (profile: individual)
+4. **nvidia-models** - Pre-configured for NVIDIA models spider (profile: individual)
+5. **kaggle-api-csv** - Kaggle API service (profile: api)
+
+### Running Specific Services
+
+```bash
+# Run the main scraper service
+docker-compose up scraper
+
+# Run a specific spider service (requires --profile flag)
+docker-compose --profile individual up kaggle-links
+
+# List all services
+docker-compose config --services
+```
+
+## Environment Variables
+
+The docker-compose.yml sets these environment variables for Selenium/browser automation:
+
+- **DISPLAY=:99** - Virtual display number for headless X server (Xvfb)
+- **CHROME_BIN=/usr/bin/chromium** - Path to the Chromium browser binary
+- **CHROMEDRIVER_PATH=/usr/bin/chromedriver** - Path to ChromeDriver executable
+
+These variables enable headless browser automation inside the Docker container.
+
 ## Notes
 
 - The Docker image includes Chromium and ChromeDriver for Selenium automation
-- Output files are persisted via volume mounts
-- Scrapers run headless (no GUI)
+- Output files are persisted via volume mounts (`./output` → `/app/output`)
+- API output is mounted at `../api_output` → `/app/api_output`
+- Scrapers run headless (no GUI) using virtual display
 - All terminal interactions have been removed
