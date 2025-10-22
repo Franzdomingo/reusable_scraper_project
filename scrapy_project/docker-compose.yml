@@ -15,7 +15,7 @@ services:
       - DISPLAY=:99
       - CHROME_BIN=/usr/bin/chromium
       - CHROMEDRIVER_PATH=/usr/bin/chromedriver
-    command: python run.py
+    command: python scrapy_project/run.py
     # For running specific spiders, override the command:
     # docker-compose run scraper python run.py kaggle_links -a max_pages=10
 
@@ -33,7 +33,7 @@ services:
       - DISPLAY=:99
       - CHROME_BIN=/usr/bin/chromium
       - CHROMEDRIVER_PATH=/usr/bin/chromedriver
-    command: python run.py kaggle_links -a max_pages=100
+    command: python scrapy_project/run.py kaggle_links -a max_pages=100
     profiles:
       - individual
 
@@ -50,7 +50,7 @@ services:
       - DISPLAY=:99
       - CHROME_BIN=/usr/bin/chromium
       - CHROMEDRIVER_PATH=/usr/bin/chromedriver
-    command: python run.py kaggle_metadata
+    command: python scrapy_project/run.py kaggle_metadata
     profiles:
       - individual
 
@@ -67,7 +67,7 @@ services:
       - DISPLAY=:99
       - CHROME_BIN=/usr/bin/chromium
       - CHROMEDRIVER_PATH=/usr/bin/chromedriver
-    command: python run.py nvidia_models
+    command: python scrapy_project/run.py nvidia_models
     profiles:
       - individual
 

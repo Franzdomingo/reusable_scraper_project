@@ -22,21 +22,25 @@ class KaggleSelectors:
     
     # Download count selectors - ordered by priority
     # CSS selectors first (for Selenium), then XPath (for lxml)
-    # Updated 2025-10-13: Precise selectors targeting downloads section
+    # Updated 2025-10-22: New Kaggle redesign selectors
     # Target: span element containing download count (NOT views)
-    # NOTE: Excludes Engagement/Views section
+    # NOTE: Downloads appear in the right sidebar under "Downloads" heading
+    # IMPORTANT: Must target the Downloads section specifically to avoid matching other numbers
     DOWNLOAD_SELECTORS: List[str] = [
-        # CSS selectors (try these first with Selenium for dynamic content)
-        # Most specific - user-provided selectors that correctly target downloads
+        # XPath selectors (2025-10-22 redesign) - MOST RELIABLE
+        # Target the Downloads section specifically by finding the h3 header first
+        '//h3[text()="Downloads"]/ancestor::div[@class and contains(@class, "sc-fEaSUP")]//span[contains(@class, "sc-kvnevz") and contains(@class, "sc-kMemMU")][1]',
+        '//h3[text()="Downloads"]//following::span[contains(@class, "sc-kvnevz") and contains(@class, "sc-kMemMU")][1]',
+        # CSS selectors (less reliable, may match wrong elements)
+        'span.sc-kvnevz.sc-kMemMU.jQNTEi.djTcMj',
+        # Fallback - older selectors
         '.sc-jTpuXY > div:nth-child(1) > div:nth-child(2) > div:nth-child(1) > span:nth-child(1)',
         'div.sc-gUYSAC:nth-child(2) > div:nth-child(2) > div:nth-child(2) > span:nth-child(1)',
-        # Original selectors (fallback)
-        'span.sc-kCuUfV.sc-hoocXy.iPCsnU.eqfbZr',  # Index [388]: '430' - exact match
-        'span.sc-hoocXy.eqfbZr',  # Downloads-specific classes (excludes Engagement)
+        'span.sc-kCuUfV.sc-hoocXy.iPCsnU.eqfbZr',
+        'span.sc-hoocXy.eqfbZr',
         '.sc-jTpuXY > div:nth-child(1) > div:nth-child(2) > div:nth-child(1)',
-        # Fallback with class filtering
-        'span.iPCsnU.eqfbZr',  # Partial class match - still excludes Engagement
-        # XPath selectors (fallback for lxml parsing)
+        'span.iPCsnU.eqfbZr',
+        # Generic XPath fallbacks
         '//span[contains(@class, "sc-kCuUfV") and contains(@class, "sc-hoocXy") and contains(@class, "iPCsnU") and contains(@class, "eqfbZr")]',
         '//span[contains(@class, "sc-hoocXy") and contains(@class, "eqfbZr")]',
         '//span[contains(@class, "iPCsnU") and contains(@class, "eqfbZr")]'
@@ -45,12 +49,16 @@ class KaggleSelectors:
     # Usability score selectors - ordered by priority
     # CSS selectors first (for Selenium), then XPath (for lxml)
     # Target: p element containing usability score
+    # Updated 2025-10-22: New Kaggle redesign selectors
     USABILITY_SELECTORS: List[str] = [
-        # CSS selector - user-provided selector
+        # CSS selector - 2025-10-22 redesign
+        'p.sc-fbQrwq.sc-fwxbQo.kHxwkV.hwCees',  # New usability score class
+        # Fallback - older selectors
         'p.sc-hwddKA:nth-child(5)',
-        # Fallback - broader class match
         'p.sc-hwddKA',
-        # XPath fallback
+        # XPath selectors
+        '//h2[contains(text(), "Usability")]//following::p[contains(@class, "sc-fbQrwq")][1]',
+        '//p[contains(@class, "sc-fbQrwq") and contains(@class, "sc-fwxbQo")]',
         '//p[contains(@class, "sc-hwddKA")]'
     ]
     
@@ -72,47 +80,55 @@ class KaggleSelectors:
     TAG_POPUP_TEXT_SPAN: str = 'span.bMbEZO'  # Span containing tag text within popup buttons
 
     # Collaborators action button (to expand/collapse the section if needed)
-    COLLABORATORS_ACTION_BUTTON: str = 'div.sc-bBhMX:nth-child(1) > div:nth-child(1) > button:nth-child(2)'
+    # Updated 2025-10-22: New Kaggle redesign selectors
+    COLLABORATORS_ACTION_BUTTON: str = 'button[aria-label="Expand Collaborators"]'
 
     # Collaborators selectors - ordered by priority
     # Target: p elements with margin-left style containing collaborator names
+    # Updated 2025-10-22: Collaborators section is now collapsed by default
     COLLABORATORS_SELECTORS: List[str] = [
-        # Most specific - target p elements within each collaborator div
+        # CSS selector - 2025-10-22 redesign
+        # After clicking expand button, content appears in a div
+        '//h3[text()="Collaborators"]/following::div//p',
+        # Fallback - older selectors
         'p.sc-gGKoUb.bEqAGC',
-        # Alternative - target p elements with margin-left style
         'p[style*="margin-left"]',
-        # Fallback - find all p elements within the collaborators container
         '.sc-cFFDlC p',
         # XPath fallback
         '//div[contains(@class, "sc-cFFDlC")]//p[contains(@class, "sc-gGKoUb")]'
     ]
 
     # Authors action button (to expand the authors section)
-    AUTHORS_ACTION_BUTTON: str = 'div.sc-bBhMX:nth-child(2) > div:nth-child(1) > button:nth-child(2)'
+    # Updated 2025-10-22: New Kaggle redesign selectors
+    AUTHORS_ACTION_BUTTON: str = 'button[aria-label="Expand Authors"]'
 
     # Authors selectors - ordered by priority
     # Target: p element containing authors/contributors information
-    # NOTE: Authors section is typically div.sc-bBhMX:nth-child(2)
-    # Avoid using 'p.sc-gGKoUb.bEqAGC' as fallback - it matches collaborators!
+    # Updated 2025-10-22: Authors section is now collapsed by default
     AUTHORS_SELECTORS: List[str] = [
-        # Most specific - target the authors container (2nd sc-bBhMX div)
+        # XPath selector - 2025-10-22 redesign
+        # After clicking expand button, content appears in a div
+        '//h3[text()="Authors"]/following::div//p',
+        # Fallback - older selectors
         'div.sc-bBhMX:nth-child(2) > div:nth-child(2)',
-        # Alternative - target p elements ONLY within 2nd sc-bBhMX div
         'div.sc-bBhMX:nth-child(2) p.sc-gGKoUb',
-        # Fallback - XPath targeting specifically the 2nd sc-bBhMX section
         '//div[contains(@class, "sc-bBhMX")][2]//p[contains(@class, "sc-gGKoUb")]'
     ]
 
     # Provenance action button (to expand the provenance section)
-    PROVENANCE_ACTION_BUTTON: str = 'div.sc-bBhMX:nth-child(4) > div:nth-child(1) > button:nth-child(2)'
+    # Updated 2025-10-22: New Kaggle redesign selectors
+    PROVENANCE_ACTION_BUTTON: str = 'button[aria-label="Expand Provenance"]'
 
     # Provenance selectors - ordered by priority
     # Target: div containing provenance updates, sources, and citations
+    # Updated 2025-10-22: Provenance section is now collapsed by default
     PROVENANCE_SELECTORS: List[str] = [
-        # Most specific - target the provenance container
+        # XPath selector - 2025-10-22 redesign
+        # After clicking expand button, content appears in a div
+        '//h3[text()="Provenance"]/following::div[1]',
+        # Fallback - older selectors
         '.sc-fPzfn',
         'div.sc-cFFDlC.sc-fPzfn.esaBZM.hMDRMp',
-        # Fallback - XPath
         '//div[contains(@class, "sc-fPzfn")]'
     ]
 
@@ -127,12 +143,13 @@ class KaggleSelectors:
     
     # All tab buttons (to extract all tabs for processing)
     # Target: All tab buttons with role="tab" containing tab names
-    # The text is within: <div class="sc-biDvOf cFgyMf">Transformers</div>
+    # Updated 2025-10-22: Selector remains the same, but text selector has changed
     VARIATION_TABS_ALL: str = 'button[role="tab"]'
 
     # Tab text selector (within each tab button)
-    # Target: The div containing the tab name text
-    VARIATION_TAB_TEXT: str = 'div.sc-biDvOf'
+    # Target: The span containing the tab name text
+    # Updated 2025-10-22: New Kaggle redesign - text is in span.sc-hwddKA
+    VARIATION_TAB_TEXT: str = 'span.sc-hwddKA'
 
     # Transformers variation dropdown action selector (click to open the list)
     # Target: The combobox button with aria-label="Select Variation"

@@ -113,7 +113,7 @@ SELENIUM_DRIVER_ARGUMENTS = [
     '--disable-logging',
     '--log-level=3'
 ]
-SELENIUM_POOL_SIZE = 12  # Increased from 8 for better throughput (1.5x CPU cores typical)
+SELENIUM_POOL_SIZE = 6  # Increased from 8 for better throughput (1.5x CPU cores typical)
 
 # Set settings whose default value is deprecated to a future-proof value
 REQUEST_FINGERPRINTER_IMPLEMENTATION = '2.7'

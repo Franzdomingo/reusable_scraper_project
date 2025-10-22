@@ -73,10 +73,19 @@ class KaggleMetadataSpider(scrapy.Spider):
             for pattern in json_patterns:
                 matching_files = glob.glob(pattern)
                 if matching_files:
-                    # Get the most recent file
-                    self.input_file = max(matching_files, key=os.path.getctime)
-                    self.logger.info(f'Found recent kaggle_links JSON output: {self.input_file}')
-                    break
+                    # Filter out empty files (files with size 0 or just whitespace)
+                    non_empty_files = [
+                        f for f in matching_files
+                        if os.path.getsize(f) > 2  # More than just "[]" or "{}"
+                    ]
+
+                    if non_empty_files:
+                        # Get the most recent non-empty file
+                        self.input_file = max(non_empty_files, key=os.path.getctime)
+                        self.logger.info(f'Found recent kaggle_links JSON output: {self.input_file}')
+                        break
+                    else:
+                        self.logger.warning(f'Found {len(matching_files)} files matching {pattern}, but all are empty')
 
             # Fallback to CSV files if no JSON found
             if not self.input_file:
