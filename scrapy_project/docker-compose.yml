@@ -1,5 +1,3 @@
-version: '3.8'
-
 services:
   scraper:
     build:
@@ -99,10 +97,11 @@ services:
     container_name: kaggle-api-csv
     volumes:
       - ../api_output:/app/api_output
+      - ./output:/app/output
       - ~/.kaggle:/root/.kaggle:ro
     environment:
       - KAGGLE_USERNAME=${KAGGLE_USERNAME}
       - KAGGLE_KEY=${KAGGLE_KEY}
-    command: python -m api.kaggle_api --input-csv=/app/api_output/input.csv --output=models.json
+    command: python -m api.kaggle_api --input-json=/app/output/kaggle_links_*.json --output=models.json
     profiles:
       - api

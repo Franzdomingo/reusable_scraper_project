@@ -272,11 +272,77 @@ if __name__ == '__main__':
 	parser.add_argument('--output', type=str, default='kaggle_models.json', help='Output JSON filename')
 	parser.add_argument('--filter', type=str, nargs='*', help='Filter keywords (e.g. llm transformer causal)')
 	parser.add_argument('--input-csv', type=str, help='CSV file with name,kaggle_url rows to fetch specific models')
+	parser.add_argument('--input-json', type=str, help='JSON file or glob pattern with kaggle_links output (e.g. output/kaggle_links_*.json)')
 	parser.add_argument('--output-dir', type=str, default='api_output', help='Directory to save API output files')
 
 	args = parser.parse_args()
 
 	if args.input_csv:
 		fetch_models_from_csv(args.input_csv, output_file=args.output, output_dir=args.output_dir)
+	elif args.input_json:
+		# If a glob pattern is provided, pick the most recent matching file
+		import glob
+		import os
+		pattern = args.input_json
+		matches = glob.glob(pattern)
+		if not matches:
+			# Try relative to /app if running in container
+			matches = glob.glob(os.path.join('/app', pattern.lstrip('/')))
+		if not matches:
+			print(f'No matching JSON files for pattern: {pattern}')
+		else:
+			latest = max(matches, key=os.path.getctime)
+			print(f'Using input JSON: {latest}')
+			# Read JSON and write a temporary CSV that fetch_models_from_csv can consume
+			import json
+			from pathlib import Path
+			with open(latest, 'r', encoding='utf-8') as jf:
+				try:
+					data = json.load(jf)
+				except Exception as e:
+					print(f'Failed to load JSON {latest}: {e}')
+					data = None
+			if data:
+				# Normalize data to rows with name and kaggle_url
+				rows = []
+				if isinstance(data, dict) and 'models' in data and isinstance(data['models'], list):
+					for m in data['models']:
+						name = m.get('name') or m.get('title') or ''
+						url = m.get('kaggle_url') or m.get('url') or m.get('ref') or m.get('kaggleUrl') or ''
+						# If 'ref' is of form owner/slug, construct URL
+						if url and isinstance(url, str) and url.count('/') == 1 and not url.startswith('http'):
+							url = f'https://www.kaggle.com/models/{url}'
+						rows.append({'name': name, 'kaggle_url': url})
+				elif isinstance(data, list):
+					for m in data:
+						name = m.get('name') or m.get('title') or ''
+						url = m.get('kaggle_url') or m.get('url') or m.get('ref') or ''
+						if url and isinstance(url, str) and url.count('/') == 1 and not url.startswith('http'):
+							url = f'https://www.kaggle.com/models/{url}'
+						rows.append({'name': name, 'kaggle_url': url})
+				else:
+					# Try to treat the top-level dict as a single model
+					name = data.get('name') if isinstance(data, dict) else ''
+					url = data.get('kaggle_url') if isinstance(data, dict) else ''
+					if url:
+						rows.append({'name': name, 'kaggle_url': url})
+				# Write temporary CSV to /tmp or current working dir
+				from tempfile import NamedTemporaryFile
+				with NamedTemporaryFile('w', delete=False, newline='', encoding='utf-8', suffix='.csv') as tmpf:
+					w = csv.DictWriter(tmpf, fieldnames=['name', 'kaggle_url'])
+					w.writeheader()
+					for r in rows:
+						w.writerow(r)
+					tmp_path = tmpf.name
+				print(f'Wrote temporary CSV with {len(rows)} rows to {tmp_path}')
+				fetch_models_from_csv(tmp_path, output_file=args.output, output_dir=args.output_dir)
+				# Attempt to remove temp file
+				try:
+					os.remove(tmp_path)
+				except Exception:
+					pass
+	elif args.input_json or args.input_csv:
+		# handled above
+		pass
 	else:
 		list_models_and_save(page_size=args.page_size, max_pages=args.max_pages, output_file=args.output, filter_keywords=args.filter, output_dir=args.output_dir)

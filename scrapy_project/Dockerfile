@@ -31,7 +31,7 @@ ENV CHROME_BIN=/usr/bin/chromium \
 WORKDIR /app
 
 # Copy requirements first (for better caching)
-COPY requirements.txt .
+COPY scrapy_project/requirements.txt requirements.txt
 
 # Install Python dependencies
 RUN pip install --no-cache-dir -r requirements.txt
@@ -39,14 +39,15 @@ RUN pip install --no-cache-dir -r requirements.txt
 # Copy the scrapy_project application
 COPY . .
 
-# Copy the api module from parent directory
-COPY ../api /app/api
+# Copy the api module (project-level api directory must be in build context)
+# When docker-compose build context is the repo root, the api folder is at ./api
+COPY api /app/api
 
 # Create output directories
 RUN mkdir -p output api_output
 
-# Set permissions
-RUN chmod +x run.py
+# Set permissions for the project entrypoint inside scrapy_project
+RUN chmod +x scrapy_project/run.py || true
 
-# Default command: run all spiders
-CMD ["python", "run.py"]
+# Default command: run all spiders (entrypoint is inside scrapy_project)
+CMD ["python", "scrapy_project/run.py"]
