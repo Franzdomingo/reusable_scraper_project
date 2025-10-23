@@ -352,21 +352,51 @@ def extract_variations_for_tab(
                 variation_is_finetunable = ''
                 variation_example_usage = ''
 
-                # Extract version
-                if version_selector:
-                    try:
-                        version_elem = driver.find_element(By.CSS_SELECTOR, version_selector)
-                        variation_version = version_elem.text.strip()
-                        logger.info(f"Variation {variation_counter}: Found version '{variation_version}'")
-                    except Exception as e:
-                        logger.info(f"Variation {variation_counter}: Could not find version: {e}")
+                # Extract version (try multiple selectors)
+                version_selectors = version_selector if isinstance(version_selector, list) else [version_selector] if version_selector else []
 
-                # Extract downloads
-                if downloads_selector:
+                for idx, ver_selector in enumerate(version_selectors):
+                    try:
+                        # Determine if this is an XPath or CSS selector
+                        if ver_selector.startswith('/') or ver_selector.startswith('('):
+                            # XPath selector
+                            version_elem = driver.find_element(By.XPATH, ver_selector)
+                        else:
+                            # CSS selector
+                            version_elem = driver.find_element(By.CSS_SELECTOR, ver_selector)
+
+                        variation_version = version_elem.text.strip()
+
+                        logger.info(f"Variation {variation_counter}: Found version '{variation_version}' using selector {idx + 1}/{len(version_selectors)}")
+                        break
+                    except Exception as e:
+                        logger.info(f"Variation {variation_counter}: Version selector {idx + 1}/{len(version_selectors)} failed: {e}")
+                        continue
+
+                if not variation_version and version_selectors:
+                    logger.info(f"Variation {variation_counter}: Could not find version with any selector")
+
+                # Extract downloads (try XPath first, then CSS)
+                downloads_xpath_selector = selectors.get('variation_downloads_xpath')
+                downloads_css_selector = selectors.get('variation_downloads')
+
+                # Try XPath selector first
+                if downloads_xpath_selector and not variation_downloads:
+                    try:
+                        downloads_elem = driver.find_element(By.XPATH, downloads_xpath_selector)
+                        text = downloads_elem.text.strip()
+                        if text:
+                            variation_downloads = text
+                            logger.info(f"Variation {variation_counter}: Found downloads '{variation_downloads}' using XPath selector")
+                    except Exception as e:
+                        logger.info(f"Variation {variation_counter}: XPath downloads selector failed: {e}")
+
+                # Try CSS selector as fallback
+                if downloads_css_selector and not variation_downloads:
                     try:
                         # Find all matching elements to ensure we get the right one
-                        downloads_elems = driver.find_elements(By.CSS_SELECTOR, downloads_selector)
-                        logger.info(f"Variation {variation_counter}: Found {len(downloads_elems)} elements matching downloads selector")
+                        downloads_elems = driver.find_elements(By.CSS_SELECTOR, downloads_css_selector)
+                        logger.info(f"Variation {variation_counter}: Found {len(downloads_elems)} elements matching CSS downloads selector")
 
                         # Look for the element with numeric content only (no text)
                         for idx, elem in enumerate(downloads_elems):
@@ -374,16 +404,19 @@ def extract_variations_for_tab(
                             # Check if text is numeric (digits only, possibly with K/M suffix)
                             if text and (text.isdigit() or (text[:-1].isdigit() and text[-1] in ['K', 'M', 'k', 'm'])):
                                 variation_downloads = text
-                                logger.info(f"Variation {variation_counter}: Found downloads '{variation_downloads}' from element {idx + 1}/{len(downloads_elems)}")
+                                logger.info(f"Variation {variation_counter}: Found downloads '{variation_downloads}' from CSS element {idx + 1}/{len(downloads_elems)}")
                                 break
 
                         # If no numeric-only element found, use the first one as fallback
                         if not variation_downloads and len(downloads_elems) > 0:
                             variation_downloads = downloads_elems[0].text.strip()
-                            logger.info(f"Variation {variation_counter}: Using first element for downloads: '{variation_downloads}'")
+                            logger.info(f"Variation {variation_counter}: Using first CSS element for downloads: '{variation_downloads}'")
 
                     except Exception as e:
-                        logger.info(f"Variation {variation_counter}: Could not find downloads: {e}")
+                        logger.info(f"Variation {variation_counter}: Could not find downloads with CSS: {e}")
+
+                if not variation_downloads:
+                    logger.info(f"Variation {variation_counter}: Could not find downloads with any selector")
 
                 # Extract license (try multiple selectors)
                 license_selectors = license_selector if isinstance(license_selector, list) else [license_selector] if license_selector else []

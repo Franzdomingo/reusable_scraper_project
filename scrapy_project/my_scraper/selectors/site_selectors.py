@@ -155,28 +155,39 @@ class KaggleSelectors:
     TRANSFORMERS_VARIATION_SELECTED_NAME: str = 'div.sc-jaGrhB.hYa-DAr'
 
     # Version selector (appears after selecting a variation)
-    # Target: a element with class "sc-eVqvcJ iRcjJz" containing version info
-    TRANSFORMERS_VARIATION_VERSION: str = 'a.sc-eVqvcJ.iRcjJz'
+    # Updated 2025-10-23: Using absolute XPath selector
+    # Target: a element containing version info at specific path
+    TRANSFORMERS_VARIATION_VERSION: List[str] = [
+        '/html/body/div/div[1]/div[2]/div/div[2]/div/div[5]/div/div[2]/div[2]/div[2]/div[1]/div[1]/div[2]/div[1]/p/a',
+        'a.sc-cOpnSz',  # Fallback CSS selector
+    ]
 
     # Downloads selector (appears after selecting a variation)
     # Target: span element with classes for download count
     # IMPORTANT: This must be the variation-specific downloads, NOT the main model downloads
-    # The correct element is: <span class="sc-kCuUfV sc-hoocXy iPCsnU eqfbZr">398</span>
-    # within the variation details section only
-    TRANSFORMERS_VARIATION_DOWNLOADS: str = '.sc-sphZQ > div:nth-child(2) > p:nth-child(2) > div:nth-child(1) > span:nth-child(1)'
+    # Updated 2025-10-23: Using new XPath and CSS selectors
+    # XPath: /html/body/div/div[1]/div[2]/div/div[2]/div/div[5]/div/div[2]/div[2]/div[2]/div[1]/div[1]/div[2]/div[2]/p/div/span
+    # CSS: .sc-ftYudu > div:nth-child(2) > p:nth-child(2) > div:nth-child(1) > span:nth-child(1)
+    TRANSFORMERS_VARIATION_DOWNLOADS_XPATH: str = '/html/body/div/div[1]/div[2]/div/div[2]/div/div[5]/div/div[2]/div[2]/div[2]/div[1]/div[1]/div[2]/div[2]/p/div/span'
+    TRANSFORMERS_VARIATION_DOWNLOADS_CSS: str = '.sc-ftYudu > div:nth-child(2) > p:nth-child(2) > div:nth-child(1) > span:nth-child(1)'
+
+    # Legacy selector for backward compatibility
+    TRANSFORMERS_VARIATION_DOWNLOADS: str = TRANSFORMERS_VARIATION_DOWNLOADS_CSS
 
     # License selectors (appears after selecting a variation)
     # License can appear in different formats (link or plain text)
     TRANSFORMERS_VARIATION_LICENSE_SELECTORS: List[str] = [
-        'a.sc-bbbBoY.hzCdJV',  # Link format (e.g., "Apache 2.0")
-        'p.sc-gGKoUb.bEqAGC',  # Plain text format (e.g., "Gemma")
+        '/html/body/div/div[1]/div[2]/div/div[2]/div/div[5]/div/div[2]/div[2]/div[2]/div[3]/div[1]/div[2]/div[2]/p/a',
+        'a.sc-kjwdDK',  # Fallback CSS selector
     ]
 
     # Model card selector for variation (appears after selecting a variation)
-    # Target: div.sc-lkCrJH element containing the model card (Model Overview section)
+    # Target: div.sc-iRTMaw element containing the model card (Model Overview section)
     # This is the third child div within the variation container
+    # Updated 2025-10-23: Using absolute XPath and CSS selector
     TRANSFORMERS_VARIATION_MODEL_CARD_SELECTORS: List[str] = [
-        'div.sc-lkCrJH:nth-child(3)',  # Third child div containing model card content
+        '/html/body/div/div[1]/div[2]/div/div[2]/div/div[5]/div/div[2]/div[2]/div[2]/div[3]/div[1]/div[3]',  # Absolute XPath selector
+        'div.sc-iRTMaw:nth-child(3)',  # CSS selector - Third child div containing model card content
     ]
 
     # Is Finetunable selector for variation (appears after selecting a variation)
@@ -308,7 +319,8 @@ def get_selectors_for_site(site: str) -> Dict:
             'variation_name': KaggleSelectors.TRANSFORMERS_VARIATION_NAME,
             'variation_selected_name': KaggleSelectors.TRANSFORMERS_VARIATION_SELECTED_NAME,
             'variation_version': KaggleSelectors.TRANSFORMERS_VARIATION_VERSION,
-            'variation_downloads': KaggleSelectors.TRANSFORMERS_VARIATION_DOWNLOADS,
+            'variation_downloads': KaggleSelectors.TRANSFORMERS_VARIATION_DOWNLOADS_CSS,
+            'variation_downloads_xpath': KaggleSelectors.TRANSFORMERS_VARIATION_DOWNLOADS_XPATH,
             'variation_license': KaggleSelectors.TRANSFORMERS_VARIATION_LICENSE_SELECTORS,
             'variation_model_card': KaggleSelectors.TRANSFORMERS_VARIATION_MODEL_CARD_SELECTORS,
             'is_finetunable': KaggleSelectors.TRANSFORMERS_IS_FINETUNABLE_SELECTORS,
