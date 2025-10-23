@@ -3,6 +3,7 @@ Transformers variations extraction functions
 """
 
 import logging
+import re
 import time
 from typing import Dict, List
 from selenium import webdriver
@@ -22,6 +23,34 @@ from .tab_handler import build_tab_queue, click_tab
 from .version_popup_extractor import extract_versions_from_popup
 
 logger = logging.getLogger(__name__)
+
+
+def clean_variation_name(raw_name: str) -> str:
+    """
+    Clean variation name by removing unwanted elements like icons and extra text
+
+    Args:
+        raw_name: Raw variation name text from DOM
+
+    Returns:
+        Cleaned variation name
+    """
+    if not raw_name:
+        return ''
+
+    # Remove "push_pin" icon text
+    cleaned = raw_name.replace('push_pin', '')
+
+    # Remove "(managed by Keras)" or similar text
+    cleaned = re.sub(r'\s*\(managed by[^)]*\)', '', cleaned, flags=re.IGNORECASE)
+
+    # Replace newlines with spaces and clean up multiple spaces
+    cleaned = re.sub(r'\s+', ' ', cleaned)
+
+    # Strip leading/trailing whitespace
+    cleaned = cleaned.strip()
+
+    return cleaned
 
 
 def extract_variations_for_tab(
@@ -151,15 +180,18 @@ def extract_variations_for_tab(
             for idx, item in enumerate(list_items):
                 try:
                     # Extract variation name from the list item
-                    variation_name = ''
+                    raw_name = ''
                     if name_selector:
                         try:
                             name_elem = item.find_element(By.CSS_SELECTOR, name_selector)
-                            variation_name = name_elem.text.strip()
+                            raw_name = name_elem.text.strip()
                         except:
-                            variation_name = item.text.strip()
+                            raw_name = item.text.strip()
                     else:
-                        variation_name = item.text.strip()
+                        raw_name = item.text.strip()
+
+                    # Clean the variation name (remove push_pin, managed by text, etc.)
+                    variation_name = clean_variation_name(raw_name)
 
                     if variation_name:
                         variation_queue.append({
@@ -358,6 +390,13 @@ def extract_variations(driver: webdriver.Chrome, selectors: Dict, name: str, mod
             tab_text = tab_item['text']
 
             try:
+                # Navigate back to base URL before clicking next tab
+                # This ensures tabs are available (version URLs may not have tabs)
+                logger.info(f"Navigating back to base URL before processing tab: {base_url}")
+                driver.get(base_url)
+                time.sleep(1.5)  # Wait for page to load
+                logger.info(f"Successfully navigated to base URL")
+
                 logger.info(f"Processing tab {tab_idx + 1}/{len(tab_queue)}: {tab_text}")
 
                 # Click the tab button

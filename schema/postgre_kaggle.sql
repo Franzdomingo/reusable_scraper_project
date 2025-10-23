@@ -11,7 +11,13 @@ CREATE TABLE kaggle_models (
     example_usage TEXT,
     last_scraped TIMESTAMP,
     total_views INT,
-    total_engagements NUMERIC(10,5)
+    total_engagements NUMERIC(10,5),
+    -- Store activity overview as JSONB (e.g., last_scraped, total_downloads, total_views, total_engagements)
+    activity_overview JSONB,
+
+    model_metadata JSONB,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
 -- Table to store tags (many-to-many relationship with models)
@@ -38,7 +44,7 @@ CREATE TABLE model_variations (
     variation_license TEXT,
     variation_downloads INT,
     variations_model_card TEXT,
-    variations_is_finetunable TEXT,
+    variations_is_finetunable BOOLEAN,
     variations_example_usage TEXT
 );
 
@@ -49,3 +55,8 @@ CREATE TABLE model_collaborators (
     collaborator_name TEXT NOT NULL,
     role TEXT
 );
+
+-- Indexes to speed up JSONB queries and common lookups
+CREATE INDEX IF NOT EXISTS idx_kaggle_models_activity_overview ON kaggle_models USING GIN (activity_overview);
+CREATE INDEX IF NOT EXISTS idx_kaggle_models_model_metadata ON kaggle_models USING GIN (model_metadata);
+CREATE INDEX IF NOT EXISTS idx_kaggle_models_name ON kaggle_models (name);

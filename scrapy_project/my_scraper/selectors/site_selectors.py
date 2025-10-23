@@ -140,8 +140,9 @@ class KaggleSelectors:
     
     # All tab buttons (to extract all tabs for processing)
     # Target: All tab buttons with role="tab" containing tab names
-    # Updated 2025-10-22: Selector remains the same, but text selector has changed
-    VARIATION_TABS_ALL: str = 'button[role="tab"]'
+    # Updated 2025-10-24: Made selector more specific to avoid matching popup tabs
+    # Uses div[role="tablist"] to scope to framework tabs only, excluding version popup tabs
+    VARIATION_TABS_ALL: str = 'div[role="tablist"] > button[role="tab"]'
 
     # Tab text selector (within each tab button)
     # Updated 2025-10-23: Using stable selectors (direct text extraction from button)
