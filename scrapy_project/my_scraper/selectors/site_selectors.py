@@ -234,12 +234,12 @@ class KaggleSelectors:
     ]
 
     # Model card selector for variation (appears after selecting a variation)
-    # Target: div.sc-iRTMaw element containing the model card (Model Overview section)
-    # This is the third child div within the variation container
-    # Updated 2025-10-23: Using absolute XPath and CSS selector
+    # Target: div element containing the model card (Model Overview section)
+    # This section contains an h2 with "Model Overview" text
+    # Updated 2025-10-24: Using content-based XPath selector for stability
     TRANSFORMERS_VARIATION_MODEL_CARD_SELECTORS: List[str] = [
-        '/html/body/div/div[1]/div[2]/div/div[2]/div/div[5]/div/div[2]/div[2]/div[2]/div[3]/div[1]/div[3]',  # Absolute XPath selector
-        'div.sc-iRTMaw:nth-child(3)',  # CSS selector - Third child div containing model card content
+        '/html/body/div/div[1]/div[2]/div/div[2]/div/div[5]/div/div[2]/div[2]/div[2]/div[3]/div[1]/div[3]',  # Primary absolute XPath selector
+        '//div[./h2[contains(text(), "Model Overview")]]',  # Stable content-based XPath - finds div containing h2 with "Model Overview"
     ]
 
     # Is Finetunable selector for variation (appears after selecting a variation)
@@ -254,12 +254,11 @@ class KaggleSelectors:
 
     # Example Usage selector for variation (appears after selecting a variation)
     # Target: Parent container that holds both the header and content
-    # The structure is: parent div.sc-cfYtRh.eiwGaI contains:
+    # The structure is: parent div contains:
     #   - div#example-use (header)
     #   - div.sc-lkCrJH.ghmUBs (actual content) OR p.sc-hwddKA.dIsQKt (no guide message)
     # If it contains "This variation does not have a usage guide yet.", the field should be empty
     TRANSFORMERS_EXAMPLE_USAGE_SELECTORS: List[str] = [
-        'div.sc-cfYtRh.eiwGaI',  # Main container with example usage
         'div:has(> div#example-use)',  # Parent div containing example-use
     ]
     
