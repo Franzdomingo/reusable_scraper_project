@@ -263,6 +263,10 @@ def extract_versions_from_popup(
                     driver.execute_script("arguments[0].click();", link)
                     logger.info(f"Clicked version {idx + 1}: {item_version_text}")
                     time.sleep(1.0)  # Wait for page to load/update
+
+                    # Log current URL after version switch
+                    current_url = driver.current_url
+                    logger.info(f"Currently on URL: {current_url}")
                 except Exception as e:
                     logger.warning(f"Could not click version {idx + 1}: {e}")
                     continue
