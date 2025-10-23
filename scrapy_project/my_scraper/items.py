@@ -26,7 +26,7 @@ class KaggleMetadataItem(scrapy.Item):
     tags = scrapy.Field()
     variations = scrapy.Field()  # List of TransformersVariationItem
     model_metadata = scrapy.Field()  # Array containing collaborators and other metadata
-    scraped_on = scrapy.Field()  # Timestamp when data was scraped
+    activity_overview = scrapy.Field()  # Dict containing total_downloads, total_views, total_engagements, timestamps
 
 
 class TransformersVariationItem(scrapy.Item):

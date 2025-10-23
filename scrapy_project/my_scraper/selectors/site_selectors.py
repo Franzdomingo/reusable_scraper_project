@@ -32,6 +32,22 @@ class KaggleSelectors:
         '/html/body/div/div[1]/div[2]/div/div[2]/div/div[5]/div/div[1]/div[2]/div[1]/div[2]/div[1]/span',
     ]
 
+    # Total views selectors - ordered by priority
+    # Updated 2025-10-23: Using absolute XPath and CSS selectors for total views
+    # Target: span element containing total views count
+    TOTAL_VIEWS_SELECTORS: List[str] = [
+        '/html/body/div/div[1]/div[2]/div/div[2]/div/div[5]/div/div[4]/div[2]/div[1]/div[2]/div[2]/span',
+        '.sc-ffeAVz > div:nth-child(1) > div:nth-child(2) > div:nth-child(2) > span:nth-child(1)',
+    ]
+
+    # Total engagements selectors - ordered by priority
+    # Updated 2025-10-23: Using absolute XPath and CSS selectors for total engagements
+    # Target: span element containing total engagements count
+    TOTAL_ENGAGEMENTS_SELECTORS: List[str] = [
+        '/html/body/div/div[1]/div[2]/div/div[2]/div/div[5]/div/div[4]/div[2]/div[3]/div[2]/div[2]/span',
+        'div.sc-fEaSUP:nth-child(3) > div:nth-child(2) > div:nth-child(2) > span:nth-child(1)',
+    ]
+
     # Usability score selectors - ordered by priority
     # Updated 2025-10-23: Using absolute XPath selector
     # Target: p element containing usability score (numeric value)
@@ -345,6 +361,8 @@ def get_selectors_for_site(site: str) -> Dict:
         'kaggle': {
             'description': KaggleSelectors.DESCRIPTION_SELECTORS,
             'downloads': KaggleSelectors.DOWNLOAD_SELECTORS,
+            'total_views': KaggleSelectors.TOTAL_VIEWS_SELECTORS,
+            'total_engagements': KaggleSelectors.TOTAL_ENGAGEMENTS_SELECTORS,
             'usability': KaggleSelectors.USABILITY_SELECTORS,
             'description_css_fallback': KaggleSelectors.DESCRIPTION_CSS_FALLBACK,
             'model_card_selectors': KaggleSelectors.MODEL_CARD_SELECTORS,

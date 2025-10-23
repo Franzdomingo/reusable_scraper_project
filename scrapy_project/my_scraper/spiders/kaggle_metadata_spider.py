@@ -21,6 +21,8 @@ from my_scraper.selectors.site_selectors import get_selectors_for_site
 from my_scraper.extractors.selenium_utils import parse_tree_from_response, click_element
 from my_scraper.extractors.description_extractor import extract_description
 from my_scraper.extractors.downloads_extractor import extract_downloads
+from my_scraper.extractors.total_views_extractor import extract_total_views
+from my_scraper.extractors.total_engagements_extractor import extract_total_engagements
 from my_scraper.extractors.usability_extractor import extract_usability
 from my_scraper.extractors.tags_extractor import extract_tags
 from my_scraper.extractors.collaborators_extractor import extract_collaborators
@@ -211,15 +213,55 @@ class KaggleMetadataSpider(scrapy.Spider):
             item['name'] = model_name
             item['kaggle_url'] = response.url
 
-            # Add timestamp when data is scraped
-            item['scraped_on'] = datetime.now().isoformat()
-
             # Extract using driver from middleware pool
             item['short_description'] = extract_description(driver, tree, self.selectors, model_name)
             item['downloads'] = extract_downloads(driver, tree, self.selectors, model_name)
             item['usability'] = extract_usability(driver, tree, self.selectors, model_name)
             item['model_card'] = extract_model_card(driver, tree, self.selectors, model_name)
             item['tags'] = extract_tags(driver, tree, self.selectors, model_name)
+
+            # Extract activity overview data
+            total_downloads = extract_downloads(driver, tree, self.selectors, model_name)
+            total_views = extract_total_views(driver, tree, self.selectors, model_name)
+            total_engagements = extract_total_engagements(driver, tree, self.selectors, model_name)
+
+            # Convert string values to integers/floats for activity_overview
+            def parse_numeric_int(value_str):
+                """Parse numeric string to integer (handles K, M, B suffixes)"""
+                if not value_str:
+                    return 0
+                try:
+                    value_str = value_str.strip().upper()
+                    multipliers = {'K': 1000, 'M': 1000000, 'B': 1000000000}
+                    for suffix, multiplier in multipliers.items():
+                        if suffix in value_str:
+                            return int(float(value_str.replace(suffix, '').replace(',', '')) * multiplier)
+                    return int(value_str.replace(',', ''))
+                except (ValueError, AttributeError):
+                    return 0
+
+            def parse_numeric_float(value_str):
+                """Parse numeric string to float (handles K, M, B suffixes)"""
+                if not value_str:
+                    return 0.0
+                try:
+                    value_str = value_str.strip().upper()
+                    multipliers = {'K': 1000, 'M': 1000000, 'B': 1000000000}
+                    for suffix, multiplier in multipliers.items():
+                        if suffix in value_str:
+                            return float(value_str.replace(suffix, '').replace(',', '')) * multiplier
+                    return float(value_str.replace(',', ''))
+                except (ValueError, AttributeError):
+                    return 0.0
+
+            # Build activity_overview structure
+            current_time = datetime.now().isoformat()
+            item['activity_overview'] = {
+                'last_scraped': current_time,
+                'total_downloads': parse_numeric_int(total_downloads),
+                'total_views': parse_numeric_int(total_views),
+                'total_engagements': parse_numeric_float(total_engagements)
+            }
 
             # Extract variations
             # NOTE: Variations extraction now handles all versions within each variation
@@ -239,7 +281,7 @@ class KaggleMetadataSpider(scrapy.Spider):
             }
 
             # Log concise summary
-            self.logger.info(f"✓ {model_name} - Downloads: {item['downloads']}, Variations: {len(item.get('variations', []))}")
+            self.logger.info(f"✓ {model_name} - Downloads: {item['downloads']}, Views: {total_views}, Engagements: {total_engagements}, Variations: {len(item.get('variations', []))}")
 
             yield item
 
