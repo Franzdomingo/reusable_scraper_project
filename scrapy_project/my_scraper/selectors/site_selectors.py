@@ -162,6 +162,42 @@ class KaggleSelectors:
         'a.sc-cOpnSz',  # Fallback CSS selector
     ]
 
+    # Version popup button selector (button to open versions list popup)
+    # NOTE: This may be the same selector as TRANSFORMERS_VARIATION_VERSION
+    # Updated 2025-10-23: Button that opens popup showing all available versions
+    VARIATION_VERSIONS_BUTTON: List[str] = [
+        '/html/body/div/div[1]/div[2]/div/div[2]/div/div[5]/div/div[2]/div[2]/div[2]/div[1]/div[1]/div[2]/div[1]/p/a',
+        '.sc-cOpnSz',  # Fallback CSS selector
+    ]
+
+    # Version popup list items (all version items in the popup)
+    # Target: All li elements with class MuiListItem-divider containing version data
+    VARIATION_VERSIONS_POPUP_ITEMS: str = 'li.MuiListItem-divider'
+
+    # Version popup - created by field (within each version item)
+    # Target: span containing the creator/author name
+    # XPath: /html/body/div[2]/div[3]/div/div/div[2]/div/ul/li[1]/div/a/div/div[2]/span[1]
+    # CSS: li.MuiListItem-divider:nth-child(1) > div:nth-child(1) > a:nth-child(1) > div:nth-child(1) > div:nth-child(2) > span:nth-child(2)
+    VARIATION_VERSION_CREATED_BY: List[str] = [
+        'div > a > div > div:nth-child(2) > span:nth-child(2)',  # Relative to li.MuiListItem-divider
+    ]
+
+    # Version popup - update description field (within each version item)
+    # Target: span containing the update/change description
+    # XPath: /html/body/div[2]/div[3]/div/div/div[2]/div/ul/li[1]/div/a/div/div[2]/span[2]
+    # CSS: li.MuiListItem-divider:nth-child(1) > div:nth-child(1) > a:nth-child(1) > div:nth-child(1) > div:nth-child(2) > span:nth-child(3)
+    VARIATION_VERSION_UPDATE_DESC: List[str] = [
+        'div > a > div > div:nth-child(2) > span:nth-child(3)',  # Relative to li.MuiListItem-divider
+    ]
+
+    # Version popup - version number field (within each version item)
+    # Target: div containing version text like "Version 4"
+    # XPath: /html/body/div[2]/div[3]/div/div/div[2]/div/ul/li[1]/div/a/div/div[2]/div
+    # CSS: li.MuiListItem-divider:nth-child(1) > div:nth-child(1) > a:nth-child(1) > div:nth-child(1) > div:nth-child(2) > div:nth-child(1)
+    VARIATION_VERSION_NUMBER: List[str] = [
+        'div > a > div > div:nth-child(2) > div:nth-child(1)',  # Relative to li.MuiListItem-divider
+    ]
+
     # Downloads selector (appears after selecting a variation)
     # Target: span element with classes for download count
     # IMPORTANT: This must be the variation-specific downloads, NOT the main model downloads
@@ -192,10 +228,12 @@ class KaggleSelectors:
 
     # Is Finetunable selector for variation (appears after selecting a variation)
     # Target: p element with "Yes" or "No" indicating if the model is finetunable
-    # Note: Uses same class as license plain text, need to differentiate by context/position
+    # Updated 2025-10-23: Using XPath as primary selector
+    # XPath: /html/body/div/div[1]/div[2]/div/div[2]/div/div[5]/div/div[2]/div[2]/div[2]/div[3]/div[1]/div[2]/div[1]/p
+    # CSS: .sc-huUlgU > div:nth-child(1) > p:nth-child(2)
     TRANSFORMERS_IS_FINETUNABLE_SELECTORS: List[str] = [
-        'p.sc-gGKoUb.bEqAGC[style*="margin-top"]',  # With margin-top style
-        'p.sc-gGKoUb.bEqAGC',  # Fallback - may match multiple, need to filter
+        '/html/body/div/div[1]/div[2]/div/div[2]/div/div[5]/div/div[2]/div[2]/div[2]/div[3]/div[1]/div[2]/div[1]/p',  # Primary XPath selector
+        '.sc-huUlgU > div:nth-child(1) > p:nth-child(2)',  # Fallback CSS selector
     ]
 
     # Example Usage selector for variation (appears after selecting a variation)
@@ -319,6 +357,11 @@ def get_selectors_for_site(site: str) -> Dict:
             'variation_name': KaggleSelectors.TRANSFORMERS_VARIATION_NAME,
             'variation_selected_name': KaggleSelectors.TRANSFORMERS_VARIATION_SELECTED_NAME,
             'variation_version': KaggleSelectors.TRANSFORMERS_VARIATION_VERSION,
+            'variation_versions_button': KaggleSelectors.VARIATION_VERSIONS_BUTTON,
+            'variation_versions_popup_items': KaggleSelectors.VARIATION_VERSIONS_POPUP_ITEMS,
+            'variation_version_created_by': KaggleSelectors.VARIATION_VERSION_CREATED_BY,
+            'variation_version_update_desc': KaggleSelectors.VARIATION_VERSION_UPDATE_DESC,
+            'variation_version_number': KaggleSelectors.VARIATION_VERSION_NUMBER,
             'variation_downloads': KaggleSelectors.TRANSFORMERS_VARIATION_DOWNLOADS_CSS,
             'variation_downloads_xpath': KaggleSelectors.TRANSFORMERS_VARIATION_DOWNLOADS_XPATH,
             'variation_license': KaggleSelectors.TRANSFORMERS_VARIATION_LICENSE_SELECTORS,

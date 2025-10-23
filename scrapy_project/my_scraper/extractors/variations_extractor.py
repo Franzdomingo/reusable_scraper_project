@@ -19,6 +19,7 @@ from .variation_model_card_extractor import extract_model_card
 from .variation_is_finetunable_extractor import extract_is_finetunable
 from .variation_example_usage_extractor import extract_example_usage
 from .tab_handler import build_tab_queue, click_tab
+from .version_popup_extractor import extract_versions_from_popup
 
 logger = logging.getLogger(__name__)
 
@@ -28,20 +29,26 @@ def extract_variations_for_tab(
     selectors: Dict,
     name: str,
     tab_prefix: str,
+    base_url: str,
     variation_counter_start: int = 1
 ) -> List[Dict]:
     """
     Extract variations for a single tab
+
+    For each base variation, this will create multiple variation entries
+    if there are multiple versions available.
 
     Args:
         driver: Selenium driver instance
         selectors: Selectors configuration dictionary
         name: Model name for logging
         tab_prefix: Tab name to use as prefix (e.g., "Transformers", "GGUF")
+        base_url: Base model URL for constructing version URLs
         variation_counter_start: Starting number for variation counter
 
     Returns:
         List of variation dictionaries with detailed information
+        Multiple entries may be created for the same variation_name if multiple versions exist
     """
     variations = []
 
@@ -224,31 +231,66 @@ def extract_variations_for_tab(
                 # Step 4: Extract variation details after clicking
                 variation_name = queued_name  # Use the name from queue
 
-                # Extract all fields using dedicated field extractors
-                variation_version = extract_version(driver, version_selector, variation_counter)
-                variation_downloads = extract_downloads(driver, selectors, variation_counter)
-                variation_license = extract_license(driver, license_selector, variation_counter)
-                variation_model_card = extract_model_card(driver, model_card_selector, variation_counter)
-                variation_is_finetunable = extract_is_finetunable(driver, is_finetunable_selector, variation_counter)
-                variation_example_usage = extract_example_usage(driver, example_usage_selector, variation_counter)
+                # Extract version popup data - this returns a LIST of version data
+                versions_data = []
+                try:
+                    versions_data = extract_versions_from_popup(
+                        driver, selectors, base_url, variation_counter
+                    )
+                    logger.info(f"Found {len(versions_data)} versions for variation {variation_counter}")
+                except Exception as e:
+                    logger.warning(f"Error extracting version popup data for variation {variation_counter}: {e}")
 
-                # Create variation dictionary with prefix
-                # Format: "Transformers/variation_01" using tab_prefix
-                variation_id = f'{tab_prefix}/variation_{variation_counter:02d}'
+                # If we found versions, create one variation entry for each version
+                if versions_data:
+                    for version_data in versions_data:
+                        # Create variation dictionary with prefix
+                        # Format: "Transformers/variation_01" using tab_prefix
+                        variation_id = f'{tab_prefix}/variation_{variation_counter:02d}'
 
-                variation = {
-                    'variation': variation_id,
-                    'variation_name': variation_name,
-                    'variation_version': variation_version,
-                    'variation_license': variation_license,
-                    'variation_downloads': variation_downloads,
-                    'model_card': variation_model_card,
-                    'is_finetunable': variation_is_finetunable,
-                    'example_usage': variation_example_usage
-                }
-                variations.append(variation)
-                logger.info(f"Extracted {variation_id}: {variation_name} (Version: {variation_version}, Downloads: {variation_downloads}, License: {variation_license})")
-                variation_counter += 1
+                        variation = {
+                            'variation': variation_id,
+                            'variation_name': variation_name,
+                            'variation_version': version_data.get('version_number', ''),
+                            'variation_created_by': version_data.get('created_by', ''),
+                            'variation_update_description': version_data.get('update_description', ''),
+                            'variation_license': version_data.get('license', ''),
+                            'variation_downloads': version_data.get('downloads', ''),
+                            'variations_model_card': version_data.get('model_card', ''),
+                            'variations_is_finetunable': version_data.get('is_finetunable', ''),
+                            'variations_example_usage': version_data.get('example_usage', '')
+                        }
+                        variations.append(variation)
+                        logger.info(f"Extracted {variation_id}: {variation_name} (Version: {version_data.get('version_number')}, Created by: {version_data.get('created_by')}, Downloads: {version_data.get('downloads')}, License: {version_data.get('license')})")
+                        variation_counter += 1
+                else:
+                    # No versions found, extract data from current page as single variation
+                    logger.info(f"No versions found in popup, extracting current page data")
+
+                    variation_version = extract_version(driver, version_selector, variation_counter)
+                    variation_downloads = extract_downloads(driver, selectors, variation_counter)
+                    variation_license = extract_license(driver, license_selector, variation_counter)
+                    variation_model_card = extract_model_card(driver, model_card_selector, variation_counter)
+                    variation_is_finetunable = extract_is_finetunable(driver, is_finetunable_selector, variation_counter)
+                    variation_example_usage = extract_example_usage(driver, example_usage_selector, variation_counter)
+
+                    variation_id = f'{tab_prefix}/variation_{variation_counter:02d}'
+
+                    variation = {
+                        'variation': variation_id,
+                        'variation_name': variation_name,
+                        'variation_version': variation_version,
+                        'variation_created_by': '',
+                        'variation_update_description': '',
+                        'variation_license': variation_license,
+                        'variation_downloads': variation_downloads,
+                        'variations_model_card': variation_model_card,
+                        'variations_is_finetunable': variation_is_finetunable,
+                        'variations_example_usage': variation_example_usage
+                    }
+                    variations.append(variation)
+                    logger.info(f"Extracted {variation_id}: {variation_name} (Version: {variation_version}, Downloads: {variation_downloads}, License: {variation_license})")
+                    variation_counter += 1
 
             except Exception as e:
                 logger.warning(f"Error processing variation {variation_counter} ({queued_name}): {e}")
@@ -265,18 +307,23 @@ def extract_variations_for_tab(
     return variations
 
 
-def extract_variations(driver: webdriver.Chrome, selectors: Dict, name: str, model_id: int) -> List[Dict]:
+def extract_variations(driver: webdriver.Chrome, selectors: Dict, name: str, model_id: int, base_url: str) -> List[Dict]:
     """
     Extract ALL variations across ALL tabs by detecting and clicking each tab
+
+    For each base variation, if multiple versions exist, this will create
+    multiple variation entries within the variations array.
 
     Args:
         driver: Selenium driver instance
         selectors: Selectors configuration dictionary
         name: Model name for logging
         model_id: Model ID
+        base_url: Base model URL for constructing version URLs
 
     Returns:
         List of variation dictionaries with detailed information from all tabs
+        Multiple entries may be created for the same variation_name if multiple versions exist
     """
     all_variations = []
 
@@ -294,7 +341,7 @@ def extract_variations(driver: webdriver.Chrome, selectors: Dict, name: str, mod
         if not tabs_all_selector or not tab_text_selector:
             logger.warning(f"Tab selectors not configured, falling back to single-tab extraction")
             # Fallback: extract without tab information
-            return extract_variations_for_tab(driver, selectors, name, "variation", 1)
+            return extract_variations_for_tab(driver, selectors, name, "variation", base_url, 1)
 
         # Step 1: Build a tab queue
         tab_queue = build_tab_queue(driver, tabs_all_selector, tab_text_selector, name)
@@ -319,7 +366,7 @@ def extract_variations(driver: webdriver.Chrome, selectors: Dict, name: str, mod
 
                 # Extract variations for this tab
                 tab_variations = extract_variations_for_tab(
-                    driver, selectors, name, tab_text, variation_counter
+                    driver, selectors, name, tab_text, base_url, variation_counter
                 )
 
                 # Add to all_variations and update counter

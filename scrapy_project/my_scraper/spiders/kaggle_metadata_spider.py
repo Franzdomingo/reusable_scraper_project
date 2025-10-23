@@ -220,8 +220,12 @@ class KaggleMetadataSpider(scrapy.Spider):
             item['usability'] = extract_usability(driver, tree, self.selectors, model_name)
             item['model_card'] = extract_model_card(driver, tree, self.selectors, model_name)
             item['tags'] = extract_tags(driver, tree, self.selectors, model_name)
+
+            # Extract variations
+            # NOTE: Variations extraction now handles all versions within each variation
+            # No need to queue separate URLs - all versions are scraped in-place
             item['variations'] = extract_variations(
-                driver, self.selectors, model_name, model_id
+                driver, self.selectors, model_name, model_id, response.url
             )
 
             # Extract collaborators, authors, and provenance, then build model_metadata
@@ -235,7 +239,7 @@ class KaggleMetadataSpider(scrapy.Spider):
             }
 
             # Log concise summary
-            self.logger.info(f"✓ {model_name} - Downloads: {item['downloads']}")
+            self.logger.info(f"✓ {model_name} - Downloads: {item['downloads']}, Variations: {len(item.get('variations', []))}")
 
             yield item
 

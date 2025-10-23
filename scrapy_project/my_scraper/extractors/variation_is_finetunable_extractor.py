@@ -11,11 +11,11 @@ logger = logging.getLogger(__name__)
 
 def extract_is_finetunable(driver: webdriver.Chrome, is_finetunable_selector, variation_counter: int) -> str:
     """
-    Extract is_finetunable field using multiple selectors
+    Extract is_finetunable field using multiple selectors (XPath and CSS)
 
     Args:
         driver: Selenium driver instance
-        is_finetunable_selector: Single selector or list of selectors
+        is_finetunable_selector: Single selector or list of selectors (can be XPath or CSS)
         variation_counter: Current variation number for logging
 
     Returns:
@@ -25,16 +25,24 @@ def extract_is_finetunable(driver: webdriver.Chrome, is_finetunable_selector, va
 
     for idx, ft_selector in enumerate(is_finetunable_selectors):
         try:
-            # Find ALL matching elements instead of just the first one
-            finetunable_elems = driver.find_elements(By.CSS_SELECTOR, ft_selector)
-            logger.info(f"Variation {variation_counter}: Found {len(finetunable_elems)} elements matching is_finetunable selector {idx + 1}")
+            # Determine if selector is XPath (starts with /) or CSS
+            if ft_selector.startswith('/'):
+                # Use XPath
+                finetunable_elems = driver.find_elements(By.XPATH, ft_selector)
+                selector_type = "XPath"
+            else:
+                # Use CSS
+                finetunable_elems = driver.find_elements(By.CSS_SELECTOR, ft_selector)
+                selector_type = "CSS"
+
+            logger.info(f"Variation {variation_counter}: Found {len(finetunable_elems)} elements matching is_finetunable {selector_type} selector {idx + 1}")
 
             # Look for element with "Yes" or "No" text
             for elem in finetunable_elems:
                 text = elem.text.strip()
                 # Check if it's a Yes/No value (case-insensitive)
                 if text.lower() in ['yes', 'no']:
-                    logger.info(f"Variation {variation_counter}: Found is_finetunable '{text}' using selector {idx + 1}/{len(is_finetunable_selectors)}")
+                    logger.info(f"Variation {variation_counter}: Found is_finetunable '{text}' using {selector_type} selector {idx + 1}/{len(is_finetunable_selectors)}")
                     return text
         except Exception as e:
             logger.info(f"Variation {variation_counter}: Is_finetunable selector {idx + 1}/{len(is_finetunable_selectors)} failed: {e}")

@@ -15,7 +15,7 @@ def extract_license(driver: webdriver.Chrome, license_selector, variation_counte
 
     Args:
         driver: Selenium driver instance
-        license_selector: Single selector or list of selectors
+        license_selector: Single selector or list of selectors (can be XPath or CSS)
         variation_counter: Current variation number for logging
 
     Returns:
@@ -25,7 +25,14 @@ def extract_license(driver: webdriver.Chrome, license_selector, variation_counte
 
     for idx, lic_selector in enumerate(license_selectors):
         try:
-            license_elem = driver.find_element(By.CSS_SELECTOR, lic_selector)
+            # Determine selector type (XPath or CSS)
+            if lic_selector.startswith('/') or lic_selector.startswith('('):
+                # XPath selector
+                license_elem = driver.find_element(By.XPATH, lic_selector)
+            else:
+                # CSS selector
+                license_elem = driver.find_element(By.CSS_SELECTOR, lic_selector)
+
             variation_license = license_elem.text.strip()
 
             # Clean license text - remove icon text and extra whitespace
