@@ -27,6 +27,7 @@ from my_scraper.extractors.collaborators_extractor import extract_collaborators
 from my_scraper.extractors.authors_extractor import extract_authors
 from my_scraper.extractors.provenance_extractor import extract_provenance
 from my_scraper.extractors.variations_extractor import extract_variations
+from my_scraper.extractors.model_card_extractor import extract_model_card
 
 
 class KaggleMetadataSpider(scrapy.Spider):
@@ -217,7 +218,7 @@ class KaggleMetadataSpider(scrapy.Spider):
             item['short_description'] = extract_description(driver, tree, self.selectors, model_name)
             item['downloads'] = extract_downloads(driver, tree, self.selectors, model_name)
             item['usability'] = extract_usability(driver, tree, self.selectors, model_name)
-            item['model_card'] = self.extract_model_card(driver, tree, self.selectors, model_name)
+            item['model_card'] = extract_model_card(driver, tree, self.selectors, model_name)
             item['tags'] = extract_tags(driver, tree, self.selectors, model_name)
             item['variations'] = extract_variations(
                 driver, self.selectors, model_name, model_id
@@ -242,90 +243,3 @@ class KaggleMetadataSpider(scrapy.Spider):
             self.logger.error(f'Error processing {model_name}: {e}')
             import traceback
             traceback.print_exc()
-    
-    def extract_model_card(self, driver, tree, selectors: Dict, name: str) -> str:
-        """
-        Extract the model card text and links
-        
-        Args:
-            driver: Selenium driver instance
-            tree: lxml tree object
-            selectors: Selectors configuration dictionary
-            name: Model name for logging
-            
-        Returns:
-            Model card text with links
-        """
-        result = {'text': '', 'links': []}
-        
-        # Try to click action button if configured
-        action_selector = selectors.get('model_card_action')
-        if action_selector:
-            try:
-                if click_element(driver, action_selector):
-                    time.sleep(1)
-                    # Refresh tree after click (using driver's page source)
-                    tree = lxml_html.fromstring(driver.page_source)
-            except Exception:
-                pass
-        
-        # Try CSS selectors via Selenium first
-        for sel in selectors.get('model_card_selectors', []):
-            try:
-                el = driver.find_element(By.CSS_SELECTOR, sel)
-                text = el.text.strip()
-                if text:
-                    result['text'] = text
-
-                    # Extract anchor hrefs
-                    try:
-                        anchors = el.find_elements(By.TAG_NAME, 'a')
-                        for a in anchors:
-                            href = a.get_attribute('href')
-                            if href:
-                                result['links'].append(href)
-                    except Exception:
-                        pass
-
-                    break
-            except Exception:
-                pass
-        
-        # Fallback to XPath using lxml
-        if not result['text']:
-            fallback_xpaths = [
-                '//div[contains(@class, "sc-lkCrJH")][1]',
-                '//div[contains(@class, "sc-chzmIZ")]/div[1]'
-            ]
-            
-            for xp in fallback_xpaths:
-                try:
-                    elems = tree.xpath(xp)
-                    if elems:
-                        text = elems[0].text_content().strip()
-                        if text:
-                            result['text'] = text
-
-                            # Extract links
-                            try:
-                                anchor_nodes = elems[0].xpath('.//a')
-                                for node in anchor_nodes:
-                                    href = node.get('href')
-                                    if href:
-                                        result['links'].append(href)
-                            except Exception:
-                                pass
-
-                            break
-                except Exception:
-                    pass
-        
-        if not result['text']:
-            self.logger.warning(f"Could not find model_card for {name}")
-        
-        # Combine text and links
-        model_card_text = result['text']
-        if result['links']:
-            model_card_text += '\n\nLinks:\n' + '\n'.join([f"- {l}" for l in result['links']])
-
-        return model_card_text

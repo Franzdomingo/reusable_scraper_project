@@ -7,7 +7,7 @@ from typing import Dict
 from selenium import webdriver
 from selenium.webdriver.common.by import By
 from lxml import html as lxml_html
-from my_scraper.utils import is_numeric_value
+from my_scraper.utils import is_numeric_value, is_css_selector, is_xpath_selector
 
 logger = logging.getLogger(__name__)
 
@@ -33,12 +33,16 @@ def extract_downloads(driver: webdriver.Chrome, tree: lxml_html.HtmlElement,
         logger.debug(f"No driver provided, skipping downloads extraction for {name}")
         return downloads
 
-    # Try CSS selectors via Selenium for dynamic content
+    # Wait a moment for dynamic content to load
+    import time
+    time.sleep(1)
+
+    # Try selectors via Selenium for dynamic content
     # IMPORTANT: Use the FIRST valid match from prioritized selectors
     # Don't collect all candidates - trust the selector priority order
     for selector in selectors.get('downloads', []):
-        # Check if it's a CSS selector (starts with . or #)
-        if selector.startswith('.') or selector.startswith('#') or selector.startswith('span') or selector.startswith('div'):
+        # Use smart selector detection
+        if is_css_selector(selector):
             try:
                 logger.debug(f"Trying downloads CSS selector via Selenium: {selector}")
                 elements = driver.find_elements(By.CSS_SELECTOR, selector)
@@ -68,11 +72,41 @@ def extract_downloads(driver: webdriver.Chrome, tree: lxml_html.HtmlElement,
                         continue
             except Exception as e:
                 logger.debug(f"Downloads CSS selector {selector} failed: {e}")
+        else:
+            # XPath selector - use Selenium for dynamic content
+            try:
+                logger.debug(f"Trying downloads XPath selector via Selenium: {selector}")
+                elements = driver.find_elements(By.XPATH, selector)
+                logger.debug(f"Found {len(elements)} elements with XPath via Selenium")
+
+                for elem in elements:
+                    try:
+                        text = elem.text.strip()
+                        logger.debug(f"Checking element text: '{text}'")
+                        if text and is_numeric_value(text):
+                            # Filter out engagement values (small decimals < 1 without K/M/B suffix)
+                            try:
+                                if '.' in text and not any(x in text.upper() for x in ['K', 'M', 'B']):
+                                    val = float(text.replace(',', ''))
+                                    if val < 1:
+                                        logger.debug(f"Skipping engagement-like value: {text}")
+                                        continue
+                            except (ValueError, TypeError):
+                                pass  # If conversion fails, keep it as candidate
+
+                            # Found a valid value - return it immediately
+                            logger.info(f"Found downloads using XPath via Selenium '{selector}': {text}")
+                            return text
+                    except Exception as e:
+                        logger.debug(f"Error getting text from element: {e}")
+                        continue
+            except Exception as e:
+                logger.debug(f"Downloads XPath selector via Selenium {selector} failed: {e}")
 
     # Try XPath selectors using lxml tree as fallback
     for selector in selectors.get('downloads', []):
-        # Skip CSS selectors (already tried above)
-        if selector.startswith('.') or selector.startswith('#') or selector.startswith('span') or selector.startswith('div'):
+        # Use smart selector detection - skip CSS selectors (already tried above)
+        if is_css_selector(selector):
             continue
 
         try:

@@ -25,7 +25,7 @@ ROBOTSTXT_OBEY = False
 
 # Configure maximum concurrent requests performed by Scrapy (default: 16)
 # Optimized for speed + stability: 64 concurrent (4x default, matches autothrottle target)
-CONCURRENT_REQUESTS = 64
+CONCURRENT_REQUESTS = 32
 
 # Configure a delay for requests for the same website (default: 0)
 # See https://docs.scrapy.org/en/latest/topics/settings.html#download-delay
@@ -113,8 +113,7 @@ SELENIUM_DRIVER_ARGUMENTS = [
     '--disable-logging',
     '--log-level=3'
 ]
-SELENIUM_POOL_SIZE = 6  # Increased from 8 for better throughput (1.5x CPU cores typical)
-
+SELENIUM_POOL_SIZE = 1 
 # Set settings whose default value is deprecated to a future-proof value
 REQUEST_FINGERPRINTER_IMPLEMENTATION = '2.7'
 TWISTED_REACTOR = 'twisted.internet.asyncioreactor.AsyncioSelectorReactor'

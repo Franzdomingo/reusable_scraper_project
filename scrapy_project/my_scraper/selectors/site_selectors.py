@@ -13,65 +13,44 @@ class KaggleSelectors:
     """Configuration class for Kaggle scraping selectors"""
     
     # Description selectors - ordered by priority (most specific first)
+    # Updated 2025-10-23: Using stable selectors (meta tags, semantic HTML)
     DESCRIPTION_SELECTORS: List[str] = [
-        '//p[@class="sc-gGKoUb jJPcnF"]',
-        '//div[@class="sc-fhfEft"]//p[2]',
-        './/span/p[1]',
-        '.sc-fhfEft > p:nth-child(2)'  # CSS selector for Selenium fallback
+        # Most stable: meta description tag
+        '//meta[@name="description"]/@content',
+        # Semantic: Find description after "Language models" pattern
+        '//p[contains(text(), "Language models") or contains(text(), "models pretrained")]',
+        # Structure-based: Description appears after organization name
+        '//h1[contains(@class, "sc-lgpSej")]/following-sibling::span//p[2]',
+        # Fallback: Any paragraph with margin-top styling in main content
+        '//div[@class="sc-guPfGz eukZsY"]//p[@style="margin-top: 40px;"]',
     ]
     
     # Download count selectors - ordered by priority
-    # CSS selectors first (for Selenium), then XPath (for lxml)
-    # Updated 2025-10-22: New Kaggle redesign selectors
-    # Target: span element containing download count (NOT views)
-    # NOTE: Downloads appear in the right sidebar under "Downloads" heading
-    # IMPORTANT: Must target the Downloads section specifically to avoid matching other numbers
+    # Updated 2025-10-23: Using absolute XPath selector
+    # Target: span element containing download count at specific path
     DOWNLOAD_SELECTORS: List[str] = [
-        # XPath selectors (2025-10-22 redesign) - MOST RELIABLE
-        # Target the Downloads section specifically by finding the h3 header first
-        '//h3[text()="Downloads"]/ancestor::div[@class and contains(@class, "sc-fEaSUP")]//span[contains(@class, "sc-kvnevz") and contains(@class, "sc-kMemMU")][1]',
-        '//h3[text()="Downloads"]//following::span[contains(@class, "sc-kvnevz") and contains(@class, "sc-kMemMU")][1]',
-        # CSS selectors (less reliable, may match wrong elements)
-        'span.sc-kvnevz.sc-kMemMU.jQNTEi.djTcMj',
-        # Fallback - older selectors
-        '.sc-jTpuXY > div:nth-child(1) > div:nth-child(2) > div:nth-child(1) > span:nth-child(1)',
-        'div.sc-gUYSAC:nth-child(2) > div:nth-child(2) > div:nth-child(2) > span:nth-child(1)',
-        'span.sc-kCuUfV.sc-hoocXy.iPCsnU.eqfbZr',
-        'span.sc-hoocXy.eqfbZr',
-        '.sc-jTpuXY > div:nth-child(1) > div:nth-child(2) > div:nth-child(1)',
-        'span.iPCsnU.eqfbZr',
-        # Generic XPath fallbacks
-        '//span[contains(@class, "sc-kCuUfV") and contains(@class, "sc-hoocXy") and contains(@class, "iPCsnU") and contains(@class, "eqfbZr")]',
-        '//span[contains(@class, "sc-hoocXy") and contains(@class, "eqfbZr")]',
-        '//span[contains(@class, "iPCsnU") and contains(@class, "eqfbZr")]'
+        '/html/body/div/div[1]/div[2]/div/div[2]/div/div[5]/div/div[1]/div[2]/div[1]/div[2]/div[1]/span',
     ]
 
     # Usability score selectors - ordered by priority
-    # CSS selectors first (for Selenium), then XPath (for lxml)
-    # Target: p element containing usability score
-    # Updated 2025-10-22: New Kaggle redesign selectors
+    # Updated 2025-10-23: Using absolute XPath selector
+    # Target: p element containing usability score (numeric value)
     USABILITY_SELECTORS: List[str] = [
-        # CSS selector - 2025-10-22 redesign
-        'p.sc-fbQrwq.sc-fwxbQo.kHxwkV.hwCees',  # New usability score class
-        # Fallback - older selectors
-        'p.sc-hwddKA:nth-child(5)',
-        'p.sc-hwddKA',
-        # XPath selectors
-        '//h2[contains(text(), "Usability")]//following::p[contains(@class, "sc-fbQrwq")][1]',
-        '//p[contains(@class, "sc-fbQrwq") and contains(@class, "sc-fwxbQo")]',
-        '//p[contains(@class, "sc-hwddKA")]'
+        # Absolute XPath selector
+        '/html/body/div/div[1]/div[2]/div/div[2]/div/div[5]/div/div[1]/div[2]/p',
     ]
     
-    # Tag selectors - ordered by priority (based on actual HTML structure)
+    # Tag selectors - ordered by priority
+    # Updated 2025-10-23: Using stable selectors (heading anchors, semantic links)
     TAG_SELECTORS: List[str] = [
-        '.sc-hfCsLp.hNfILY',  # Main container for tags section
-        '//div[contains(@class, "sc-hfCsLp") and contains(@class, "hNfILY")]',  # XPath equivalent
-        '.sc-hfCsLp',  # Fallback: broader tag container
-        '//div[contains(@class, "sc-hfCsLp")]'  # XPath fallback
+        # MOST STABLE: Find div containing h2 "Tags"
+        '//div[.//h2[contains(text(), "Tags ")]]',
+        '//h2[contains(text(), "Tags ")]/following-sibling::div[1]',
     ]
-    
+
     # Individual tag link selector
-    TAG_LINK_SELECTOR: str = 'a.sc-hZpmlk.kpuQUO'
+    # Updated 2025-10-23: Using stable selectors (target attribute, href pattern)
+    TAG_LINK_SELECTOR: str = 'a[target="_blank"][href*="/models?"]'
 
     # Tags "more" button selectors (for expanding hidden tags)
     TAG_MORE_BUTTON_TEXT_SPAN: str = 'span.eWEDa-d'  # Span containing "X more" text
@@ -132,14 +111,16 @@ class KaggleSelectors:
         '//div[contains(@class, "sc-fPzfn")]'
     ]
 
-    # Model card selectors (CSS) - ordered by priority
+    # Model card selectors - ordered by priority
+    # Updated 2025-10-23: Using absolute XPath selector
     MODEL_CARD_SELECTORS: List[str] = [
-        'div.sc-lkCrJH:nth-child(1)',
-        '.sc-chzmIZ > div:nth-child(1)'
+        # Absolute XPath selector
+        '/html/body/div/div[1]/div[2]/div/div[2]/div/div[5]/div/div[1]/div[1]/div[2]/div[1]',
     ]
 
     # Optional action button to reveal model card (click before scraping)
-    MODEL_CARD_ACTION_BUTTON: str = '.sc-kHBIib > span:nth-child(2)'
+    # Using role and aria attributes for stability
+    MODEL_CARD_ACTION_BUTTON: str = 'button[aria-label*="Read more"]'
     
     # All tab buttons (to extract all tabs for processing)
     # Target: All tab buttons with role="tab" containing tab names
@@ -147,9 +128,9 @@ class KaggleSelectors:
     VARIATION_TABS_ALL: str = 'button[role="tab"]'
 
     # Tab text selector (within each tab button)
-    # Target: The span containing the tab name text
-    # Updated 2025-10-22: New Kaggle redesign - text is in span.sc-hwddKA
-    VARIATION_TAB_TEXT: str = 'span.sc-hwddKA'
+    # Updated 2025-10-23: Using stable selectors (direct text extraction from button)
+    # NOTE: Extract text directly from button[role="tab"] instead of relying on span classes
+    VARIATION_TAB_TEXT: str = 'span'  # Generic span within tab button
 
     # Transformers variation dropdown action selector (click to open the list)
     # Target: The combobox button with aria-label="Select Variation"

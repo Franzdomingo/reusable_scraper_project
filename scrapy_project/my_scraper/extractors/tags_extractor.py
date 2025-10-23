@@ -19,6 +19,7 @@ from .selenium_utils import (
     get_element_text,
     get_element_attribute
 )
+from my_scraper.utils import is_css_selector, is_xpath_selector
 
 logger = logging.getLogger(__name__)
 
@@ -259,7 +260,7 @@ def extract_tags(driver: webdriver.Chrome, tree: lxml_html.HtmlElement,
         # If specific selector failed, try container selectors
         for selector in selectors.get('tags', []):
             try:
-                if selector.startswith('.') or selector.startswith('#'):
+                if is_css_selector(selector):
                     # CSS selector - use Selenium
                     tag_containers = driver.find_elements(By.CSS_SELECTOR, selector)
 

@@ -7,6 +7,7 @@ from typing import Dict
 from selenium import webdriver
 from selenium.webdriver.common.by import By
 from lxml import html as lxml_html
+from my_scraper.utils import is_css_selector, is_xpath_selector
 
 logger = logging.getLogger(__name__)
 
@@ -32,10 +33,10 @@ def extract_usability(driver: webdriver.Chrome, tree: lxml_html.HtmlElement,
         logger.debug(f"No driver provided, skipping usability extraction for {name}")
         return usability
 
-    # Try CSS selectors via Selenium for dynamic content
+    # Try all selectors via Selenium for dynamic content
     for selector in selectors.get('usability', []):
-        # Check if it's a CSS selector
-        if selector.startswith('.') or selector.startswith('#') or selector.startswith('p') or selector.startswith('div'):
+        # Use smart selector detection
+        if is_css_selector(selector):
             try:
                 logger.debug(f"Trying usability CSS selector via Selenium: {selector}")
                 elements = driver.find_elements(By.CSS_SELECTOR, selector)
@@ -54,29 +55,26 @@ def extract_usability(driver: webdriver.Chrome, tree: lxml_html.HtmlElement,
                         continue
             except Exception as e:
                 logger.debug(f"Usability CSS selector {selector} failed: {e}")
+        else:
+            # XPath selector - use Selenium's XPath method for dynamic content
+            try:
+                logger.debug(f"Trying usability XPath selector via Selenium: {selector}")
+                elements = driver.find_elements(By.XPATH, selector)
+                logger.debug(f"Found {len(elements)} elements with XPath")
 
-    # Try XPath selectors using lxml tree as fallback
-    for selector in selectors.get('usability', []):
-        # Skip CSS selectors (already tried above)
-        if selector.startswith('.') or selector.startswith('#') or selector.startswith('p') or selector.startswith('div'):
-            continue
-
-        try:
-            logger.debug(f"Trying usability XPath selector: {selector}")
-            usability_elements = tree.xpath(selector)
-            logger.debug(f"Found {len(usability_elements)} elements with XPath")
-
-            if usability_elements:
-                for elem in usability_elements:
-                    text = elem.text_content().strip()
-                    logger.debug(f"Checking element text: '{text}'")
-                    if text:
-                        # Found a valid value - return it immediately
-                        logger.info(f"Found usability using XPath '{selector}': {text}")
-                        return text
-        except Exception as e:
-            logger.debug(f"Usability XPath selector {selector} failed: {e}")
-            continue
+                for elem in elements:
+                    try:
+                        text = elem.text.strip()
+                        logger.debug(f"Checking element text: '{text}'")
+                        if text:
+                            # Found a valid value - return it immediately
+                            logger.info(f"Found usability using XPath '{selector}': {text}")
+                            return text
+                    except Exception as e:
+                        logger.debug(f"Error getting text from element: {e}")
+                        continue
+            except Exception as e:
+                logger.debug(f"Usability XPath selector {selector} failed: {e}")
 
     # Fallback: Search for text near "Usability" heading
     if not usability:

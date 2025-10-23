@@ -7,7 +7,7 @@ from typing import Dict
 from selenium import webdriver
 from selenium.webdriver.common.by import By
 from lxml import html as lxml_html
-from my_scraper.utils import html_to_text
+from my_scraper.utils import html_to_text, is_css_selector, is_xpath_selector
 
 logger = logging.getLogger(__name__)
 
@@ -30,7 +30,7 @@ def extract_description(driver: webdriver.Chrome, tree: lxml_html.HtmlElement,
 
     # First try CSS selectors (via Selenium) - these are more reliable for dynamic content
     for selector in selectors.get('description', []):
-        if selector.startswith('.') or selector.startswith('#'):
+        if is_css_selector(selector):
             try:
                 logger.debug(f"Trying description CSS selector via Selenium: {selector}")
                 desc_element = driver.find_element(By.CSS_SELECTOR, selector)
@@ -43,7 +43,7 @@ def extract_description(driver: webdriver.Chrome, tree: lxml_html.HtmlElement,
 
     # Next try XPath selectors using lxml tree
     for selector in selectors.get('description', []):
-        if selector.startswith('.') or selector.startswith('#'):
+        if is_css_selector(selector):
             continue
         try:
             logger.debug(f"Trying description XPath selector: {selector}")

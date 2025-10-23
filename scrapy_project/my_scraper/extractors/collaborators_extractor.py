@@ -9,6 +9,7 @@ from selenium import webdriver
 from selenium.webdriver.common.by import By
 from lxml import html as lxml_html
 from my_scraper.extractors.selenium_utils import click_element
+from my_scraper.utils import is_css_selector, is_xpath_selector
 
 logger = logging.getLogger(__name__)
 
@@ -60,7 +61,7 @@ def extract_collaborators(driver: webdriver.Chrome, tree: lxml_html.HtmlElement,
         # Try CSS selectors via Selenium first
         for selector in selectors.get('collaborators', []):
             try:
-                if selector.startswith('.') or selector.startswith('#') or selector.startswith('p') or selector.startswith('div'):
+                if is_css_selector(selector):
                     # CSS selector - use Selenium
                     logger.debug(f"Trying collaborator CSS selector: {selector}")
                     elements = driver.find_elements(By.CSS_SELECTOR, selector)
