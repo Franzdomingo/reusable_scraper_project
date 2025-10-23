@@ -5,10 +5,13 @@ CREATE TABLE kaggle_models (
     name TEXT NOT NULL,
     scraped_on TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     downloads INT,
-    usability TEXT,
+    usability NUMERIC(5,2),
     short_description TEXT,
-    model_card TEXT -- store README or markdown content
-    example_usage TEXT -- store example usage code snippets
+    model_card TEXT,
+    example_usage TEXT,
+    last_scraped TIMESTAMP,
+    total_views INT,
+    total_engagements NUMERIC(10,5)
 );
 
 -- Table to store tags (many-to-many relationship with models)
@@ -23,22 +26,26 @@ CREATE TABLE model_tags (
     PRIMARY KEY (model_id, tag_id)
 );
 
--- Table for metadata fields
-CREATE TABLE 
- (
-    model_id INT REFERENCES kaggle_models(id) ON DELETE CASCADE PRIMARY KEY,
-    collaborators TEXT[], -- array of collaborator names
-    authors TEXT[],       -- array of metadata authors
-    provenance TEXT       -- provenance info
-);
-
-CREATE TABLE variation_info (
-    model_id INT REFERENCES kaggle_models(id) ON DELETE CASCADE PRIMARY KEY,
-    variation TEXT,
+-- Table to store model variations
+CREATE TABLE model_variations (
+    id SERIAL PRIMARY KEY,
+    model_id INT REFERENCES kaggle_models(id) ON DELETE CASCADE,
+    variation TEXT NOT NULL,
+    variation_name TEXT NOT NULL,
     variation_version TEXT,
+    variation_created_by TEXT,
+    variation_update_description TEXT,
     variation_license TEXT,
     variation_downloads INT,
-    model_card TEXT, -- store README or markdown content
-    is_finetunable BOOLEAN,
-    example_usage TEXT -- store example usage code snippets
+    variations_model_card TEXT,
+    variations_is_finetunable TEXT,
+    variations_example_usage TEXT
+);
+
+-- Table to store model metadata/collaborators
+CREATE TABLE model_collaborators (
+    id SERIAL PRIMARY KEY,
+    model_id INT REFERENCES kaggle_models(id) ON DELETE CASCADE,
+    collaborator_name TEXT NOT NULL,
+    role TEXT
 );
