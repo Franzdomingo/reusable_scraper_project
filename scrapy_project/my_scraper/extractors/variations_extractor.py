@@ -11,138 +11,16 @@ from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.common.exceptions import TimeoutException, StaleElementReferenceException
 
-from selenium.webdriver.common.action_chains import ActionChains
-from selenium.webdriver.common.keys import Keys
-
-from .selenium_utils import click_element
+from .dropdown_handler import click_dropdown_to_open
+from .variation_version_extractor import extract_version
+from .variation_downloads_extractor import extract_downloads
+from .variation_license_extractor import extract_license
+from .variation_model_card_extractor import extract_model_card
+from .variation_is_finetunable_extractor import extract_is_finetunable
+from .variation_example_usage_extractor import extract_example_usage
+from .tab_handler import build_tab_queue, click_tab
 
 logger = logging.getLogger(__name__)
-
-
-def click_dropdown_to_open(driver: webdriver.Chrome, selector: str, timeout: int = 3) -> bool:
-    """
-    Aggressively try to open a dropdown by clicking it multiple ways
-
-    Args:
-        driver: Selenium driver instance
-        selector: CSS selector for dropdown element
-        timeout: Max seconds to wait for aria-expanded=true
-
-    Returns:
-        True if dropdown opened (aria-expanded=true), False otherwise
-    """
-    try:
-        element = driver.find_element(By.CSS_SELECTOR, selector)
-
-        # First, scroll the element into view
-        logger.info("Scrolling dropdown element into view")
-        driver.execute_script("arguments[0].scrollIntoView({block: 'center', behavior: 'smooth'});", element)
-        time.sleep(0.5)
-
-        # Try to hide any overlaying elements (common issue)
-        try:
-            logger.info("Attempting to hide overlay elements")
-            # Hide common overlay classes
-            driver.execute_script("""
-                let overlays = document.querySelectorAll('.sc-ABqPz.hkFQpn');
-                overlays.forEach(el => el.style.display = 'none');
-            """)
-            time.sleep(0.3)
-        except Exception as e:
-            logger.info(f"Could not hide overlays: {e}")
-
-        # Method 1: JavaScript click with force
-        try:
-            logger.info("Method 1: Trying JavaScript click")
-            driver.execute_script("arguments[0].click();", element)
-            time.sleep(0.5)
-            if element.get_attribute('aria-expanded') == 'true':
-                logger.info("Method 1 succeeded - dropdown opened")
-                return True
-        except Exception as e:
-            logger.info(f"Method 1 failed: {e}")
-
-        # Method 2: JavaScript MouseEvent dispatch (most powerful)
-        try:
-            logger.info("Method 2: Trying JavaScript MouseEvent dispatch")
-            driver.execute_script("""
-                var element = arguments[0];
-                var event = new MouseEvent('mousedown', {
-                    view: window,
-                    bubbles: true,
-                    cancelable: true
-                });
-                element.dispatchEvent(event);
-
-                var clickEvent = new MouseEvent('click', {
-                    view: window,
-                    bubbles: true,
-                    cancelable: true
-                });
-                element.dispatchEvent(clickEvent);
-            """, element)
-            time.sleep(0.5)
-            if element.get_attribute('aria-expanded') == 'true':
-                logger.info("Method 2 succeeded - dropdown opened")
-                return True
-        except Exception as e:
-            logger.info(f"Method 2 failed: {e}")
-
-        # Method 3: Focus and press SPACE key (accessibility method)
-        try:
-            logger.info("Method 3: Trying focus via JavaScript and SPACE key")
-            driver.execute_script("arguments[0].focus();", element)
-            time.sleep(0.2)
-            element.send_keys(Keys.SPACE)
-            time.sleep(0.5)
-            if element.get_attribute('aria-expanded') == 'true':
-                logger.info("Method 3 succeeded - dropdown opened")
-                return True
-        except Exception as e:
-            logger.info(f"Method 3 failed: {e}")
-
-        # Method 4: Focus and press ENTER key
-        try:
-            logger.info("Method 4: Trying focus via JavaScript and ENTER key")
-            driver.execute_script("arguments[0].focus();", element)
-            time.sleep(0.2)
-            element.send_keys(Keys.ENTER)
-            time.sleep(0.5)
-            if element.get_attribute('aria-expanded') == 'true':
-                logger.info("Method 4 succeeded - dropdown opened")
-                return True
-        except Exception as e:
-            logger.info(f"Method 4 failed: {e}")
-
-        # Method 5: Regular Selenium click (after overlay removal)
-        try:
-            logger.info("Method 5: Trying regular Selenium click after overlay removal")
-            element.click()
-            time.sleep(0.5)
-            if element.get_attribute('aria-expanded') == 'true':
-                logger.info("Method 5 succeeded - dropdown opened")
-                return True
-        except Exception as e:
-            logger.info(f"Method 5 failed: {e}")
-
-        # Method 6: ActionChains with offset
-        try:
-            logger.info("Method 6: Trying ActionChains with offset")
-            actions = ActionChains(driver)
-            actions.move_to_element(element).move_by_offset(0, 0).click().perform()
-            time.sleep(0.5)
-            if element.get_attribute('aria-expanded') == 'true':
-                logger.info("Method 6 succeeded - dropdown opened")
-                return True
-        except Exception as e:
-            logger.info(f"Method 6 failed: {e}")
-
-        logger.warning("All click methods failed - dropdown did not open")
-        return False
-
-    except Exception as e:
-        logger.error(f"Error in click_dropdown_to_open: {e}")
-        return False
 
 
 def extract_variations_for_tab(
@@ -345,222 +223,14 @@ def extract_variations_for_tab(
 
                 # Step 4: Extract variation details after clicking
                 variation_name = queued_name  # Use the name from queue
-                variation_version = ''
-                variation_downloads = ''
-                variation_license = ''
-                variation_model_card = ''
-                variation_is_finetunable = ''
-                variation_example_usage = ''
 
-                # Extract version (try multiple selectors)
-                version_selectors = version_selector if isinstance(version_selector, list) else [version_selector] if version_selector else []
-
-                for idx, ver_selector in enumerate(version_selectors):
-                    try:
-                        # Determine if this is an XPath or CSS selector
-                        if ver_selector.startswith('/') or ver_selector.startswith('('):
-                            # XPath selector
-                            version_elem = driver.find_element(By.XPATH, ver_selector)
-                        else:
-                            # CSS selector
-                            version_elem = driver.find_element(By.CSS_SELECTOR, ver_selector)
-
-                        variation_version = version_elem.text.strip()
-
-                        logger.info(f"Variation {variation_counter}: Found version '{variation_version}' using selector {idx + 1}/{len(version_selectors)}")
-                        break
-                    except Exception as e:
-                        logger.info(f"Variation {variation_counter}: Version selector {idx + 1}/{len(version_selectors)} failed: {e}")
-                        continue
-
-                if not variation_version and version_selectors:
-                    logger.info(f"Variation {variation_counter}: Could not find version with any selector")
-
-                # Extract downloads (try XPath first, then CSS)
-                downloads_xpath_selector = selectors.get('variation_downloads_xpath')
-                downloads_css_selector = selectors.get('variation_downloads')
-
-                # Try XPath selector first
-                if downloads_xpath_selector and not variation_downloads:
-                    try:
-                        downloads_elem = driver.find_element(By.XPATH, downloads_xpath_selector)
-                        text = downloads_elem.text.strip()
-                        if text:
-                            variation_downloads = text
-                            logger.info(f"Variation {variation_counter}: Found downloads '{variation_downloads}' using XPath selector")
-                    except Exception as e:
-                        logger.info(f"Variation {variation_counter}: XPath downloads selector failed: {e}")
-
-                # Try CSS selector as fallback
-                if downloads_css_selector and not variation_downloads:
-                    try:
-                        # Find all matching elements to ensure we get the right one
-                        downloads_elems = driver.find_elements(By.CSS_SELECTOR, downloads_css_selector)
-                        logger.info(f"Variation {variation_counter}: Found {len(downloads_elems)} elements matching CSS downloads selector")
-
-                        # Look for the element with numeric content only (no text)
-                        for idx, elem in enumerate(downloads_elems):
-                            text = elem.text.strip()
-                            # Check if text is numeric (digits only, possibly with K/M suffix)
-                            if text and (text.isdigit() or (text[:-1].isdigit() and text[-1] in ['K', 'M', 'k', 'm'])):
-                                variation_downloads = text
-                                logger.info(f"Variation {variation_counter}: Found downloads '{variation_downloads}' from CSS element {idx + 1}/{len(downloads_elems)}")
-                                break
-
-                        # If no numeric-only element found, use the first one as fallback
-                        if not variation_downloads and len(downloads_elems) > 0:
-                            variation_downloads = downloads_elems[0].text.strip()
-                            logger.info(f"Variation {variation_counter}: Using first CSS element for downloads: '{variation_downloads}'")
-
-                    except Exception as e:
-                        logger.info(f"Variation {variation_counter}: Could not find downloads with CSS: {e}")
-
-                if not variation_downloads:
-                    logger.info(f"Variation {variation_counter}: Could not find downloads with any selector")
-
-                # Extract license (try multiple selectors)
-                license_selectors = license_selector if isinstance(license_selector, list) else [license_selector] if license_selector else []
-
-                for idx, lic_selector in enumerate(license_selectors):
-                    try:
-                        license_elem = driver.find_element(By.CSS_SELECTOR, lic_selector)
-                        variation_license = license_elem.text.strip()
-
-                        # Clean license text - remove icon text and extra whitespace
-                        if variation_license:
-                            # Remove common icon texts
-                            variation_license = variation_license.replace('open_in_new', '').strip()
-                            # Remove multiple spaces
-                            variation_license = ' '.join(variation_license.split())
-
-                            logger.info(f"Variation {variation_counter}: Found license '{variation_license}' using selector {idx + 1}/{len(license_selectors)}")
-                            break
-                    except Exception as e:
-                        logger.info(f"Variation {variation_counter}: License selector {idx + 1}/{len(license_selectors)} failed: {e}")
-                        continue
-
-                if not variation_license and license_selectors:
-                    logger.info(f"Variation {variation_counter}: Could not find license with any selector")
-
-                # Extract model card (try multiple selectors)
-                # Model card should be within the variation-specific content area
-                # If selector doesn't exist or doesn't find any elements, leave empty
-                model_card_selectors = model_card_selector if isinstance(model_card_selector, list) else [model_card_selector] if model_card_selector else []
-
-                for idx, mc_selector in enumerate(model_card_selectors):
-                    try:
-                        # Try to find all matching elements (there might be multiple)
-                        model_card_elems = driver.find_elements(By.CSS_SELECTOR, mc_selector)
-
-                        # If selector doesn't exist (0 elements found), skip and leave field empty
-                        if len(model_card_elems) == 0:
-                            logger.info(f"Variation {variation_counter}: Selector '{mc_selector}' found 0 elements - skipping")
-                            continue
-
-                        logger.info(f"Variation {variation_counter}: Found {len(model_card_elems)} elements matching model card selector: '{mc_selector}'")
-
-                        # Try each element until we find one with content
-                        for elem_idx, model_card_elem in enumerate(model_card_elems):
-                            try:
-                                # Get text content
-                                text_content = model_card_elem.text.strip()
-
-                                # Only accept if it has meaningful content (> 5 chars)
-                                if text_content and len(text_content) > 5:
-                                    variation_model_card = text_content
-                                    # Log truncated version (first 100 chars) to avoid log spam
-                                    preview = variation_model_card[:100] + '...' if len(variation_model_card) > 100 else variation_model_card
-                                    logger.info(f"Variation {variation_counter}: Found model card - Preview: {preview}")
-                                    break
-                                else:
-                                    logger.info(f"Variation {variation_counter}: Element {elem_idx + 1} has content too short ({len(text_content)} chars)")
-                            except Exception as elem_error:
-                                logger.info(f"Variation {variation_counter}: Error extracting text from element {elem_idx + 1}: {elem_error}")
-                                continue
-
-                        # If we found content, break out of selector loop
-                        if variation_model_card:
-                            break
-
-                    except Exception as e:
-                        logger.info(f"Variation {variation_counter}: Model card selector failed: {e}")
-                        continue
-
-                # Log if field remains empty (this is expected and OK if selector doesn't exist)
-                if not variation_model_card:
-                    logger.info(f"Variation {variation_counter}: Model card field will be empty (selector not found or no content)")
-
-                # Extract is_finetunable (try multiple selectors)
-                # Note: We need to find all matching elements and filter for "Yes"/"No" since
-                # the selector matches multiple elements (version, license, etc.)
-                is_finetunable_selectors = is_finetunable_selector if isinstance(is_finetunable_selector, list) else [is_finetunable_selector] if is_finetunable_selector else []
-
-                for idx, ft_selector in enumerate(is_finetunable_selectors):
-                    try:
-                        # Find ALL matching elements instead of just the first one
-                        finetunable_elems = driver.find_elements(By.CSS_SELECTOR, ft_selector)
-                        logger.info(f"Variation {variation_counter}: Found {len(finetunable_elems)} elements matching is_finetunable selector {idx + 1}")
-
-                        # Look for element with "Yes" or "No" text
-                        for elem in finetunable_elems:
-                            text = elem.text.strip()
-                            # Check if it's a Yes/No value (case-insensitive)
-                            if text.lower() in ['yes', 'no']:
-                                variation_is_finetunable = text
-                                logger.info(f"Variation {variation_counter}: Found is_finetunable '{variation_is_finetunable}' using selector {idx + 1}/{len(is_finetunable_selectors)}")
-                                break
-
-                        if variation_is_finetunable:
-                            break
-                    except Exception as e:
-                        logger.info(f"Variation {variation_counter}: Is_finetunable selector {idx + 1}/{len(is_finetunable_selectors)} failed: {e}")
-                        continue
-
-                if not variation_is_finetunable and is_finetunable_selectors:
-                    logger.info(f"Variation {variation_counter}: Could not find is_finetunable with any selector")
-
-                # Extract example usage (try multiple selectors)
-                example_usage_selectors = example_usage_selector if isinstance(example_usage_selector, list) else [example_usage_selector] if example_usage_selector else []
-
-                for idx, eu_selector in enumerate(example_usage_selectors):
-                    try:
-                        example_usage_elem = driver.find_element(By.CSS_SELECTOR, eu_selector)
-
-                        # First check if it contains the "no usage guide" message
-                        # Look for the specific paragraph element
-                        try:
-                            no_guide_elem = example_usage_elem.find_element(By.CSS_SELECTOR, 'p.sc-hwddKA.dIsQKt')
-                            if no_guide_elem and 'This variation does not have a usage guide yet.' in no_guide_elem.text:
-                                variation_example_usage = ''
-                                logger.info(f"Variation {variation_counter}: No usage guide available")
-                                break
-                        except:
-                            pass  # No "no guide" message found, continue with extraction
-
-                        # Try to find the content div (sibling to the header)
-                        try:
-                            content_elem = example_usage_elem.find_element(By.CSS_SELECTOR, 'div.sc-lkCrJH.ghmUBs')
-                            variation_example_usage = content_elem.text.strip()
-                        except:
-                            # Fallback: get all text from parent (includes header)
-                            variation_example_usage = example_usage_elem.text.strip()
-                            # Remove the "Example Use" header if present at the start
-                            if variation_example_usage.startswith('Example Use\n'):
-                                variation_example_usage = variation_example_usage[12:].strip()
-                            elif variation_example_usage.startswith('Example Use'):
-                                variation_example_usage = variation_example_usage[11:].strip()
-
-                        if variation_example_usage:
-                            # Log truncated version (first 100 chars) to avoid log spam
-                            preview = variation_example_usage[:100] + '...' if len(variation_example_usage) > 100 else variation_example_usage
-                            logger.info(f"Variation {variation_counter}: Found example usage using selector {idx + 1}/{len(example_usage_selectors)} - Preview: {preview}")
-                            break
-                    except Exception as e:
-                        logger.info(f"Variation {variation_counter}: Example usage selector {idx + 1}/{len(example_usage_selectors)} failed: {e}")
-                        continue
-
-                if not variation_example_usage and example_usage_selectors:
-                    logger.info(f"Variation {variation_counter}: Could not find example usage with any selector")
+                # Extract all fields using dedicated field extractors
+                variation_version = extract_version(driver, version_selector, variation_counter)
+                variation_downloads = extract_downloads(driver, selectors, variation_counter)
+                variation_license = extract_license(driver, license_selector, variation_counter)
+                variation_model_card = extract_model_card(driver, model_card_selector, variation_counter)
+                variation_is_finetunable = extract_is_finetunable(driver, is_finetunable_selector, variation_counter)
+                variation_example_usage = extract_example_usage(driver, example_usage_selector, variation_counter)
 
                 # Create variation dictionary with prefix
                 # Format: "Transformers/variation_01" using tab_prefix
@@ -626,40 +296,11 @@ def extract_variations(driver: webdriver.Chrome, selectors: Dict, name: str, mod
             # Fallback: extract without tab information
             return extract_variations_for_tab(driver, selectors, name, "variation", 1)
 
-        # Step 1: Find all tab buttons and build a tab queue
-        tab_queue = []
+        # Step 1: Build a tab queue
+        tab_queue = build_tab_queue(driver, tabs_all_selector, tab_text_selector, name)
 
-        try:
-            tab_buttons = driver.find_elements(By.CSS_SELECTOR, tabs_all_selector)
-            logger.info(f"Found {len(tab_buttons)} tab buttons with selector '{tabs_all_selector}'")
-
-            if len(tab_buttons) == 0:
-                logger.warning(f"No tabs found for {name}, skipping variations")
-                return all_variations
-
-            # Build queue: store tab text and indices
-            for idx, tab_button in enumerate(tab_buttons):
-                try:
-                    # Extract tab text
-                    tab_text_elem = tab_button.find_element(By.CSS_SELECTOR, tab_text_selector)
-                    tab_text = tab_text_elem.text.strip()
-
-                    if tab_text:
-                        tab_queue.append({
-                            'index': idx,
-                            'text': tab_text,
-                            'button': tab_button
-                        })
-                        logger.info(f"Added tab to queue - Index {idx}: {tab_text}")
-
-                except Exception as e:
-                    logger.warning(f"Error extracting text from tab button {idx}: {e}")
-                    continue
-
-            logger.info(f"Built tab queue with {len(tab_queue)} tabs for {name}")
-
-        except Exception as e:
-            logger.error(f"Error building tab queue for {name}: {e}")
+        if len(tab_queue) == 0:
+            logger.warning(f"No tabs found for {name}, skipping variations")
             return all_variations
 
         # Step 2: Process each tab
@@ -673,24 +314,7 @@ def extract_variations(driver: webdriver.Chrome, selectors: Dict, name: str, mod
                 logger.info(f"Processing tab {tab_idx + 1}/{len(tab_queue)}: {tab_text}")
 
                 # Click the tab button
-                try:
-                    # Re-find the tab button (it may be stale)
-                    tab_buttons = driver.find_elements(By.CSS_SELECTOR, tabs_all_selector)
-                    if tab_idx < len(tab_buttons):
-                        tab_button = tab_buttons[tab_idx]
-
-                        # Scroll into view and click
-                        driver.execute_script("arguments[0].scrollIntoView({block: 'center', behavior: 'smooth'});", tab_button)
-                        time.sleep(0.3)
-                        tab_button.click()
-                        logger.info(f"Clicked tab: {tab_text}")
-                        time.sleep(1)  # Wait for tab content to load
-                    else:
-                        logger.warning(f"Tab index {tab_idx} out of range")
-                        continue
-
-                except Exception as e:
-                    logger.error(f"Error clicking tab '{tab_text}': {e}")
+                if not click_tab(driver, tabs_all_selector, tab_idx, tab_text):
                     continue
 
                 # Extract variations for this tab

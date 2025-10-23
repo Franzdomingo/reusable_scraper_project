@@ -1,0 +1,47 @@
+"""
+License field extraction for variations
+"""
+
+import logging
+from selenium import webdriver
+from selenium.webdriver.common.by import By
+
+logger = logging.getLogger(__name__)
+
+
+def extract_license(driver: webdriver.Chrome, license_selector, variation_counter: int) -> str:
+    """
+    Extract license field using multiple selectors
+
+    Args:
+        driver: Selenium driver instance
+        license_selector: Single selector or list of selectors
+        variation_counter: Current variation number for logging
+
+    Returns:
+        License string or empty string if not found
+    """
+    license_selectors = license_selector if isinstance(license_selector, list) else [license_selector] if license_selector else []
+
+    for idx, lic_selector in enumerate(license_selectors):
+        try:
+            license_elem = driver.find_element(By.CSS_SELECTOR, lic_selector)
+            variation_license = license_elem.text.strip()
+
+            # Clean license text - remove icon text and extra whitespace
+            if variation_license:
+                # Remove common icon texts
+                variation_license = variation_license.replace('open_in_new', '').strip()
+                # Remove multiple spaces
+                variation_license = ' '.join(variation_license.split())
+
+                logger.info(f"Variation {variation_counter}: Found license '{variation_license}' using selector {idx + 1}/{len(license_selectors)}")
+                return variation_license
+        except Exception as e:
+            logger.info(f"Variation {variation_counter}: License selector {idx + 1}/{len(license_selectors)} failed: {e}")
+            continue
+
+    if license_selectors:
+        logger.info(f"Variation {variation_counter}: Could not find license with any selector")
+
+    return ''
