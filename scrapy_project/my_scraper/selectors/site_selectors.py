@@ -151,7 +151,13 @@ class KaggleSelectors:
 
     # Transformers variation dropdown action selector (click to open the list)
     # Target: The combobox button with aria-label="Select Variation"
-    TRANSFORMERS_VARIATION_ACTION: str = 'div[role="combobox"][aria-label="Select Variation"]'
+    # Multiple selectors for fallback (ordered by specificity)
+    TRANSFORMERS_VARIATION_ACTION: List[str] = [
+        'div[role="combobox"][aria-label="Select Variation"]',  # Most specific
+        'div[role="combobox"]',  # More generic - any combobox
+        'div[aria-label="Select Variation"]',  # aria-label only
+        'button[aria-label="Select Variation"]',  # Alternative - might be button instead of div
+    ]
 
     # Transformers variation list container (the opened dropdown)
     # Target: ul element with role="listbox" that contains all variation options

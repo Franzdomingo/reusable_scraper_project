@@ -101,12 +101,29 @@ def extract_variations_for_tab(
             return variations
 
         try:
-            dropdown_buttons = driver.find_elements(By.CSS_SELECTOR, action_selector)
-            logger.info(f"Found {len(dropdown_buttons)} dropdown buttons with selector '{action_selector}'")
+            # Support both single selector string and list of selectors
+            action_selectors = action_selector if isinstance(action_selector, list) else [action_selector]
 
-            if len(dropdown_buttons) == 0:
-                logger.warning(f"No variation dropdown found for {name} - this model may not have variations")
+            # Try each selector in order until one works
+            dropdown_found = False
+            working_selector = None
+
+            for selector in action_selectors:
+                dropdown_buttons = driver.find_elements(By.CSS_SELECTOR, selector)
+                logger.info(f"Trying selector '{selector}': found {len(dropdown_buttons)} dropdown buttons")
+
+                if len(dropdown_buttons) > 0:
+                    dropdown_found = True
+                    working_selector = selector
+                    logger.info(f"Using selector '{selector}' for dropdown")
+                    break
+
+            if not dropdown_found:
+                logger.warning(f"No variation dropdown found for {name} with any selector - this model may not have variations")
                 return variations
+
+            # Update action_selector to the working one for use in the rest of the function
+            action_selector = working_selector
 
             # Click the first dropdown button to open the variation list
             logger.info(f"Attempting to click dropdown button for {name}")
@@ -226,11 +243,46 @@ def extract_variations_for_tab(
                 # Re-open the dropdown (it may have closed after previous selection)
                 if variation_counter > 1:  # Don't re-open on first iteration
                     try:
-                        if not click_dropdown_to_open(driver, action_selector):
+                        # Add explicit wait for dropdown element to be available
+                        logger.info(f"Waiting for dropdown element to be available for variation {variation_counter}")
+                        dropdown_available = False
+                        working_selector = None
+
+                        # Support both single selector and list of selectors
+                        action_selectors = action_selector if isinstance(action_selector, list) else [action_selector]
+
+                        # Try to find the dropdown element with retries (up to 5 attempts)
+                        for attempt in range(5):
+                            # Try each selector in order
+                            for selector in action_selectors:
+                                try:
+                                    # Wait for element to be present
+                                    wait = WebDriverWait(driver, 1)  # Shorter timeout per selector
+                                    wait.until(EC.presence_of_element_located((By.CSS_SELECTOR, selector)))
+                                    dropdown_available = True
+                                    working_selector = selector
+                                    logger.info(f"Dropdown element found with selector '{selector}' on attempt {attempt + 1}")
+                                    break
+                                except TimeoutException:
+                                    logger.debug(f"Selector '{selector}' not found on attempt {attempt + 1}")
+                                    continue
+
+                            if dropdown_available:
+                                break
+
+                            logger.warning(f"No dropdown selector worked on attempt {attempt + 1}, retrying...")
+                            time.sleep(0.5)
+
+                        if not dropdown_available:
+                            logger.warning(f"Dropdown element not available with any selector after 5 attempts for variation {variation_counter}")
+                            continue
+
+                        # Now try to open the dropdown with the working selector
+                        if not click_dropdown_to_open(driver, working_selector):
                             logger.warning(f"Could not re-open dropdown for variation {variation_counter}")
                             continue
                         logger.info(f"Re-opened dropdown for variation {variation_counter}")
-                        time.sleep(0.3)  # Wait for dropdown to open
+                        time.sleep(0.5)  # Increased wait for dropdown to fully open
                     except Exception as e:
                         logger.error(f"Error re-opening dropdown for variation {variation_counter}: {e}")
                         continue
