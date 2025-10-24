@@ -5,6 +5,7 @@ Is finetunable field extraction for variations
 import logging
 from selenium import webdriver
 from selenium.webdriver.common.by import By
+from my_scraper.extractors.retry_utils import retry_selenium_find, retry_xpath, retry_click, retry_operation
 
 logger = logging.getLogger(__name__)
 
@@ -28,11 +29,11 @@ def extract_is_finetunable(driver: webdriver.Chrome, is_finetunable_selector, va
             # Determine if selector is XPath (starts with /) or CSS
             if ft_selector.startswith('/'):
                 # Use XPath
-                finetunable_elems = driver.find_elements(By.XPATH, ft_selector)
+                finetunable_elems = retry_selenium_find(driver, By.XPATH, ft_selector, max_retries=3, delay=0.5, find_multiple=True)
                 selector_type = "XPath"
             else:
                 # Use CSS
-                finetunable_elems = driver.find_elements(By.CSS_SELECTOR, ft_selector)
+                finetunable_elems = retry_selenium_find(driver, By.CSS_SELECTOR, ft_selector, max_retries=3, delay=0.5, find_multiple=True)
                 selector_type = "CSS"
 
             logger.info(f"Variation {variation_counter}: Found {len(finetunable_elems)} elements matching is_finetunable {selector_type} selector {idx + 1}")

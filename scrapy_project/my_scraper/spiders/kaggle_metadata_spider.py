@@ -30,6 +30,7 @@ from my_scraper.extractors.authors_extractor import extract_authors
 from my_scraper.extractors.provenance_extractor import extract_provenance
 from my_scraper.extractors.variations_extractor import extract_variations
 from my_scraper.extractors.model_card_extractor import extract_model_card
+from my_scraper.extractors.retry_utils import retry_selenium_find, retry_click, retry_operation
 
 
 class KaggleMetadataSpider(scrapy.Spider):

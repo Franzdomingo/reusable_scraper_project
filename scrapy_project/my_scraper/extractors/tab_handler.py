@@ -7,6 +7,7 @@ import time
 from typing import Dict, List
 from selenium import webdriver
 from selenium.webdriver.common.by import By
+from my_scraper.extractors.retry_utils import retry_selenium_find, retry_xpath, retry_click, retry_operation
 
 logger = logging.getLogger(__name__)
 
@@ -27,7 +28,7 @@ def build_tab_queue(driver: webdriver.Chrome, tabs_all_selector: str, tab_text_s
     tab_queue = []
 
     try:
-        tab_buttons = driver.find_elements(By.CSS_SELECTOR, tabs_all_selector)
+        tab_buttons = retry_selenium_find(driver, By.CSS_SELECTOR, tabs_all_selector, max_retries=3, delay=0.5, find_multiple=True)
         logger.info(f"Found {len(tab_buttons)} tab buttons with selector '{tabs_all_selector}'")
 
         if len(tab_buttons) == 0:
@@ -38,7 +39,7 @@ def build_tab_queue(driver: webdriver.Chrome, tabs_all_selector: str, tab_text_s
         for idx, tab_button in enumerate(tab_buttons):
             try:
                 # Extract tab text
-                tab_text_elem = tab_button.find_element(By.CSS_SELECTOR, tab_text_selector)
+                tab_text_elem = retry_selenium_find(tab_button, By.CSS_SELECTOR, tab_text_selector, max_retries=3, delay=0.5)
                 tab_text = tab_text_elem.text.strip()
 
                 if tab_text:
@@ -77,7 +78,7 @@ def click_tab(driver: webdriver.Chrome, tabs_all_selector: str, tab_idx: int, ta
     """
     try:
         # Re-find the tab button (it may be stale)
-        tab_buttons = driver.find_elements(By.CSS_SELECTOR, tabs_all_selector)
+        tab_buttons = retry_selenium_find(driver, By.CSS_SELECTOR, tabs_all_selector, max_retries=3, delay=0.5, find_multiple=True)
         if tab_idx >= len(tab_buttons):
             logger.warning(f"Tab index {tab_idx} out of range")
             return False

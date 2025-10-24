@@ -8,6 +8,7 @@ from selenium import webdriver
 from selenium.webdriver.common.by import By
 from lxml import html as lxml_html
 from my_scraper.utils import is_css_selector, is_xpath_selector
+from my_scraper.extractors.retry_utils import retry_selenium_find, retry_xpath, retry_click, retry_operation
 
 logger = logging.getLogger(__name__)
 
@@ -39,7 +40,7 @@ def extract_usability(driver: webdriver.Chrome, tree: lxml_html.HtmlElement,
         if is_css_selector(selector):
             try:
                 logger.debug(f"Trying usability CSS selector via Selenium: {selector}")
-                elements = driver.find_elements(By.CSS_SELECTOR, selector)
+                elements = retry_selenium_find(driver, By.CSS_SELECTOR, selector, max_retries=3, delay=0.5, find_multiple=True)
                 logger.debug(f"Found {len(elements)} elements with CSS selector")
 
                 for elem in elements:
@@ -59,7 +60,7 @@ def extract_usability(driver: webdriver.Chrome, tree: lxml_html.HtmlElement,
             # XPath selector - use Selenium's XPath method for dynamic content
             try:
                 logger.debug(f"Trying usability XPath selector via Selenium: {selector}")
-                elements = driver.find_elements(By.XPATH, selector)
+                elements = retry_selenium_find(driver, By.XPATH, selector, max_retries=3, delay=0.5, find_multiple=True)
                 logger.debug(f"Found {len(elements)} elements with XPath")
 
                 for elem in elements:
@@ -81,7 +82,7 @@ def extract_usability(driver: webdriver.Chrome, tree: lxml_html.HtmlElement,
         logger.debug(f"Trying fallback: searching for usability near 'Usability' heading")
         try:
             # Find the Usability heading and look for siblings/nearby elements
-            usability_heading = driver.find_elements(By.XPATH, "//*[contains(text(), 'Usability')]")
+            usability_heading = retry_selenium_find(driver, By.XPATH, "//*[contains(text(), 'Usability')]", max_retries=3, delay=0.5, find_multiple=True)
 
             if usability_heading:
                 logger.debug(f"Found {len(usability_heading)} 'Usability' headings")
@@ -90,9 +91,9 @@ def extract_usability(driver: webdriver.Chrome, tree: lxml_html.HtmlElement,
                 for heading in usability_heading[:2]:
                     try:
                         # Try to find parent div/section
-                        parent = heading.find_element(By.XPATH, './ancestor::div[1]')
+                        parent = retry_selenium_find(heading, By.XPATH, './ancestor::div[1]', max_retries=3, delay=0.5)
                         # Look for p elements in the parent's following siblings
-                        following_p = parent.find_element(By.XPATH, './following-sibling::*//p')
+                        following_p = retry_selenium_find(parent, By.XPATH, './following-sibling::*//p', max_retries=3, delay=0.5)
                         if following_p:
                             text = following_p.text.strip()
                             if text:

@@ -5,6 +5,7 @@ Example usage field extraction for variations
 import logging
 from selenium import webdriver
 from selenium.webdriver.common.by import By
+from my_scraper.extractors.retry_utils import retry_selenium_find, retry_xpath, retry_click, retry_operation
 
 logger = logging.getLogger(__name__)
 
@@ -25,12 +26,12 @@ def extract_example_usage(driver: webdriver.Chrome, example_usage_selector, vari
 
     for idx, eu_selector in enumerate(example_usage_selectors):
         try:
-            example_usage_elem = driver.find_element(By.CSS_SELECTOR, eu_selector)
+            example_usage_elem = retry_selenium_find(driver, By.CSS_SELECTOR, eu_selector, max_retries=3, delay=0.5)
 
             # First check if it contains the "no usage guide" message
             # Look for the specific paragraph element
             try:
-                no_guide_elem = example_usage_elem.find_element(By.CSS_SELECTOR, 'p.sc-hwddKA.dIsQKt')
+                no_guide_elem = retry_selenium_find(example_usage_elem, By.CSS_SELECTOR, 'p.sc-hwddKA.dIsQKt', max_retries=3, delay=0.5)
                 if no_guide_elem and 'This variation does not have a usage guide yet.' in no_guide_elem.text:
                     logger.info(f"Variation {variation_counter}: No usage guide available")
                     return ''
@@ -39,7 +40,7 @@ def extract_example_usage(driver: webdriver.Chrome, example_usage_selector, vari
 
             # Try to find the content div (sibling to the header)
             try:
-                content_elem = example_usage_elem.find_element(By.CSS_SELECTOR, 'div.sc-lkCrJH.ghmUBs')
+                content_elem = retry_selenium_find(example_usage_elem, By.CSS_SELECTOR, 'div.sc-lkCrJH.ghmUBs', max_retries=3, delay=0.5)
                 variation_example_usage = content_elem.text.strip()
             except:
                 # Fallback: get all text from parent (includes header)

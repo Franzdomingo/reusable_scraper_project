@@ -8,6 +8,7 @@ from selenium import webdriver
 from selenium.webdriver.common.by import By
 from lxml import html as lxml_html
 from my_scraper.utils import html_to_text, is_css_selector, is_xpath_selector
+from my_scraper.extractors.retry_utils import retry_selenium_find, retry_xpath
 
 logger = logging.getLogger(__name__)
 
@@ -33,11 +34,12 @@ def extract_description(driver: webdriver.Chrome, tree: lxml_html.HtmlElement,
         if is_css_selector(selector):
             try:
                 logger.debug(f"Trying description CSS selector via Selenium: {selector}")
-                desc_element = driver.find_element(By.CSS_SELECTOR, selector)
-                outer = desc_element.get_attribute('outerHTML')
-                if outer and outer.strip():
-                    logger.info(f"Found short_description using CSS selector: {selector}")
-                    return html_to_text(outer)
+                desc_element = retry_selenium_find(driver, By.CSS_SELECTOR, selector, max_retries=3, delay=0.5)
+                if desc_element:
+                    outer = desc_element.get_attribute('outerHTML')
+                    if outer and outer.strip():
+                        logger.info(f"Found short_description using CSS selector: {selector}")
+                        return html_to_text(outer)
             except Exception as e:
                 logger.debug(f"Description CSS selector {selector} not found: {e}")
 
@@ -47,7 +49,7 @@ def extract_description(driver: webdriver.Chrome, tree: lxml_html.HtmlElement,
             continue
         try:
             logger.debug(f"Trying description XPath selector: {selector}")
-            desc_elements = tree.xpath(selector)
+            desc_elements = retry_xpath(tree, selector, max_retries=3, delay=0.5)
             if desc_elements and desc_elements[0].text_content().strip():
                 logger.info(f"Found short_description using XPath selector: {selector}")
                 return desc_elements[0].text_content().strip()
@@ -57,11 +59,12 @@ def extract_description(driver: webdriver.Chrome, tree: lxml_html.HtmlElement,
     # Final fallback: use configured CSS fallback
     if 'description_css_fallback' in selectors:
         try:
-            desc_element = driver.find_element(By.CSS_SELECTOR, selectors['description_css_fallback'])
-            outer = desc_element.get_attribute('outerHTML')
-            if outer and outer.strip():
-                logger.info(f"Found short_description using fallback CSS selector")
-                return html_to_text(outer)
+            desc_element = retry_selenium_find(driver, By.CSS_SELECTOR, selectors['description_css_fallback'], max_retries=3, delay=0.5)
+            if desc_element:
+                outer = desc_element.get_attribute('outerHTML')
+                if outer and outer.strip():
+                    logger.info(f"Found short_description using fallback CSS selector")
+                    return html_to_text(outer)
         except Exception:
             logger.warning(f"Could not find short_description for {name}")
 

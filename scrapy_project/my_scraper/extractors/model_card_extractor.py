@@ -10,6 +10,7 @@ from selenium.webdriver.common.by import By
 from lxml import html as lxml_html
 from my_scraper.utils import is_xpath_selector
 from my_scraper.extractors.selenium_utils import click_element
+from my_scraper.extractors.retry_utils import retry_selenium_find, retry_xpath, retry_click, retry_operation
 
 logger = logging.getLogger(__name__)
 
@@ -52,10 +53,10 @@ def extract_model_card(driver: webdriver.Chrome, tree: lxml_html.HtmlElement,
             # Detect if selector is XPath or CSS
             if is_xpath_selector(sel):
                 logger.debug(f"Trying model card XPath selector: {sel}")
-                el = driver.find_element(By.XPATH, sel)
+                el = retry_selenium_find(driver, By.XPATH, sel, max_retries=3, delay=0.5)
             else:
                 logger.debug(f"Trying model card CSS selector: {sel}")
-                el = driver.find_element(By.CSS_SELECTOR, sel)
+                el = retry_selenium_find(driver, By.CSS_SELECTOR, sel, max_retries=3, delay=0.5)
 
             text = el.text.strip()
             if text:
@@ -64,7 +65,7 @@ def extract_model_card(driver: webdriver.Chrome, tree: lxml_html.HtmlElement,
 
                 # Extract anchor hrefs
                 try:
-                    anchors = el.find_elements(By.TAG_NAME, 'a')
+                    anchors = retry_selenium_find(el, By.TAG_NAME, 'a', max_retries=3, delay=0.5, find_multiple=True)
                     for a in anchors:
                         href = a.get_attribute('href')
                         if href:
@@ -86,7 +87,7 @@ def extract_model_card(driver: webdriver.Chrome, tree: lxml_html.HtmlElement,
 
         for xp in fallback_xpaths:
             try:
-                elems = tree.xpath(xp)
+                elems = retry_xpath(tree, xp, max_retries=3, delay=0.5)
                 if elems:
                     text = elems[0].text_content().strip()
                     if text:

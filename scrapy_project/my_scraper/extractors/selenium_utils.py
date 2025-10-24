@@ -11,6 +11,7 @@ from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.remote.webelement import WebElement
 from lxml import html as lxml_html
+from my_scraper.extractors.retry_utils import retry_selenium_find
 
 logger = logging.getLogger(__name__)
 
@@ -86,7 +87,10 @@ def click_element(driver: webdriver.Chrome, selector: str,
         True if clicked successfully, False otherwise
     """
     try:
-        element = driver.find_element(by, selector)
+        element = retry_selenium_find(driver, by, selector, max_retries=3, delay=0.5)
+        if not element:
+            logger.debug(f"Could not find element to click: {selector}")
+            return False
         try:
             element.click()
             logger.debug(f"Clicked element: {selector}")
@@ -219,10 +223,11 @@ def find_elements_by_parent(driver: webdriver.Chrome, parent_selector: str,
     """
     children = []
     try:
-        parents = driver.find_elements(by, parent_selector)
+        parents = retry_selenium_find(driver, by, parent_selector, max_retries=3, delay=0.5, find_multiple=True)
         for parent in parents:
             try:
-                children.extend(parent.find_elements(by, child_selector))
+                child_elems = retry_selenium_find(parent, by, child_selector, max_retries=3, delay=0.5, find_multiple=True)
+                children.extend(child_elems)
             except Exception:
                 continue
     except Exception as e:

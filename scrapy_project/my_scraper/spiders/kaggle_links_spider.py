@@ -4,20 +4,23 @@ Scrapes LLM model names and URLs from Kaggle models page
 """
 
 import scrapy
+import time
+from typing import Callable, Any
 from selenium.webdriver.common.by import By
 from my_scraper.items import KaggleModelItem
 from my_scraper.selectors.site_selectors import get_selectors_for_site
 from my_scraper.extractors.selenium_utils import get_driver_from_response, parse_tree_from_response, click_element
 from my_scraper.extractors.kaggle_links_extractor import extract_model_links
+from my_scraper.extractors.retry_utils import retry_selenium_find, retry_click, retry_operation
 
 
 class KaggleLinksSpider(scrapy.Spider):
     """
     Spider to scrape Kaggle model links
-    
+
     Extracts model names and URLs from Kaggle's models listing page
     """
-    
+
     name = 'kaggle_links'
     allowed_domains = ['kaggle.com']
     start_urls = ['https://www.kaggle.com/models?owner-type=organization']
@@ -36,6 +39,7 @@ class KaggleLinksSpider(scrapy.Spider):
         self.seen_page_content_hashes = set()  # Track page content by hash
         self.selectors = get_selectors_for_site('kaggle')
         self.previous_first_model = None  # Track first model URL to detect page change
+
     
     def start_requests(self):
         """Generate initial request with Selenium enabled"""
@@ -135,13 +139,27 @@ class KaggleLinksSpider(scrapy.Spider):
                     
                     for attempt in range(max_wait_seconds):
                         try:
-                            # Primary check: Verify the first model link has changed
-                            first_link_elements = driver.find_elements(By.XPATH, '//ul/li/div/a[contains(@href, "/models/")]')
+                            # Primary check: Verify the first model link has changed (with retry)
+                            first_link_elements = retry_selenium_find(
+                                driver,
+                                By.XPATH,
+                                '//ul/li/div/a[contains(@href, "/models/")]',
+                                max_retries=3,
+                                delay=0.5,
+                                find_multiple=True
+                            )
                             if first_link_elements:
                                 current_first_model = first_link_elements[0].get_attribute('href')
-                                
-                                # Also check page indicator to ensure we're on the right page
-                                selected_page_elements = driver.find_elements(By.CSS_SELECTOR, 'button[aria-current="true"][data-testid="selectedPage"]')
+
+                                # Also check page indicator to ensure we're on the right page (with retry)
+                                selected_page_elements = retry_selenium_find(
+                                    driver,
+                                    By.CSS_SELECTOR,
+                                    'button[aria-current="true"][data-testid="selectedPage"]',
+                                    max_retries=3,
+                                    delay=0.5,
+                                    find_multiple=True
+                                )
                                 current_page_indicator = None
                                 if selected_page_elements:
                                     current_page_indicator = selected_page_elements[0].text.strip()
@@ -225,8 +243,12 @@ class KaggleLinksSpider(scrapy.Spider):
         
         for by_type, selector in selectors:
             try:
-                next_button = driver.find_element(by_type, selector)
-                
+                # Find next button with retry
+                next_button = retry_selenium_find(driver, by_type, selector, max_retries=3, delay=0.5, find_multiple=False)
+
+                if not next_button:
+                    continue
+
                 # Get button attributes for detailed checking
                 button_classes = next_button.get_attribute('class') or ''
                 button_disabled = next_button.get_attribute('disabled')
@@ -285,23 +307,25 @@ class KaggleLinksSpider(scrapy.Spider):
         
         for by_type, selector in selectors:
             try:
-                # Wait for element to be present and clickable
+                # Wait for element to be present and clickable (with retry)
                 wait = WebDriverWait(driver, 5)
-                element = wait.until(EC.element_to_be_clickable((by_type, selector)))
-                
+                element = retry_operation(
+                    wait.until,
+                    3,  # max_retries
+                    0.5,  # delay
+                    f'wait.until(clickable: {by_type}, {selector})',  # operation_name
+                    EC.element_to_be_clickable((by_type, selector))  # positional arg
+                )
+
+                if not element:
+                    continue
+
                 # Scroll element into view
                 scroll_element_into_view(driver, element, block='center')
-                
-                # Try regular click first
-                try:
-                    element.click()
+
+                # Try clicking with retry (includes JavaScript fallback)
+                if retry_click(element, driver=driver, max_retries=3, delay=0.5):
                     self.logger.info(f'Successfully clicked next button using {by_type}: {selector}')
-                    return True
-                except Exception as click_error:
-                    # Try JavaScript click as fallback
-                    self.logger.debug(f'Regular click failed, trying JS click: {click_error}')
-                    driver.execute_script("arguments[0].click();", element)
-                    self.logger.info(f'Successfully clicked next button via JS using {by_type}: {selector}')
                     return True
                     
             except Exception as e:

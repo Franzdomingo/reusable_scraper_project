@@ -6,6 +6,7 @@ import logging
 import re
 from selenium.webdriver.common.by import By
 from selenium.common.exceptions import NoSuchElementException
+from my_scraper.extractors.retry_utils import retry_selenium_find, retry_xpath, retry_click, retry_operation
 
 logger = logging.getLogger(__name__)
 
@@ -25,7 +26,7 @@ def extract_created_by(item, created_by_selector) -> str:
 
     for idx, selector in enumerate(created_by_selectors):
         try:
-            elem = item.find_element(By.CSS_SELECTOR, selector)
+            elem = retry_selenium_find(item, By.CSS_SELECTOR, selector, max_retries=3, delay=0.5)
             created_by = elem.text.strip()
 
             if created_by:
@@ -60,7 +61,7 @@ def extract_update_description(item, update_desc_selector) -> str:
 
     for idx, selector in enumerate(update_desc_selectors):
         try:
-            elem = item.find_element(By.CSS_SELECTOR, selector)
+            elem = retry_selenium_find(item, By.CSS_SELECTOR, selector, max_retries=3, delay=0.5)
             update_desc = elem.text.strip()
 
             if update_desc:

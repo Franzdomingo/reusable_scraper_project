@@ -5,6 +5,7 @@ License field extraction for variations
 import logging
 from selenium import webdriver
 from selenium.webdriver.common.by import By
+from my_scraper.extractors.retry_utils import retry_selenium_find, retry_xpath, retry_click, retry_operation
 
 logger = logging.getLogger(__name__)
 
@@ -28,10 +29,10 @@ def extract_license(driver: webdriver.Chrome, license_selector, variation_counte
             # Determine selector type (XPath or CSS)
             if lic_selector.startswith('/') or lic_selector.startswith('('):
                 # XPath selector
-                license_elem = driver.find_element(By.XPATH, lic_selector)
+                license_elem = retry_selenium_find(driver, By.XPATH, lic_selector, max_retries=3, delay=0.5)
             else:
                 # CSS selector
-                license_elem = driver.find_element(By.CSS_SELECTOR, lic_selector)
+                license_elem = retry_selenium_find(driver, By.CSS_SELECTOR, lic_selector, max_retries=3, delay=0.5)
 
             variation_license = license_elem.text.strip()
 

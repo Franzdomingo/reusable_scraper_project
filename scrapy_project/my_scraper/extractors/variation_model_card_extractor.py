@@ -5,6 +5,7 @@ Model card field extraction for variations
 import logging
 from selenium import webdriver
 from selenium.webdriver.common.by import By
+from my_scraper.extractors.retry_utils import retry_selenium_find, retry_xpath, retry_click, retry_operation
 
 logger = logging.getLogger(__name__)
 

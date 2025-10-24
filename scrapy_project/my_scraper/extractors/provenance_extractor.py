@@ -10,6 +10,7 @@ from selenium.webdriver.common.by import By
 from lxml import html as lxml_html
 from my_scraper.extractors.selenium_utils import click_element
 from my_scraper.utils import is_css_selector, is_xpath_selector
+from my_scraper.extractors.retry_utils import retry_selenium_find, retry_xpath, retry_click, retry_operation
 
 logger = logging.getLogger(__name__)
 
@@ -43,7 +44,7 @@ def extract_provenance(driver: webdriver.Chrome, tree: lxml_html.HtmlElement,
         if action_selector:
             try:
                 logger.debug(f"Looking for provenance action button: {action_selector}")
-                button = driver.find_element(By.CSS_SELECTOR, action_selector)
+                button = retry_selenium_find(driver, By.CSS_SELECTOR, action_selector, max_retries=3, delay=0.5)
 
                 # Check if the section is collapsed (aria-expanded="false")
                 aria_expanded = button.get_attribute('aria-expanded')
@@ -64,7 +65,7 @@ def extract_provenance(driver: webdriver.Chrome, tree: lxml_html.HtmlElement,
                 if is_css_selector(selector):
                     # CSS selector - use Selenium
                     logger.debug(f"Trying provenance CSS selector: {selector}")
-                    elements = driver.find_elements(By.CSS_SELECTOR, selector)
+                    elements = retry_selenium_find(driver, By.CSS_SELECTOR, selector, max_retries=3, delay=0.5, find_multiple=True)
                     logger.debug(f"Found {len(elements)} provenance elements")
 
                     for elem in elements:
@@ -83,7 +84,7 @@ def extract_provenance(driver: webdriver.Chrome, tree: lxml_html.HtmlElement,
                 else:
                     # XPath selector - use lxml
                     logger.debug(f"Trying provenance XPath selector: {selector}")
-                    elements = tree.xpath(selector)
+                    elements = retry_xpath(tree, selector, max_retries=3, delay=0.5)
                     logger.debug(f"Found {len(elements)} provenance elements via XPath")
 
                     for elem in elements:

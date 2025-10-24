@@ -8,6 +8,7 @@ from selenium import webdriver
 from selenium.webdriver.common.by import By
 from lxml import html as lxml_html
 from my_scraper.utils import is_numeric_value, is_css_selector, is_xpath_selector
+from my_scraper.extractors.retry_utils import retry_selenium_find, retry_xpath
 
 logger = logging.getLogger(__name__)
 
@@ -45,7 +46,7 @@ def extract_downloads(driver: webdriver.Chrome, tree: lxml_html.HtmlElement,
         if is_css_selector(selector):
             try:
                 logger.debug(f"Trying downloads CSS selector via Selenium: {selector}")
-                elements = driver.find_elements(By.CSS_SELECTOR, selector)
+                elements = retry_selenium_find(driver, By.CSS_SELECTOR, selector, max_retries=3, delay=0.5, find_multiple=True)
                 logger.debug(f"Found {len(elements)} elements with CSS selector")
 
                 for elem in elements:
@@ -76,7 +77,7 @@ def extract_downloads(driver: webdriver.Chrome, tree: lxml_html.HtmlElement,
             # XPath selector - use Selenium for dynamic content
             try:
                 logger.debug(f"Trying downloads XPath selector via Selenium: {selector}")
-                elements = driver.find_elements(By.XPATH, selector)
+                elements = retry_selenium_find(driver, By.XPATH, selector, max_retries=3, delay=0.5, find_multiple=True)
                 logger.debug(f"Found {len(elements)} elements with XPath via Selenium")
 
                 for elem in elements:
@@ -111,7 +112,7 @@ def extract_downloads(driver: webdriver.Chrome, tree: lxml_html.HtmlElement,
 
         try:
             logger.debug(f"Trying downloads XPath selector: {selector}")
-            download_elements = tree.xpath(selector)
+            download_elements = retry_xpath(tree, selector, max_retries=3, delay=0.5)
             logger.debug(f"Found {len(download_elements)} elements with XPath")
 
             if download_elements:
@@ -142,7 +143,7 @@ def extract_downloads(driver: webdriver.Chrome, tree: lxml_html.HtmlElement,
         all_candidates = []
         try:
             # Strategy 1: Find the DOWNLOADS heading and look for siblings/nearby elements
-            downloads_heading = driver.find_elements(By.XPATH, "//*[contains(text(), 'DOWNLOADS') or contains(text(), 'Downloads')]")
+            downloads_heading = retry_selenium_find(driver, By.XPATH, "//*[contains(text(), 'DOWNLOADS') or contains(text(), 'Downloads')]", max_retries=3, delay=0.5, find_multiple=True)
 
             if downloads_heading:
                 logger.debug(f"Found {len(downloads_heading)} 'DOWNLOADS' headings")
@@ -166,7 +167,7 @@ def extract_downloads(driver: webdriver.Chrome, tree: lxml_html.HtmlElement,
 
             # Strategy 2: Look for all spans with numeric values
             if not all_candidates:
-                all_spans = driver.find_elements(By.TAG_NAME, 'span')
+                all_spans = retry_selenium_find(driver, By.TAG_NAME, 'span', max_retries=3, delay=0.5, find_multiple=True)
 
                 for span in all_spans:
                     try:

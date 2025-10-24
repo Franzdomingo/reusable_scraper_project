@@ -8,6 +8,7 @@ from selenium import webdriver
 from selenium.webdriver.common.by import By
 from selenium.webdriver.common.action_chains import ActionChains
 from selenium.webdriver.common.keys import Keys
+from my_scraper.extractors.retry_utils import retry_selenium_find, retry_xpath, retry_click, retry_operation
 
 logger = logging.getLogger(__name__)
 
@@ -25,7 +26,7 @@ def click_dropdown_to_open(driver: webdriver.Chrome, selector: str, timeout: int
         True if dropdown opened (aria-expanded=true), False otherwise
     """
     try:
-        element = driver.find_element(By.CSS_SELECTOR, selector)
+        element = retry_selenium_find(driver, By.CSS_SELECTOR, selector, max_retries=3, delay=0.5)
 
         # First, scroll the element into view
         logger.info("Scrolling dropdown element into view")

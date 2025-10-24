@@ -6,6 +6,7 @@ import logging
 from typing import Dict
 from selenium import webdriver
 from selenium.webdriver.common.by import By
+from my_scraper.extractors.retry_utils import retry_selenium_find, retry_xpath, retry_click, retry_operation
 
 logger = logging.getLogger(__name__)
 
@@ -29,7 +30,7 @@ def extract_downloads(driver: webdriver.Chrome, selectors: Dict, variation_count
     # Try XPath selector first
     if downloads_xpath_selector:
         try:
-            downloads_elem = driver.find_element(By.XPATH, downloads_xpath_selector)
+            downloads_elem = retry_selenium_find(driver, By.XPATH, downloads_xpath_selector, max_retries=3, delay=0.5)
             text = downloads_elem.text.strip()
             if text:
                 variation_downloads = text
@@ -42,7 +43,7 @@ def extract_downloads(driver: webdriver.Chrome, selectors: Dict, variation_count
     if downloads_css_selector:
         try:
             # Find all matching elements to ensure we get the right one
-            downloads_elems = driver.find_elements(By.CSS_SELECTOR, downloads_css_selector)
+            downloads_elems = retry_selenium_find(driver, By.CSS_SELECTOR, downloads_css_selector, max_retries=3, delay=0.5, find_multiple=True)
             logger.info(f"Variation {variation_counter}: Found {len(downloads_elems)} elements matching CSS downloads selector")
 
             # Look for the element with numeric content only (no text)

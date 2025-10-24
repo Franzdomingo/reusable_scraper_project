@@ -12,6 +12,7 @@ from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.common.exceptions import TimeoutException, NoSuchElementException, ElementClickInterceptedException
+from my_scraper.extractors.retry_utils import retry_selenium_find, retry_xpath, retry_click, retry_operation
 
 logger = logging.getLogger(__name__)
 
@@ -124,7 +125,7 @@ def extract_versions_from_popup(
                     by_type = By.CSS_SELECTOR
 
                 # Find all matching elements
-                elements = driver.find_elements(by_type, selector)
+                elements = retry_selenium_find(driver, by_type, selector, max_retries=3, delay=0.5, find_multiple=True)
                 for elem in elements:
                     button_candidates.append(('configured_selector', selector, elem))
                     logger.debug(f"Found button candidate with selector '{selector}': text='{elem.text[:50]}'")
@@ -138,13 +139,13 @@ def extract_versions_from_popup(
             logger.info(f"Configured selectors didn't find button, trying text-based search")
             try:
                 # Look for <a> tags containing "Version" text
-                version_links = driver.find_elements(By.XPATH, "//a[contains(text(), 'Version')]")
+                version_links = retry_selenium_find(driver, By.XPATH, "//a[contains(text(), 'Version')]", max_retries=3, delay=0.5, find_multiple=True)
                 for elem in version_links:
                     button_candidates.append(('text_search', 'xpath://a[contains(text(), "Version")]', elem))
                     logger.debug(f"Found button candidate by text search: text='{elem.text[:50]}'")
 
                 # Also try looking for elements with "version" in aria-label
-                aria_elements = driver.find_elements(By.XPATH, "//*[contains(@aria-label, 'version') or contains(@aria-label, 'Version')]")
+                aria_elements = retry_selenium_find(driver, By.XPATH, "//*[contains(@aria-label, 'version') or contains(@aria-label, 'Version')]", max_retries=3, delay=0.5, find_multiple=True)
                 for elem in aria_elements:
                     button_candidates.append(('aria_label', f'xpath://*[@aria-label contains version]', elem))
                     logger.debug(f"Found button candidate by aria-label: aria-label='{elem.get_attribute('aria-label')}'")
@@ -158,7 +159,7 @@ def extract_versions_from_popup(
             logger.warning(f"Dumping debug info:")
             try:
                 # Find all links on the page
-                all_links = driver.find_elements(By.TAG_NAME, 'a')
+                all_links = retry_selenium_find(driver, By.TAG_NAME, 'a', max_retries=3, delay=0.5, find_multiple=True)
                 logger.warning(f"Total <a> tags on page: {len(all_links)}")
 
                 # Look for any links with "version" text
@@ -214,7 +215,7 @@ def extract_versions_from_popup(
 
                         # Check if popup appeared (look for popup items)
                         try:
-                            popup_elements = driver.find_elements(By.CSS_SELECTOR, popup_items_selector)
+                            popup_elements = retry_selenium_find(driver, By.CSS_SELECTOR, popup_items_selector, max_retries=3, delay=0.5, find_multiple=True)
                             if len(popup_elements) > 0:
                                 logger.info(f"✓ Successfully clicked versions button using {method_name} via {strategy}")
                                 logger.info(f"  Selector: {selector_desc}")
@@ -257,7 +258,7 @@ def extract_versions_from_popup(
             return versions_data
 
         # Find all version items
-        version_items = driver.find_elements(By.CSS_SELECTOR, popup_items_selector)
+        version_items = retry_selenium_find(driver, By.CSS_SELECTOR, popup_items_selector, max_retries=3, delay=0.5, find_multiple=True)
         logger.info(f"Found {len(version_items)} version items in popup")
 
         if len(version_items) == 0:
@@ -286,9 +287,9 @@ def extract_versions_from_popup(
                     for selector in (versions_button_selector if isinstance(versions_button_selector, list) else [versions_button_selector]):
                         try:
                             if selector.startswith('/') or selector.startswith('('):
-                                button = driver.find_element(By.XPATH, selector)
+                                button = retry_selenium_find(driver, By.XPATH, selector, max_retries=3, delay=0.5)
                             else:
-                                button = driver.find_element(By.CSS_SELECTOR, selector)
+                                button = retry_selenium_find(driver, By.CSS_SELECTOR, selector, max_retries=3, delay=0.5)
 
                             driver.execute_script("arguments[0].scrollIntoView({block: 'center'});", button)
                             time.sleep(0.1)
@@ -307,7 +308,7 @@ def extract_versions_from_popup(
                     time.sleep(0.3)
 
                 # Re-find version items (they may be stale)
-                version_items = driver.find_elements(By.CSS_SELECTOR, popup_items_selector)
+                version_items = retry_selenium_find(driver, By.CSS_SELECTOR, popup_items_selector, max_retries=3, delay=0.5, find_multiple=True)
                 if idx >= len(version_items):
                     logger.warning(f"Version item {idx + 1} no longer available")
                     break
@@ -323,7 +324,7 @@ def extract_versions_from_popup(
                 if version_number_selector:
                     for selector in (version_number_selector if isinstance(version_number_selector, list) else [version_number_selector]):
                         try:
-                            elem = item.find_element(By.CSS_SELECTOR, selector)
+                            elem = retry_selenium_find(item, By.CSS_SELECTOR, selector, max_retries=3, delay=0.5)
                             item_version_text = elem.text.strip()
                             if item_version_text:
                                 break
@@ -335,7 +336,7 @@ def extract_versions_from_popup(
                 # Click the version item to navigate to that version
                 try:
                     # Find the clickable link within the item
-                    link = item.find_element(By.CSS_SELECTOR, 'a')
+                    link = retry_selenium_find(item, By.CSS_SELECTOR, 'a', max_retries=3, delay=0.5)
                     driver.execute_script("arguments[0].click();", link)
                     logger.info(f"Clicked version {idx + 1}: {item_version_text}")
                     time.sleep(1.0)  # Wait for page to load/update
@@ -378,7 +379,7 @@ def extract_versions_from_popup(
         # Close popup if still open
         try:
             from selenium.webdriver.common.keys import Keys
-            driver.find_element(By.TAG_NAME, 'body').send_keys(Keys.ESCAPE)
+            retry_selenium_find(driver, By.TAG_NAME, 'body', max_retries=3, delay=0.5).send_keys(Keys.ESCAPE)
             time.sleep(0.2)
         except:
             pass
