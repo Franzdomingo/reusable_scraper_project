@@ -15,9 +15,9 @@ from lxml import html as lxml_html
 from my_scraper.items import NvidiaModelItem
 from my_scraper.selectors.site_selectors import get_selectors_for_site
 from my_scraper.extractors.selenium_utils import parse_tree_from_response
-from my_scraper.extractors.nvidia_tags_extractor import extract_nvidia_tags
-from my_scraper.extractors.nvidia_modelcard_extractor import extract_modelcard
-from my_scraper.extractors.nvidia_url_extractor import (
+from my_scraper.extractors.nvidia.nvidia_tags_extractor import extract_nvidia_tags
+from my_scraper.extractors.nvidia.nvidia_modelcard_extractor import extract_modelcard
+from my_scraper.extractors.nvidia.nvidia_url_extractor import (
     extract_model_name_from_card,
     extract_model_url_from_card,
     extract_parent_container,

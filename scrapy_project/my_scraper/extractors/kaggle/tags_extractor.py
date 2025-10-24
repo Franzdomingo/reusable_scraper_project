@@ -12,7 +12,7 @@ from selenium.webdriver.support import expected_conditions as EC
 from selenium.common.exceptions import TimeoutException, StaleElementReferenceException
 from lxml import html as lxml_html
 
-from .selenium_utils import (
+from my_scraper.extractors.selenium_utils import (
     scroll_element_into_view,
     click_element_with_fallback,
     close_popup,

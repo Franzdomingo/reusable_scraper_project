@@ -10,7 +10,7 @@ from selenium.webdriver.common.by import By
 from my_scraper.items import KaggleModelItem
 from my_scraper.selectors.site_selectors import get_selectors_for_site
 from my_scraper.extractors.selenium_utils import get_driver_from_response, parse_tree_from_response, click_element
-from my_scraper.extractors.kaggle_links_extractor import extract_model_links
+from my_scraper.extractors.kaggle.kaggle_links_extractor import extract_model_links
 from my_scraper.extractors.retry_utils import retry_selenium_find, retry_click, retry_operation
 
 

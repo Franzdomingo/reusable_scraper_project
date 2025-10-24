@@ -19,17 +19,17 @@ from my_scraper.items import KaggleMetadataItem, TransformersVariationItem
 from my_scraper.utils import html_to_text
 from my_scraper.selectors.site_selectors import get_selectors_for_site
 from my_scraper.extractors.selenium_utils import parse_tree_from_response, click_element
-from my_scraper.extractors.description_extractor import extract_description
-from my_scraper.extractors.downloads_extractor import extract_downloads
-from my_scraper.extractors.total_views_extractor import extract_total_views
-from my_scraper.extractors.total_engagements_extractor import extract_total_engagements
-from my_scraper.extractors.usability_extractor import extract_usability
-from my_scraper.extractors.tags_extractor import extract_tags
-from my_scraper.extractors.collaborators_extractor import extract_collaborators
-from my_scraper.extractors.authors_extractor import extract_authors
-from my_scraper.extractors.provenance_extractor import extract_provenance
-from my_scraper.extractors.variations_extractor import extract_variations
-from my_scraper.extractors.model_card_extractor import extract_model_card
+from my_scraper.extractors.kaggle.description_extractor import extract_description
+from my_scraper.extractors.kaggle.downloads_extractor import extract_downloads
+from my_scraper.extractors.kaggle.total_views_extractor import extract_total_views
+from my_scraper.extractors.kaggle.total_engagements_extractor import extract_total_engagements
+from my_scraper.extractors.kaggle.usability_extractor import extract_usability
+from my_scraper.extractors.kaggle.tags_extractor import extract_tags
+from my_scraper.extractors.kaggle.collaborators_extractor import extract_collaborators
+from my_scraper.extractors.kaggle.authors_extractor import extract_authors
+from my_scraper.extractors.kaggle.provenance_extractor import extract_provenance
+from my_scraper.extractors.kaggle.variations_extractor import extract_variations
+from my_scraper.extractors.kaggle.model_card_extractor import extract_model_card
 from my_scraper.extractors.retry_utils import retry_selenium_find, retry_click, retry_operation
 
 

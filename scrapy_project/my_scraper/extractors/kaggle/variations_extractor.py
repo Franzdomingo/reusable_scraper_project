@@ -13,14 +13,14 @@ from selenium.webdriver.support import expected_conditions as EC
 from selenium.common.exceptions import TimeoutException, StaleElementReferenceException
 
 from .dropdown_handler import click_dropdown_to_open
-from .variation_version_extractor import extract_version
-from .variation_downloads_extractor import extract_downloads
-from .variation_license_extractor import extract_license
-from .variation_model_card_extractor import extract_model_card
-from .variation_is_finetunable_extractor import extract_is_finetunable
-from .variation_example_usage_extractor import extract_example_usage
+from .variation.variation_version_extractor import extract_version
+from .variation.variation_downloads_extractor import extract_downloads
+from .variation.variation_license_extractor import extract_license
+from .variation.variation_model_card_extractor import extract_model_card
+from .variation.variation_is_finetunable_extractor import extract_is_finetunable
+from .variation.variation_example_usage_extractor import extract_example_usage
 from .tab_handler import build_tab_queue, click_tab
-from .version_popup_extractor import extract_versions_from_popup
+from .variation.version_popup_extractor import extract_versions_from_popup
 from my_scraper.extractors.retry_utils import retry_selenium_find, retry_xpath, retry_click, retry_operation
 
 logger = logging.getLogger(__name__)
