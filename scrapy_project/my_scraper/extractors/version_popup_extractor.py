@@ -107,24 +107,90 @@ def extract_versions_from_popup(
         # Step 1: Click the versions button to open popup
         logger.info(f"Attempting to click versions button for variation {variation_counter}")
 
-        # Try multiple selectors with robust clicking methods
+        # Wait a bit for the page to stabilize after variation selection
+        time.sleep(1.0)
+
+        # First, let's try to find all possible versions button candidates
         button_clicked = False
+        button_candidates = []
+
+        # Strategy 1: Try configured selectors
         for selector in (versions_button_selector if isinstance(versions_button_selector, list) else [versions_button_selector]):
             try:
                 # Determine selector type (XPath or CSS)
                 if selector.startswith('/') or selector.startswith('('):
-                    # XPath selector
                     by_type = By.XPATH
                 else:
-                    # CSS selector
                     by_type = By.CSS_SELECTOR
 
-                # Find the button element
-                button = driver.find_element(by_type, selector)
+                # Find all matching elements
+                elements = driver.find_elements(by_type, selector)
+                for elem in elements:
+                    button_candidates.append(('configured_selector', selector, elem))
+                    logger.debug(f"Found button candidate with selector '{selector}': text='{elem.text[:50]}'")
+
+            except (NoSuchElementException, Exception) as e:
+                logger.debug(f"Could not find versions button with selector '{selector}': {e}")
+                continue
+
+        # Strategy 2: Look for elements containing "Version" text (more resilient)
+        if not button_candidates:
+            logger.info(f"Configured selectors didn't find button, trying text-based search")
+            try:
+                # Look for <a> tags containing "Version" text
+                version_links = driver.find_elements(By.XPATH, "//a[contains(text(), 'Version')]")
+                for elem in version_links:
+                    button_candidates.append(('text_search', 'xpath://a[contains(text(), "Version")]', elem))
+                    logger.debug(f"Found button candidate by text search: text='{elem.text[:50]}'")
+
+                # Also try looking for elements with "version" in aria-label
+                aria_elements = driver.find_elements(By.XPATH, "//*[contains(@aria-label, 'version') or contains(@aria-label, 'Version')]")
+                for elem in aria_elements:
+                    button_candidates.append(('aria_label', f'xpath://*[@aria-label contains version]', elem))
+                    logger.debug(f"Found button candidate by aria-label: aria-label='{elem.get_attribute('aria-label')}'")
+
+            except Exception as e:
+                logger.debug(f"Text-based search failed: {e}")
+
+        # Strategy 3: If still no candidates, log detailed debug info
+        if not button_candidates:
+            logger.warning(f"No versions button candidates found for variation {variation_counter}")
+            logger.warning(f"Dumping debug info:")
+            try:
+                # Find all links on the page
+                all_links = driver.find_elements(By.TAG_NAME, 'a')
+                logger.warning(f"Total <a> tags on page: {len(all_links)}")
+
+                # Look for any links with "version" text
+                for link in all_links[:20]:  # First 20 links
+                    if 'version' in link.text.lower():
+                        logger.warning(f"  Link with 'version' text: '{link.text[:100]}', classes='{link.get_attribute('class')}'")
+            except:
+                pass
+
+            return versions_data
+
+        logger.info(f"Found {len(button_candidates)} versions button candidate(s)")
+
+        # Try to click each candidate
+        for strategy, selector_desc, button in button_candidates:
+            try:
+                # Check if element is visible and enabled
+                if not button.is_displayed():
+                    logger.debug(f"Button candidate not visible, skipping: {selector_desc}")
+                    continue
 
                 # Scroll element into view
                 driver.execute_script("arguments[0].scrollIntoView({block: 'center'});", button)
-                time.sleep(0.2)
+                time.sleep(0.3)
+
+                # Hide any overlays that might intercept clicks
+                driver.execute_script("""
+                    // Remove or hide common overlay elements
+                    document.querySelectorAll('[class*="overlay"], [class*="modal"], [class*="popup"]').forEach(el => {
+                        if (el.style.zIndex > 100) el.style.display = 'none';
+                    });
+                """)
 
                 # Try multiple click methods
                 click_methods = [
@@ -142,19 +208,27 @@ def extract_versions_from_popup(
 
                 for method_name, click_func in click_methods:
                     try:
-                        logger.debug(f"Trying {method_name} for versions button")
+                        logger.debug(f"Trying {method_name} for button found via {strategy}")
                         click_func()
-                        time.sleep(0.5)  # Wait to see if popup appears
+                        time.sleep(0.8)  # Increased wait time for popup to appear
 
                         # Check if popup appeared (look for popup items)
                         try:
-                            driver.find_element(By.CSS_SELECTOR, popup_items_selector)
-                            logger.info(f"Successfully clicked versions button using {method_name} with selector: {selector}")
-                            button_clicked = True
-                            break
+                            popup_elements = driver.find_elements(By.CSS_SELECTOR, popup_items_selector)
+                            if len(popup_elements) > 0:
+                                logger.info(f"✓ Successfully clicked versions button using {method_name} via {strategy}")
+                                logger.info(f"  Selector: {selector_desc}")
+                                logger.info(f"  Button text: '{button.text[:100]}'")
+                                button_clicked = True
+                                break
+                            else:
+                                logger.debug(f"Popup items not found after click, trying next method")
+                                continue
                         except NoSuchElementException:
                             # Popup didn't appear, try next method
+                            logger.debug(f"Popup didn't appear after {method_name}, trying next method")
                             continue
+
                     except (ElementClickInterceptedException, Exception) as e:
                         logger.debug(f"{method_name} failed: {e}")
                         continue
@@ -163,11 +237,13 @@ def extract_versions_from_popup(
                     break
 
             except (NoSuchElementException, Exception) as e:
-                logger.debug(f"Could not find versions button with selector '{selector}': {e}")
+                logger.debug(f"Could not click button candidate: {e}")
                 continue
 
         if not button_clicked:
-            logger.warning(f"Could not click versions button for variation {variation_counter} - tried all methods")
+            logger.warning(f"Could not click versions button for variation {variation_counter} - tried all {len(button_candidates)} candidates and all click methods")
+            # Log current page URL for debugging
+            logger.warning(f"Current URL: {driver.current_url}")
             return versions_data
 
         # Step 2: Wait for popup to appear and find all version items
