@@ -263,14 +263,9 @@ class KaggleMetadataSpider(scrapy.Spider):
                 'total_engagements': parse_numeric_float(total_engagements)
             }
 
-            # Extract variations
-            # NOTE: Variations extraction now handles all versions within each variation
-            # No need to queue separate URLs - all versions are scraped in-place
-            item['variations'] = extract_variations(
-                driver, self.selectors, model_name, model_id, response.url
-            )
-
-            # Extract collaborators, authors, and provenance, then build model_metadata
+            # IMPORTANT: Extract model_metadata BEFORE variations
+            # Collaborators, authors, and provenance exist on the main model page
+            # If we extract variations first, we'll navigate away from the main page
             collaborators = extract_collaborators(driver, tree, self.selectors, model_name)
             authors = extract_authors(driver, tree, self.selectors, model_name)
             provenance = extract_provenance(driver, tree, self.selectors, model_name)
@@ -279,6 +274,14 @@ class KaggleMetadataSpider(scrapy.Spider):
                 'authors': authors,
                 'provenance': provenance
             }
+
+            # Extract variations
+            # NOTE: Variations extraction now handles all versions within each variation
+            # No need to queue separate URLs - all versions are scraped in-place
+            # This must come AFTER model_metadata extraction since it navigates to variation pages
+            item['variations'] = extract_variations(
+                driver, self.selectors, model_name, model_id, response.url
+            )
 
             # Log concise summary
             self.logger.info(f"✓ {model_name} - Downloads: {item['downloads']}, Views: {total_views}, Engagements: {total_engagements}, Variations: {len(item.get('variations', []))}")
