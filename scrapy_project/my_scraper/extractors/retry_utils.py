@@ -15,9 +15,15 @@ try:
     DEFAULT_MAX_RETRIES = RETRY_MAX_ATTEMPTS
     DEFAULT_DELAY = RETRY_DELAY
 except ImportError:
-    # Fallback if settings not available
-    DEFAULT_MAX_RETRIES = 3
-    DEFAULT_DELAY = 0.5
+    try:
+        # Try relative import for when module is loaded from within extractors
+        from ..settings import RETRY_MAX_ATTEMPTS, RETRY_DELAY
+        DEFAULT_MAX_RETRIES = RETRY_MAX_ATTEMPTS
+        DEFAULT_DELAY = RETRY_DELAY
+    except ImportError:
+        # Fallback if settings not available
+        DEFAULT_MAX_RETRIES = 3
+        DEFAULT_DELAY = 0.5
 
 
 def retry_operation(func: Callable, max_retries: int = None, delay: float = None, operation_name: str = None, *args, **kwargs) -> Any:

@@ -30,7 +30,7 @@ def extract_downloads(driver: webdriver.Chrome, selectors: Dict, variation_count
     # Try XPath selector first
     if downloads_xpath_selector:
         try:
-            downloads_elem = retry_selenium_find(driver, By.XPATH, downloads_xpath_selector, max_retries=3, delay=0.5)
+            downloads_elem = retry_selenium_find(driver, By.XPATH, downloads_xpath_selector)
             text = downloads_elem.text.strip()
             if text:
                 variation_downloads = text
@@ -43,7 +43,7 @@ def extract_downloads(driver: webdriver.Chrome, selectors: Dict, variation_count
     if downloads_css_selector:
         try:
             # Find all matching elements to ensure we get the right one
-            downloads_elems = retry_selenium_find(driver, By.CSS_SELECTOR, downloads_css_selector, max_retries=3, delay=0.5, find_multiple=True)
+            downloads_elems = retry_selenium_find(driver, By.CSS_SELECTOR, downloads_css_selector, find_multiple=True)
             logger.info(f"Variation {variation_counter}: Found {len(downloads_elems)} elements matching CSS downloads selector")
 
             # Look for the element with numeric content only (no text)

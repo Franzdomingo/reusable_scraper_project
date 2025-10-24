@@ -110,7 +110,7 @@ def extract_variations_for_tab(
             working_selector = None
 
             for selector in action_selectors:
-                dropdown_buttons = retry_selenium_find(driver, By.CSS_SELECTOR, selector, max_retries=3, delay=0.5, find_multiple=True)
+                dropdown_buttons = retry_selenium_find(driver, By.CSS_SELECTOR, selector, find_multiple=True)
                 logger.info(f"Trying selector '{selector}': found {len(dropdown_buttons)} dropdown buttons")
 
                 if len(dropdown_buttons) > 0:
@@ -187,7 +187,7 @@ def extract_variations_for_tab(
             specific_selector = f'{list_container_selector} {list_items_selector}'
             logger.info(f"Finding list items with selector '{specific_selector}'")
 
-            list_items = retry_selenium_find(driver, By.CSS_SELECTOR, specific_selector, max_retries=3, delay=0.5, find_multiple=True)
+            list_items = retry_selenium_find(driver, By.CSS_SELECTOR, specific_selector, find_multiple=True)
             logger.info(f"Found {len(list_items)} variation list items")
 
             if len(list_items) == 0:
@@ -201,7 +201,7 @@ def extract_variations_for_tab(
                     raw_name = ''
                     if name_selector:
                         try:
-                            name_elem = retry_selenium_find(item, By.CSS_SELECTOR, name_selector, max_retries=3, delay=0.5)
+                            name_elem = retry_selenium_find(item, By.CSS_SELECTOR, name_selector)
                             raw_name = name_elem.text.strip()
                         except:
                             raw_name = item.text.strip()
@@ -297,7 +297,7 @@ def extract_variations_for_tab(
 
                     # Find items within the list container
                     specific_selector = f'{list_container_selector} {list_items_selector}'
-                    list_items = retry_selenium_find(driver, By.CSS_SELECTOR, specific_selector, max_retries=3, delay=0.5, find_multiple=True)
+                    list_items = retry_selenium_find(driver, By.CSS_SELECTOR, specific_selector, find_multiple=True)
 
                     if idx >= len(list_items):
                         logger.warning(f"Index {idx} out of range, only {len(list_items)} items found")

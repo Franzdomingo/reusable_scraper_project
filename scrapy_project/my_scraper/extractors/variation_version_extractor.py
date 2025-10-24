@@ -29,10 +29,10 @@ def extract_version(driver: webdriver.Chrome, version_selector, variation_counte
             # Determine if this is an XPath or CSS selector
             if ver_selector.startswith('/') or ver_selector.startswith('('):
                 # XPath selector
-                version_elem = retry_selenium_find(driver, By.XPATH, ver_selector, max_retries=3, delay=0.5)
+                version_elem = retry_selenium_find(driver, By.XPATH, ver_selector)
             else:
                 # CSS selector
-                version_elem = retry_selenium_find(driver, By.CSS_SELECTOR, ver_selector, max_retries=3, delay=0.5)
+                version_elem = retry_selenium_find(driver, By.CSS_SELECTOR, ver_selector)
 
             variation_version = version_elem.text.strip()
             logger.info(f"Variation {variation_counter}: Found version '{variation_version}' using selector {idx + 1}/{len(version_selectors)}")

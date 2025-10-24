@@ -53,10 +53,10 @@ def extract_model_card(driver: webdriver.Chrome, tree: lxml_html.HtmlElement,
             # Detect if selector is XPath or CSS
             if is_xpath_selector(sel):
                 logger.debug(f"Trying model card XPath selector: {sel}")
-                el = retry_selenium_find(driver, By.XPATH, sel, max_retries=3, delay=0.5)
+                el = retry_selenium_find(driver, By.XPATH, sel)
             else:
                 logger.debug(f"Trying model card CSS selector: {sel}")
-                el = retry_selenium_find(driver, By.CSS_SELECTOR, sel, max_retries=3, delay=0.5)
+                el = retry_selenium_find(driver, By.CSS_SELECTOR, sel)
 
             text = el.text.strip()
             if text:
@@ -65,7 +65,7 @@ def extract_model_card(driver: webdriver.Chrome, tree: lxml_html.HtmlElement,
 
                 # Extract anchor hrefs
                 try:
-                    anchors = retry_selenium_find(el, By.TAG_NAME, 'a', max_retries=3, delay=0.5, find_multiple=True)
+                    anchors = retry_selenium_find(el, By.TAG_NAME, 'a', find_multiple=True)
                     for a in anchors:
                         href = a.get_attribute('href')
                         if href:
@@ -87,7 +87,7 @@ def extract_model_card(driver: webdriver.Chrome, tree: lxml_html.HtmlElement,
 
         for xp in fallback_xpaths:
             try:
-                elems = retry_xpath(tree, xp, max_retries=3, delay=0.5)
+                elems = retry_xpath(tree, xp)
                 if elems:
                     text = elems[0].text_content().strip()
                     if text:

@@ -87,7 +87,7 @@ def click_element(driver: webdriver.Chrome, selector: str,
         True if clicked successfully, False otherwise
     """
     try:
-        element = retry_selenium_find(driver, by, selector, max_retries=3, delay=0.5)
+        element = retry_selenium_find(driver, by, selector)
         if not element:
             logger.debug(f"Could not find element to click: {selector}")
             return False
@@ -223,10 +223,10 @@ def find_elements_by_parent(driver: webdriver.Chrome, parent_selector: str,
     """
     children = []
     try:
-        parents = retry_selenium_find(driver, by, parent_selector, max_retries=3, delay=0.5, find_multiple=True)
+        parents = retry_selenium_find(driver, by, parent_selector, find_multiple=True)
         for parent in parents:
             try:
-                child_elems = retry_selenium_find(parent, by, child_selector, max_retries=3, delay=0.5, find_multiple=True)
+                child_elems = retry_selenium_find(parent, by, child_selector, find_multiple=True)
                 children.extend(child_elems)
             except Exception:
                 continue

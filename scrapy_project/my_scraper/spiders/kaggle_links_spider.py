@@ -144,8 +144,6 @@ class KaggleLinksSpider(scrapy.Spider):
                                 driver,
                                 By.XPATH,
                                 '//ul/li/div/a[contains(@href, "/models/")]',
-                                max_retries=3,
-                                delay=0.5,
                                 find_multiple=True
                             )
                             if first_link_elements:
@@ -156,8 +154,6 @@ class KaggleLinksSpider(scrapy.Spider):
                                     driver,
                                     By.CSS_SELECTOR,
                                     'button[aria-current="true"][data-testid="selectedPage"]',
-                                    max_retries=3,
-                                    delay=0.5,
                                     find_multiple=True
                                 )
                                 current_page_indicator = None
@@ -244,7 +240,7 @@ class KaggleLinksSpider(scrapy.Spider):
         for by_type, selector in selectors:
             try:
                 # Find next button with retry
-                next_button = retry_selenium_find(driver, by_type, selector, max_retries=3, delay=0.5, find_multiple=False)
+                next_button = retry_selenium_find(driver, by_type, selector, find_multiple=False)
 
                 if not next_button:
                     continue
@@ -311,10 +307,10 @@ class KaggleLinksSpider(scrapy.Spider):
                 wait = WebDriverWait(driver, 5)
                 element = retry_operation(
                     wait.until,
-                    3,  # max_retries
-                    0.5,  # delay
+                    None,  # max_retries (use default from settings)
+                    None,  # delay (use default from settings)
                     f'wait.until(clickable: {by_type}, {selector})',  # operation_name
-                    EC.element_to_be_clickable((by_type, selector))  # positional arg
+                    EC.element_to_be_clickable((by_type, selector))  # positional arg for func
                 )
 
                 if not element:
@@ -324,7 +320,7 @@ class KaggleLinksSpider(scrapy.Spider):
                 scroll_element_into_view(driver, element, block='center')
 
                 # Try clicking with retry (includes JavaScript fallback)
-                if retry_click(element, driver=driver, max_retries=3, delay=0.5):
+                if retry_click(element, driver=driver):
                     self.logger.info(f'Successfully clicked next button using {by_type}: {selector}')
                     return True
                     

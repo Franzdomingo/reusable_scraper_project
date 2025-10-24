@@ -44,7 +44,7 @@ def extract_collaborators(driver: webdriver.Chrome, tree: lxml_html.HtmlElement,
         if action_selector:
             try:
                 logger.debug(f"Looking for collaborators action button: {action_selector}")
-                button = retry_selenium_find(driver, By.CSS_SELECTOR, action_selector, max_retries=3, delay=0.5)
+                button = retry_selenium_find(driver, By.CSS_SELECTOR, action_selector)
 
                 # Check if the section is collapsed (aria-expanded="false")
                 aria_expanded = button.get_attribute('aria-expanded')
@@ -65,7 +65,7 @@ def extract_collaborators(driver: webdriver.Chrome, tree: lxml_html.HtmlElement,
                 if is_css_selector(selector):
                     # CSS selector - use Selenium
                     logger.debug(f"Trying collaborator CSS selector: {selector}")
-                    elements = retry_selenium_find(driver, By.CSS_SELECTOR, selector, max_retries=3, delay=0.5, find_multiple=True)
+                    elements = retry_selenium_find(driver, By.CSS_SELECTOR, selector, find_multiple=True)
                     logger.debug(f"Found {len(elements)} collaborator elements")
 
                     for elem in elements:
@@ -108,7 +108,7 @@ def extract_collaborators(driver: webdriver.Chrome, tree: lxml_html.HtmlElement,
                 else:
                     # XPath selector - use lxml
                     logger.debug(f"Trying collaborator XPath selector: {selector}")
-                    elements = retry_xpath(tree, selector, max_retries=3, delay=0.5)
+                    elements = retry_xpath(tree, selector)
                     logger.debug(f"Found {len(elements)} collaborator elements via XPath")
 
                     for elem in elements:

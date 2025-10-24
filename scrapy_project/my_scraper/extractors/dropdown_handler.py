@@ -26,7 +26,7 @@ def click_dropdown_to_open(driver: webdriver.Chrome, selector: str, timeout: int
         True if dropdown opened (aria-expanded=true), False otherwise
     """
     try:
-        element = retry_selenium_find(driver, By.CSS_SELECTOR, selector, max_retries=3, delay=0.5)
+        element = retry_selenium_find(driver, By.CSS_SELECTOR, selector)
 
         # First, scroll the element into view
         logger.info("Scrolling dropdown element into view")

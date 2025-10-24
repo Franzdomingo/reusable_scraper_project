@@ -40,7 +40,7 @@ def extract_model_links(
 
     # Extract model links using configured selector with retry
     model_links_xpath = selectors.get('model_links_xpath')
-    list_items = retry_xpath(tree, model_links_xpath, max_retries=3, delay=0.5)
+    list_items = retry_xpath(tree, model_links_xpath)
 
     if not list_items:
         logger.error(f'Page {page_num}: Failed to extract model links after retries')
@@ -51,7 +51,7 @@ def extract_model_links(
     # Extract data from each link
     for link in list_items:
         # Extract href with retry
-        href = retry_operation(link.get, 3, 0.5, 'link.get(href)', 'href', '')
+        href = retry_operation(link.get, None, None, 'link.get(href)', 'href', '')
 
         if not href or href == '/models':
             continue
@@ -74,13 +74,13 @@ def extract_model_links(
 
         # Extract model name with retry
         model_name_xpath = selectors.get('model_name_xpath')
-        name_elements = retry_xpath(link, model_name_xpath, max_retries=3, delay=0.5)
+        name_elements = retry_xpath(link, model_name_xpath)
 
         if name_elements:
             model_name = name_elements[0].strip()
         else:
             # Fallback: extract from link text or URL with retry
-            model_name = retry_operation(link.text_content, 3, 0.5, 'link.text_content()')
+            model_name = retry_operation(link.text_content, None, None, 'link.text_content()')
             if model_name:
                 model_name = model_name.strip()
             if not model_name:

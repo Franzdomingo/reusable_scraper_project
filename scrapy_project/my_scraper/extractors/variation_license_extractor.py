@@ -29,10 +29,10 @@ def extract_license(driver: webdriver.Chrome, license_selector, variation_counte
             # Determine selector type (XPath or CSS)
             if lic_selector.startswith('/') or lic_selector.startswith('('):
                 # XPath selector
-                license_elem = retry_selenium_find(driver, By.XPATH, lic_selector, max_retries=3, delay=0.5)
+                license_elem = retry_selenium_find(driver, By.XPATH, lic_selector)
             else:
                 # CSS selector
-                license_elem = retry_selenium_find(driver, By.CSS_SELECTOR, lic_selector, max_retries=3, delay=0.5)
+                license_elem = retry_selenium_find(driver, By.CSS_SELECTOR, lic_selector)
 
             variation_license = license_elem.text.strip()
 

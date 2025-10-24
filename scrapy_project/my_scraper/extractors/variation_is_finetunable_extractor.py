@@ -29,11 +29,11 @@ def extract_is_finetunable(driver: webdriver.Chrome, is_finetunable_selector, va
             # Determine if selector is XPath (starts with /) or CSS
             if ft_selector.startswith('/'):
                 # Use XPath
-                finetunable_elems = retry_selenium_find(driver, By.XPATH, ft_selector, max_retries=3, delay=0.5, find_multiple=True)
+                finetunable_elems = retry_selenium_find(driver, By.XPATH, ft_selector, find_multiple=True)
                 selector_type = "XPath"
             else:
                 # Use CSS
-                finetunable_elems = retry_selenium_find(driver, By.CSS_SELECTOR, ft_selector, max_retries=3, delay=0.5, find_multiple=True)
+                finetunable_elems = retry_selenium_find(driver, By.CSS_SELECTOR, ft_selector, find_multiple=True)
                 selector_type = "CSS"
 
             logger.info(f"Variation {variation_counter}: Found {len(finetunable_elems)} elements matching is_finetunable {selector_type} selector {idx + 1}")

@@ -44,7 +44,7 @@ def extract_total_engagements(driver: webdriver.Chrome, tree: lxml_html.HtmlElem
         if is_css_selector(selector):
             try:
                 logger.debug(f"Trying total_engagements CSS selector via Selenium: {selector}")
-                elements = retry_selenium_find(driver, By.CSS_SELECTOR, selector, max_retries=3, delay=0.5, find_multiple=True)
+                elements = retry_selenium_find(driver, By.CSS_SELECTOR, selector, find_multiple=True)
                 logger.debug(f"Found {len(elements)} elements with CSS selector")
 
                 for elem in elements:
@@ -64,7 +64,7 @@ def extract_total_engagements(driver: webdriver.Chrome, tree: lxml_html.HtmlElem
             # XPath selector - use Selenium for dynamic content
             try:
                 logger.debug(f"Trying total_engagements XPath selector via Selenium: {selector}")
-                elements = retry_selenium_find(driver, By.XPATH, selector, max_retries=3, delay=0.5, find_multiple=True)
+                elements = retry_selenium_find(driver, By.XPATH, selector, find_multiple=True)
                 logger.debug(f"Found {len(elements)} elements with XPath via Selenium")
 
                 for elem in elements:
@@ -89,7 +89,7 @@ def extract_total_engagements(driver: webdriver.Chrome, tree: lxml_html.HtmlElem
 
         try:
             logger.debug(f"Trying total_engagements XPath selector: {selector}")
-            engagement_elements = retry_xpath(tree, selector, max_retries=3, delay=0.5)
+            engagement_elements = retry_xpath(tree, selector)
             logger.debug(f"Found {len(engagement_elements)} elements with XPath")
 
             if engagement_elements:

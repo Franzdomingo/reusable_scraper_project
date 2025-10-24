@@ -26,7 +26,7 @@ def extract_created_by(item, created_by_selector) -> str:
 
     for idx, selector in enumerate(created_by_selectors):
         try:
-            elem = retry_selenium_find(item, By.CSS_SELECTOR, selector, max_retries=3, delay=0.5)
+            elem = retry_selenium_find(item, By.CSS_SELECTOR, selector)
             created_by = elem.text.strip()
 
             if created_by:
@@ -61,7 +61,7 @@ def extract_update_description(item, update_desc_selector) -> str:
 
     for idx, selector in enumerate(update_desc_selectors):
         try:
-            elem = retry_selenium_find(item, By.CSS_SELECTOR, selector, max_retries=3, delay=0.5)
+            elem = retry_selenium_find(item, By.CSS_SELECTOR, selector)
             update_desc = elem.text.strip()
 
             if update_desc:

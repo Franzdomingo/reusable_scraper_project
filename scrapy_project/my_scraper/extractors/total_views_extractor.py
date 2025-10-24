@@ -44,7 +44,7 @@ def extract_total_views(driver: webdriver.Chrome, tree: lxml_html.HtmlElement,
         if is_css_selector(selector):
             try:
                 logger.debug(f"Trying total_views CSS selector via Selenium: {selector}")
-                elements = retry_selenium_find(driver, By.CSS_SELECTOR, selector, max_retries=3, delay=0.5, find_multiple=True)
+                elements = retry_selenium_find(driver, By.CSS_SELECTOR, selector, find_multiple=True)
                 logger.debug(f"Found {len(elements)} elements with CSS selector")
 
                 for elem in elements:
@@ -64,7 +64,7 @@ def extract_total_views(driver: webdriver.Chrome, tree: lxml_html.HtmlElement,
             # XPath selector - use Selenium for dynamic content
             try:
                 logger.debug(f"Trying total_views XPath selector via Selenium: {selector}")
-                elements = retry_selenium_find(driver, By.XPATH, selector, max_retries=3, delay=0.5, find_multiple=True)
+                elements = retry_selenium_find(driver, By.XPATH, selector, find_multiple=True)
                 logger.debug(f"Found {len(elements)} elements with XPath via Selenium")
 
                 for elem in elements:
@@ -89,7 +89,7 @@ def extract_total_views(driver: webdriver.Chrome, tree: lxml_html.HtmlElement,
 
         try:
             logger.debug(f"Trying total_views XPath selector: {selector}")
-            view_elements = retry_xpath(tree, selector, max_retries=3, delay=0.5)
+            view_elements = retry_xpath(tree, selector)
             logger.debug(f"Found {len(view_elements)} elements with XPath")
 
             if view_elements:

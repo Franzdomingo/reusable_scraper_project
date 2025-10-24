@@ -34,7 +34,7 @@ def extract_description(driver: webdriver.Chrome, tree: lxml_html.HtmlElement,
         if is_css_selector(selector):
             try:
                 logger.debug(f"Trying description CSS selector via Selenium: {selector}")
-                desc_element = retry_selenium_find(driver, By.CSS_SELECTOR, selector, max_retries=3, delay=0.5)
+                desc_element = retry_selenium_find(driver, By.CSS_SELECTOR, selector)
                 if desc_element:
                     outer = desc_element.get_attribute('outerHTML')
                     if outer and outer.strip():
@@ -49,7 +49,7 @@ def extract_description(driver: webdriver.Chrome, tree: lxml_html.HtmlElement,
             continue
         try:
             logger.debug(f"Trying description XPath selector: {selector}")
-            desc_elements = retry_xpath(tree, selector, max_retries=3, delay=0.5)
+            desc_elements = retry_xpath(tree, selector)
             if desc_elements and desc_elements[0].text_content().strip():
                 logger.info(f"Found short_description using XPath selector: {selector}")
                 return desc_elements[0].text_content().strip()
@@ -59,7 +59,7 @@ def extract_description(driver: webdriver.Chrome, tree: lxml_html.HtmlElement,
     # Final fallback: use configured CSS fallback
     if 'description_css_fallback' in selectors:
         try:
-            desc_element = retry_selenium_find(driver, By.CSS_SELECTOR, selectors['description_css_fallback'], max_retries=3, delay=0.5)
+            desc_element = retry_selenium_find(driver, By.CSS_SELECTOR, selectors['description_css_fallback'])
             if desc_element:
                 outer = desc_element.get_attribute('outerHTML')
                 if outer and outer.strip():
