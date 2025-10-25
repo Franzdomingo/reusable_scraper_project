@@ -62,23 +62,61 @@ def extract_tags_from_more_buttons(driver: webdriver.Chrome, selectors: Dict) ->
 
     try:
         # Get selectors from configuration
-        more_button_span = selectors.get('tag_more_button_span', 'span.eWEDa-d')
+        # tag_more_button_span can be a single selector (str) or a list of selectors (preferred)
+        more_button_span = selectors.get('tag_more_button_span', ['span.eWEDa-d'])
         popup_container = selectors.get('tag_more_popup', '.eqXpEC')
         popup_checkbox = selectors.get('tag_popup_checkbox', 'button[role="checkbox"]')
         popup_text_span = selectors.get('tag_popup_text_span', 'span.bMbEZO')
 
         logger.debug("Looking for 'more' buttons to expand tags")
 
-        # Find all buttons that contain the "more" text span
-        more_text_spans = retry_selenium_find(driver, By.CSS_SELECTOR, more_button_span, find_multiple=True)
+        # Find all elements that match the "more" selector (supports CSS or XPath)
+        more_text_spans = []
+        try:
+            # Support list of selectors (try in order), or a single selector string
+            candidates = list(more_button_span) if isinstance(more_button_span, (list, tuple)) else [more_button_span]
+        except Exception:
+            candidates = [more_button_span]
 
-        # Get the parent buttons
-        more_buttons = []
-        for span in more_text_spans:
+        for sel in candidates:
             try:
-                # Check if the span text contains "more"
-                if 'more' in span.text.lower():
-                    button = span.find_element(By.XPATH, './ancestor::button[@role="button"]')
+                if not sel:
+                    continue
+                if is_xpath_selector(sel):
+                    found = retry_selenium_find(driver, By.XPATH, sel, find_multiple=True)
+                else:
+                    found = retry_selenium_find(driver, By.CSS_SELECTOR, sel, find_multiple=True)
+
+                if found:
+                    more_text_spans = found
+                    logger.debug(f"'more' selector matched using: {sel}")
+                    break
+            except Exception:
+                # try next candidate
+                continue
+
+        # Get the parent buttons (be tolerant: the selector may already return the button)
+        more_buttons = []
+        for el in more_text_spans:
+            try:
+                text = (el.text or '').lower()
+                # Check if the element text contains "more" or a plus sign like "+3"
+                if 'more' in text or ('+' in text and any(ch.isdigit() for ch in text)):
+                    button = None
+                    try:
+                        # If the matched element is the button itself, use it
+                        if getattr(el, 'tag_name', '').lower() == 'button':
+                            button = el
+                        else:
+                            # Otherwise, search for an ancestor button
+                            button = el.find_element(By.XPATH, './ancestor::button[@role="button"]')
+                    except Exception:
+                        # fallback: try to find closest ancestor button without role
+                        try:
+                            button = el.find_element(By.XPATH, './ancestor::button')
+                        except Exception:
+                            button = None
+
                     if button and button not in more_buttons:
                         more_buttons.append(button)
             except Exception:

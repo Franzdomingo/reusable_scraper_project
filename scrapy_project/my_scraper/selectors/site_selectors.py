@@ -68,8 +68,12 @@ class KaggleSelectors:
     # Updated 2025-10-23: Using stable selectors (target attribute, href pattern)
     TAG_LINK_SELECTOR: str = 'a[target="_blank"][href*="/models?"]'
 
-    # Tags "more" button selectors (for expanding hidden tags)
-    TAG_MORE_BUTTON_TEXT_SPAN: str = 'span.eWEDa-d'  # Span containing "X more" text
+    # Tags "more" button selector (for expanding hidden tags)
+    # Updated: prefer absolute XPath but keep original CSS class as a fallback
+    # Stored as a list so callers can provide multiple selector types (XPath first, CSS fallback)
+    TAG_MORE_BUTTON_TEXT_SPAN: List[str] = [
+        '/html/body/div/div[1]/div[2]/div/div[2]/div/div[5]/div/div[2]/div[2]/div[2]/div[1]/div/button',  # XPath to the "more" button  # Fallback CSS selector (previous fragile class)
+    ]
     TAG_MORE_POPUP_CONTAINER: str = '.eqXpEC'  # Popup container that appears when "more" is clicked
     TAG_POPUP_CHECKBOX_BUTTON: str = 'button[role="checkbox"]'  # Tag buttons within popup
     TAG_POPUP_TEXT_SPAN: str = 'span.bMbEZO'  # Span containing tag text within popup buttons
@@ -251,12 +255,13 @@ class KaggleSelectors:
 
     # Is Finetunable selector for variation (appears after selecting a variation)
     # Target: p element with "Yes" or "No" indicating if the model is finetunable
-    # Updated 2025-10-23: Using XPath as primary selector
-    # XPath: /html/body/div/div[1]/div[2]/div/div[2]/div/div[5]/div/div[2]/div[2]/div[2]/div[3]/div[1]/div[2]/div[1]/p
-    # CSS: .sc-huUlgU > div:nth-child(1) > p:nth-child(2)
+    # Updated 2025-10-25: Using content-based XPath selector (is_contain approach)
+    # Finds the div containing "Fine-Tunable" span, then gets the p element with the Yes/No value
+    # Structure: <div><span>Fine-Tunable</span><p style="margin-top: 8px;">Yes</p></div>
     TRANSFORMERS_IS_FINETUNABLE_SELECTORS: List[str] = [
-        '/html/body/div/div[1]/div[2]/div/div[2]/div/div[5]/div/div[2]/div[2]/div[2]/div[3]/div[1]/div[2]/div[1]/p',  # Primary XPath selector
-        '.sc-huUlgU > div:nth-child(1) > p:nth-child(2)',  # Fallback CSS selector
+        '//div[.//span[contains(text(), "Fine-Tunable")]]/p',  # Primary content-based XPath - stable
+        '/html/body/div/div[1]/div[2]/div/div[2]/div/div[5]/div/div[2]/div[2]/div[2]/div[3]/div[1]/div[2]/div[1]/p',  # Fallback absolute XPath
+        '.sc-huUlgU > div:nth-child(1) > p:nth-child(2)',  # Last resort CSS selector
     ]
 
     # Example Usage selector for variation (appears after selecting a variation)
