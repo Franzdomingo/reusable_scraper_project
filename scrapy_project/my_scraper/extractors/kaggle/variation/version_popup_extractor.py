@@ -269,6 +269,7 @@ def extract_versions_from_popup(
         # Import extractors we need
         from .variation_downloads_extractor import extract_downloads
         from .variation_license_extractor import extract_license
+        from .variation_base_model_extractor import extract_base_model
         from .variation_model_card_extractor import extract_model_card
         from .variation_is_finetunable_extractor import extract_is_finetunable
         from .variation_example_usage_extractor import extract_example_usage
@@ -351,6 +352,7 @@ def extract_versions_from_popup(
                 # Extract data for this version
                 version_downloads = extract_downloads(driver, selectors, variation_counter)
                 version_license = extract_license(driver, selectors.get('variation_license'), variation_counter)
+                version_base_model = extract_base_model(driver, selectors.get('variation_base_model'), variation_counter)
                 version_model_card = extract_model_card(driver, selectors.get('variation_model_card'), variation_counter)
                 version_is_finetunable = extract_is_finetunable(driver, selectors.get('is_finetunable'), variation_counter)
                 version_example_usage = extract_example_usage(driver, selectors.get('example_usage'), variation_counter)
@@ -362,6 +364,7 @@ def extract_versions_from_popup(
                     'version_number': item_version_text,
                     'downloads': version_downloads,
                     'license': version_license,
+                    'base_model': version_base_model,
                     'model_card': version_model_card,
                     'is_finetunable': version_is_finetunable,
                     'example_usage': version_example_usage

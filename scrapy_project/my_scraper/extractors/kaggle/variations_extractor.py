@@ -16,6 +16,7 @@ from .dropdown_handler import click_dropdown_to_open
 from .variation.variation_version_extractor import extract_version
 from .variation.variation_downloads_extractor import extract_downloads
 from .variation.variation_license_extractor import extract_license
+from .variation.variation_base_model_extractor import extract_base_model
 from .variation.variation_model_card_extractor import extract_model_card
 from .variation.variation_is_finetunable_extractor import extract_is_finetunable
 from .variation.variation_example_usage_extractor import extract_example_usage
@@ -92,6 +93,7 @@ def extract_variations_for_tab(
         version_selector = selectors.get('variation_version')
         downloads_selector = selectors.get('variation_downloads')
         license_selector = selectors.get('variation_license')
+        base_model_selector = selectors.get('variation_base_model')
         model_card_selector = selectors.get('variation_model_card')
         is_finetunable_selector = selectors.get('is_finetunable')
         example_usage_selector = selectors.get('example_usage')
@@ -340,6 +342,7 @@ def extract_variations_for_tab(
                             'variation_created_by': version_data.get('created_by', ''),
                             'variation_update_description': version_data.get('update_description', ''),
                             'variation_license': version_data.get('license', ''),
+                            'variation_base_model': version_data.get('base_model', ''),
                             'variation_downloads': version_data.get('downloads', ''),
                             'variations_model_card': version_data.get('model_card', ''),
                             'variations_is_finetunable': version_data.get('is_finetunable', ''),
@@ -355,6 +358,7 @@ def extract_variations_for_tab(
                     variation_version = extract_version(driver, version_selector, variation_counter)
                     variation_downloads = extract_downloads(driver, selectors, variation_counter)
                     variation_license = extract_license(driver, license_selector, variation_counter)
+                    variation_base_model = extract_base_model(driver, base_model_selector, variation_counter)
                     variation_model_card = extract_model_card(driver, model_card_selector, variation_counter)
                     variation_is_finetunable = extract_is_finetunable(driver, is_finetunable_selector, variation_counter)
                     variation_example_usage = extract_example_usage(driver, example_usage_selector, variation_counter)
@@ -368,6 +372,7 @@ def extract_variations_for_tab(
                         'variation_created_by': '',
                         'variation_update_description': '',
                         'variation_license': variation_license,
+                        'variation_base_model': variation_base_model,
                         'variation_downloads': variation_downloads,
                         'variations_model_card': variation_model_card,
                         'variations_is_finetunable': variation_is_finetunable,

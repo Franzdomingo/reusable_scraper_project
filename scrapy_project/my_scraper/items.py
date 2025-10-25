@@ -34,11 +34,14 @@ class TransformersVariationItem(scrapy.Item):
     variation = scrapy.Field()
     variation_name = scrapy.Field()
     variation_version = scrapy.Field()
+    variation_created_by = scrapy.Field()
+    variation_update_description = scrapy.Field()
     variation_license = scrapy.Field()
+    variation_base_model = scrapy.Field()
     variation_downloads = scrapy.Field()
-    model_card = scrapy.Field()
-    is_finetunable = scrapy.Field()
-    example_usage = scrapy.Field()
+    variations_model_card = scrapy.Field()
+    variations_is_finetunable = scrapy.Field()
+    variations_example_usage = scrapy.Field()
 
 
 class NvidiaModelItem(scrapy.Item):

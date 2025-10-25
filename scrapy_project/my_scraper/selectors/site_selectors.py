@@ -266,6 +266,20 @@ class KaggleSelectors:
         'a.sc-kjwdDK',  # Last resort: CSS selector for link format
     ]
 
+    # Base Model selectors (appears after selecting a variation)
+    # Target: a (link) element containing the base model URL
+    # Updated 2025-10-25: Using stable content-based and structure-based selectors
+    # Structure: <div><span>Base Model</span><p><a href="/models/...">model name</a></p></div>
+    # Example: <div><span class="sc-eQwNpu hIQOKp">Base Model</span><p class="sc-dNdcvo ktDYxp"><a href="/models/keras/gemma/keras/gemma_2b_en">gemma · Keras · gemma_2b_en</a></p></div>
+    # Extract the href attribute to get the base model URL path
+    TRANSFORMERS_VARIATION_BASE_MODEL_SELECTORS: List[str] = [
+        '//div[.//span[contains(text(), "Base Model")]]/p/a',  # Most stable: Content-based XPath - finds div with "Base Model" span, gets a in p
+        '//span[contains(text(), "Base Model")]/following-sibling::p/a',  # Alternative: finds a in p after "Base Model" span
+        'a.sc-kjwdDK.fDGKWq[href*="/models/"]',  # Class-based: uses actual link classes with href pattern
+        'div > span.sc-eQwNpu + p > a',  # Structure-based: a in p following span with label class
+        '/html/body/div/div[1]/div[2]/div/div[2]/div/div[5]/div/div[3]/div[2]/div[2]/div[3]/div[1]/div[2]/div[4]/p/a',  # Fallback: Original absolute XPath
+    ]
+
     # Model card selector for variation (appears after selecting a variation)
     # Target: div element containing the model card (Model Overview section)
     # This section contains an h2 with "Model Overview" text
@@ -417,6 +431,7 @@ def get_selectors_for_site(site: str) -> Dict:
             'variation_downloads': KaggleSelectors.TRANSFORMERS_VARIATION_DOWNLOADS_CSS,
             'variation_downloads_xpath': KaggleSelectors.TRANSFORMERS_VARIATION_DOWNLOADS_XPATH,
             'variation_license': KaggleSelectors.TRANSFORMERS_VARIATION_LICENSE_SELECTORS,
+            'variation_base_model': KaggleSelectors.TRANSFORMERS_VARIATION_BASE_MODEL_SELECTORS,
             'variation_model_card': KaggleSelectors.TRANSFORMERS_VARIATION_MODEL_CARD_SELECTORS,
             'is_finetunable': KaggleSelectors.TRANSFORMERS_IS_FINETUNABLE_SELECTORS,
             'example_usage': KaggleSelectors.TRANSFORMERS_EXAMPLE_USAGE_SELECTORS,

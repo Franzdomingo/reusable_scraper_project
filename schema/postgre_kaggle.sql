@@ -32,6 +32,7 @@ CREATE TABLE model_variations (
     variation_created_by TEXT,
     variation_update_description TEXT,
     variation_license TEXT,
+    variation_base_model TEXT,
     variation_downloads INTEGER,
     variations_model_card TEXT,
     variations_is_finetunable BOOLEAN,

@@ -1,8 +1,13 @@
-  1. nvidia_tags_extractor.py - Uses By.CSS_SELECTOR exclusively (lines 48, 60, 65, 127, 159, 165, 180, 186, 206) 
-  2. selenium_utils.py - Utility functions default to CSS selectors (line 60, 75, 206)
-  3. nvidia_modelcard_extractor.py - Uses By.CSS_SELECTOR only (lines 146, 154, 179, 200)
-  4. dropdown_handler.py - Uses By.CSS_SELECTOR for finding dropdown elements (line 28)
-  5. variation_model_card_extractor.py - Uses By.CSS_SELECTOR only (line 29) - DONE 
-  6. variation_example_usage_extractor.py - Uses By.CSS_SELECTOR only (lines 28, 33, 42)
-  7. variation_version_metadata_extractor.py - Uses By.CSS_SELECTOR only (lines 28, 63)
-  8. variations_extractor.py - Uses By.CSS_SELECTOR throughout (lines 75, 143, 157, 209, 215)
+  Recommendation Priority:
+
+  🔥 Fix Immediately:
+
+  1. variation_example_usage_extractor.py - Move hardcoded selectors to site_selectors.py
+  2. tab_handler.py - Move hardcoded JavaScript selectors to site_selectors.py
+
+  ⚠️ Fix Soon:
+
+  3. TOTAL_VIEWS_SELECTORS - Add content-based XPath
+  4. TOTAL_ENGAGEMENTS_SELECTORS - Add content-based XPath
+  5. TRANSFORMERS_VARIATION_DOWNLOADS_CSS - Add content-based selector
+  6. AUTHORS_SELECTORS - Already has content-based primary, but fallbacks need improvement
