@@ -19,14 +19,24 @@ def click_dropdown_to_open(driver: webdriver.Chrome, selector: str, timeout: int
 
     Args:
         driver: Selenium driver instance
-        selector: CSS selector for dropdown element
+        selector: CSS selector or XPath for dropdown element (XPath should start with /)
         timeout: Max seconds to wait for aria-expanded=true
 
     Returns:
         True if dropdown opened (aria-expanded=true), False otherwise
     """
     try:
-        element = retry_selenium_find(driver, By.CSS_SELECTOR, selector)
+        # Determine if selector is XPath or CSS
+        # Updated 2025-10-25: Support both XPath and CSS selectors
+        if selector.startswith('/'):
+            by_type = By.XPATH
+            selector_type = "XPath"
+        else:
+            by_type = By.CSS_SELECTOR
+            selector_type = "CSS"
+
+        logger.info(f"Using {selector_type} selector: {selector}")
+        element = retry_selenium_find(driver, by_type, selector)
 
         # First, scroll the element into view
         logger.info("Scrolling dropdown element into view")
@@ -36,11 +46,24 @@ def click_dropdown_to_open(driver: webdriver.Chrome, selector: str, timeout: int
         # Try to hide any overlaying elements (common issue)
         try:
             logger.info("Attempting to hide overlay elements")
-            # Hide common overlay classes
+            # Hide overlays using stable selectors (role="presentation" is semantic)
+            # Updated 2025-10-25: Removed fragile CSS classes, using ARIA roles instead
             driver.execute_script("""
-                let overlays = document.querySelectorAll('.sc-ABqPz.hkFQpn');
+                // Hide elements with role="presentation" (common overlay pattern)
+                let overlays = document.querySelectorAll('[role="presentation"]');
                 overlays.forEach(el => el.style.display = 'none');
-            """)
+
+                // Also hide elements with common z-index patterns that might block clicks
+                let highZIndexElements = Array.from(document.querySelectorAll('*')).filter(el => {
+                    let zIndex = window.getComputedStyle(el).zIndex;
+                    return zIndex !== 'auto' && parseInt(zIndex) > 1000;
+                });
+                highZIndexElements.forEach(el => {
+                    if (el.contains(arguments[0]) === false) {
+                        el.style.display = 'none';
+                    }
+                });
+            """, element)
             time.sleep(0.3)
         except Exception as e:
             logger.info(f"Could not hide overlays: {e}")

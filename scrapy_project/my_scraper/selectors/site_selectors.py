@@ -154,13 +154,15 @@ class KaggleSelectors:
     VARIATION_TAB_TEXT: str = 'span'  # Generic span within tab button
 
     # Transformers variation dropdown action selector (click to open the list)
-    # Target: The combobox button with aria-label="Select Variation"
+    # Target: The combobox element with aria-label="Select Variation"
+    # Updated 2025-10-25: Using only stable ARIA attributes (no fragile CSS classes)
+    # Structure: <div role="combobox" aria-label="Select Variation" aria-haspopup="listbox">
     # Multiple selectors for fallback (ordered by specificity)
     TRANSFORMERS_VARIATION_ACTION: List[str] = [
-        'div[role="combobox"][aria-label="Select Variation"]',  # Most specific
-        'div[role="combobox"]',  # More generic - any combobox
+        'div[role="combobox"][aria-label="Select Variation"]',  # Most specific - uses semantic ARIA attributes
+        'div[role="combobox"][aria-haspopup="listbox"]',  # Listbox pattern - identifies dropdown type
+        'div[role="combobox"]',  # Generic - any combobox
         'div[aria-label="Select Variation"]',  # aria-label only
-        'button[aria-label="Select Variation"]',  # Alternative - might be button instead of div
     ]
 
     # Transformers variation list container (the opened dropdown)
