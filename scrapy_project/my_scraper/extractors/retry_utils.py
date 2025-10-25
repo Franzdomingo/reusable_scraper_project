@@ -5,9 +5,41 @@ Provides retry mechanisms with configurable max attempts and delays
 
 import logging
 import time
+import re
 from typing import Callable, Any
 
 logger = logging.getLogger(__name__)
+
+# ANSI color codes for terminal output
+class Colors:
+    RED = '\033[91m'
+    YELLOW = '\033[93m'
+    RESET = '\033[0m'
+
+
+def _clean_exception_message(exception: Exception) -> str:
+    """
+    Clean exception message by removing verbose Chrome stack traces
+
+    Args:
+        exception: Exception object
+
+    Returns:
+        Cleaned exception message without stack traces
+    """
+    message = str(exception)
+
+    # Remove Stacktrace section and everything after it
+    if 'Stacktrace:' in message:
+        message = message.split('Stacktrace:')[0].strip()
+
+    # Remove any remaining Chrome internal stack traces
+    message = re.sub(r'\n\s*GetHandleVerifier.*', '', message)
+    message = re.sub(r'\n\s*\(No symbol\).*', '', message)
+    message = re.sub(r'\n\s*BaseThreadInitThunk.*', '', message)
+    message = re.sub(r'\n\s*RtlUserThreadStart.*', '', message)
+
+    return message.strip()
 
 # Import settings for default retry configuration
 try:
@@ -59,12 +91,14 @@ def retry_operation(func: Callable, max_retries: int = None, delay: float = None
                 return result
         except Exception as e:
             last_error = e
-            logger.warning(f'{op_name}: Attempt {attempt + 1}/{max_retries} failed: {e}')
+            clean_message = _clean_exception_message(e)
+            logger.warning(f'{Colors.RED}{op_name}: Attempt {attempt + 1}/{max_retries} failed: {clean_message}{Colors.RESET}')
 
         if attempt < max_retries - 1:
             time.sleep(delay)
 
-    logger.error(f'{op_name}: All {max_retries} attempts failed. Last error: {last_error}')
+    clean_message = _clean_exception_message(last_error)
+    logger.error(f'{Colors.RED}{op_name}: All {max_retries} attempts failed. Last error: {clean_message}{Colors.RESET}')
     return None
 
 
@@ -103,12 +137,14 @@ def retry_selenium_find(driver, by, selector, max_retries: int = None, delay: fl
                 return result
         except Exception as e:
             last_error = e
-            logger.warning(f'{operation_name}: Attempt {attempt + 1}/{max_retries} failed: {e}')
+            clean_message = _clean_exception_message(e)
+            logger.warning(f'{Colors.RED}{operation_name}: Attempt {attempt + 1}/{max_retries} failed: {clean_message}{Colors.RESET}')
 
         if attempt < max_retries - 1:
             time.sleep(delay)
 
-    logger.error(f'{operation_name}: All {max_retries} attempts failed. Last error: {last_error}')
+    clean_message = _clean_exception_message(last_error)
+    logger.error(f'{Colors.RED}{operation_name}: All {max_retries} attempts failed. Last error: {clean_message}{Colors.RESET}')
     return [] if find_multiple else None
 
 
@@ -163,7 +199,8 @@ def retry_click(element, driver=None, max_retries: int = None, delay: float = No
             return True
         except Exception as e:
             last_error = e
-            logger.warning(f'Click attempt {attempt + 1}/{max_retries} failed: {e}')
+            clean_message = _clean_exception_message(e)
+            logger.warning(f'{Colors.RED}Click attempt {attempt + 1}/{max_retries} failed: {clean_message}{Colors.RESET}')
 
             # Try JavaScript click as fallback if driver is provided
             if driver and attempt == max_retries - 1:
@@ -173,10 +210,12 @@ def retry_click(element, driver=None, max_retries: int = None, delay: float = No
                     logger.info('JavaScript click succeeded')
                     return True
                 except Exception as js_error:
-                    logger.error(f'JavaScript click also failed: {js_error}')
+                    clean_js_message = _clean_exception_message(js_error)
+                    logger.error(f'{Colors.RED}JavaScript click also failed: {clean_js_message}{Colors.RESET}')
 
         if attempt < max_retries - 1:
             time.sleep(delay)
 
-    logger.error(f'Click: All {max_retries} attempts failed. Last error: {last_error}')
+    clean_message = _clean_exception_message(last_error)
+    logger.error(f'{Colors.RED}Click: All {max_retries} attempts failed. Last error: {clean_message}{Colors.RESET}')
     return False

@@ -9,11 +9,13 @@ This module contains custom middlewares for:
 import random
 import logging
 import threading
+import os
 from queue import Queue, Empty
 from scrapy import signals
 from scrapy.http import HtmlResponse
 from selenium import webdriver
 from selenium.webdriver.chrome.options import Options
+from selenium.webdriver.chrome.service import Service
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
@@ -83,14 +85,19 @@ class SeleniumMiddleware:
             except Exception:
                 logging.debug('No user agents configured, using default browser UA')
 
+            # Suppress Chrome verbose logging and error output
+            chrome_options.add_experimental_option('excludeSwitches', ['enable-logging'])
+            chrome_options.add_argument('--silent')
+            chrome_options.add_argument('--disable-logging')
+
+            # Create service to redirect ChromeDriver logs to devnull
+            service = Service(log_path=os.devnull if os.name != 'nt' else 'nul')
+
             # Create driver
             if self.driver_executable_path:
-                return webdriver.Chrome(
-                    executable_path=self.driver_executable_path,
-                    options=chrome_options
-                )
-            else:
-                return webdriver.Chrome(options=chrome_options)
+                service.path = self.driver_executable_path
+
+            return webdriver.Chrome(service=service, options=chrome_options)
 
         else:
             raise NotImplementedError(f'Driver {self.driver_name} is not supported')

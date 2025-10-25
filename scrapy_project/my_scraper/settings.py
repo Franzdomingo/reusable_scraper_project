@@ -113,8 +113,6 @@ SELENIUM_DRIVER_ARGUMENTS = [
     '--disable-blink-features=AutomationControlled',
     '--disable-gpu',
     '--disable-extensions',
-    '--disable-logging',
-    '--log-level=3'
 ]
 SELENIUM_POOL_SIZE = 1 
 # Set settings whose default value is deprecated to a future-proof value
