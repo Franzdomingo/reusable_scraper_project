@@ -204,27 +204,40 @@ class KaggleSelectors:
     VARIATION_VERSIONS_POPUP_ITEMS: str = 'li.MuiListItem-divider'
 
     # Version popup - created by field (within each version item)
-    # Target: span containing the creator/author name
+    # Target: span containing the creator/author name (e.g., "Created by Matt Watson")
     # XPath: /html/body/div[2]/div[3]/div/div/div[2]/div/ul/li[1]/div/a/div/div[2]/span[1]
-    # CSS: li.MuiListItem-divider:nth-child(1) > div:nth-child(1) > a:nth-child(1) > div:nth-child(1) > div:nth-child(2) > span:nth-child(2)
+    # Updated 2025-10-25: Using stable class-based and structure-based selectors
+    # Structure: li.MuiListItem-divider > div > a > div > div[2] > span[1]
     VARIATION_VERSION_CREATED_BY: List[str] = [
-        'div > a > div > div:nth-child(2) > span:nth-child(2)',  # Relative to li.MuiListItem-divider
+        'span.sc-eqNDNG.sc-fYRIQK',  # Stable: Uses actual class combination from spans
+        'div > a > div > div span:first-of-type',  # Structure-based: first span in any div
+        'div > a > div > div:nth-child(2) > span:first-of-type',  # More specific structure
+        'div > a > div > div:nth-child(2) > span:nth-child(1)',  # Fallback: absolute position
     ]
 
     # Version popup - update description field (within each version item)
-    # Target: span containing the update/change description
+    # Target: span containing the update/change description (e.g., "updated json files")
     # XPath: /html/body/div[2]/div[3]/div/div/div[2]/div/ul/li[1]/div/a/div/div[2]/span[2]
-    # CSS: li.MuiListItem-divider:nth-child(1) > div:nth-child(1) > a:nth-child(1) > div:nth-child(1) > div:nth-child(2) > span:nth-child(3)
+    # Updated 2025-10-25: Using stable class-based and structure-based selectors
+    # Structure: li.MuiListItem-divider > div > a > div > div[2] > span[2]
     VARIATION_VERSION_UPDATE_DESC: List[str] = [
-        'div > a > div > div:nth-child(2) > span:nth-child(3)',  # Relative to li.MuiListItem-divider
+        'div > a > div > div span:nth-of-type(2)',  # Structure-based: second span in any div
+        'div > a > div > div:nth-child(2) > span:nth-of-type(2)',  # More specific structure
+        'span.sc-eqNDNG.sc-fYRIQK',  # Fallback: class-based (matches both spans)
+        'div > a > div > div:nth-child(2) > span:nth-child(2)',  # Last resort: absolute position
     ]
 
     # Version popup - version number field (within each version item)
     # Target: div containing version text like "Version 4"
-    # XPath: /html/body/div[2]/div[3]/div/div/div[2]/div/ul/li[1]/div/a/div/div[2]/div
-    # CSS: li.MuiListItem-divider:nth-child(1) > div:nth-child(1) > a:nth-child(1) > div:nth-child(1) > div:nth-child(2) > div:nth-child(1)
+    # XPath: /html/body/div[2]/div[3]/div/div/div[2]/div/ul/li[1]/div/a/div/div[2]/div[1]
+    # Updated 2025-10-25: Using stable class-based and structure-based selectors
+    # Structure: li.MuiListItem-divider > div > a > div > div[2] > div[1]
     VARIATION_VERSION_NUMBER: List[str] = [
-        'div > a > div > div:nth-child(2) > div:nth-child(1)',  # Relative to li.MuiListItem-divider
+        'div.sc-kCuUfV.sc-bjxVRI',  # Most stable: Uses actual version div classes
+        'div > a > div > div div:first-of-type',  # Structure-based: first div in any div
+        'div > a > div > div:nth-child(2) > div:first-of-type',  # More specific structure
+        'div.bXQAUF.dEeLno',  # Alternative class combination
+        'div > a > div > div:nth-child(2) > div:nth-child(1)',  # Last resort: absolute position
     ]
 
     # Downloads selector (appears after selecting a variation)
@@ -241,9 +254,16 @@ class KaggleSelectors:
 
     # License selectors (appears after selecting a variation)
     # License can appear in different formats (link or plain text)
+    # Updated 2025-10-25: Using stable content-based and structure-based selectors
+    # Structure: <div><span>License</span><p>License value</p></div>
+    # Example: <div><span class="sc-eQwNpu hIQOKp">License</span><p class="sc-dNdcvo ktDYxp">Gemma</p></div>
     TRANSFORMERS_VARIATION_LICENSE_SELECTORS: List[str] = [
-        '/html/body/div/div[1]/div[2]/div/div[2]/div/div[5]/div/div[2]/div[2]/div[2]/div[3]/div[1]/div[2]/div[2]/p/a',
-        'a.sc-kjwdDK',  # Fallback CSS selector
+        '//div[.//span[contains(text(), "License")]]/p',  # Most stable: Content-based XPath - finds div containing "License" span, gets p
+        '//span[contains(text(), "License")]/following-sibling::p',  # Alternative: finds p after "License" span
+        'p.sc-dNdcvo.ktDYxp',  # Class-based: uses actual p tag classes
+        'div > span.sc-eQwNpu + p',  # Structure-based: p following span with label class
+        '/html/body/div/div[1]/div[2]/div/div[2]/div/div[5]/div/div[2]/div[2]/div[2]/div[3]/div[1]/div[2]/div[2]/p/a',  # Fallback: Original absolute XPath (for link format)
+        'a.sc-kjwdDK',  # Last resort: CSS selector for link format
     ]
 
     # Model card selector for variation (appears after selecting a variation)
