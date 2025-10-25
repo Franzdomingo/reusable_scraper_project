@@ -2,7 +2,7 @@
   2. selenium_utils.py - Utility functions default to CSS selectors (line 60, 75, 206)
   3. nvidia_modelcard_extractor.py - Uses By.CSS_SELECTOR only (lines 146, 154, 179, 200)
   4. dropdown_handler.py - Uses By.CSS_SELECTOR for finding dropdown elements (line 28)
-  5. variation_model_card_extractor.py - Uses By.CSS_SELECTOR only (line 29) - ongoing 
+  5. variation_model_card_extractor.py - Uses By.CSS_SELECTOR only (line 29) - DONE 
   6. variation_example_usage_extractor.py - Uses By.CSS_SELECTOR only (lines 28, 33, 42)
   7. variation_version_metadata_extractor.py - Uses By.CSS_SELECTOR only (lines 28, 63)
   8. variations_extractor.py - Uses By.CSS_SELECTOR throughout (lines 75, 143, 157, 209, 215)

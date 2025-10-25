@@ -247,10 +247,11 @@ class KaggleSelectors:
     # Model card selector for variation (appears after selecting a variation)
     # Target: div element containing the model card (Model Overview section)
     # This section contains an h2 with "Model Overview" text
-    # Updated 2025-10-24: Using content-based XPath selector for stability
+    # Updated 2025-10-25: Prioritizing content-based XPath selector for stability
+    # Structure: <div class="sc-iRTMaw buAyFc"><h2>Model Overview</h2>...</div>
     TRANSFORMERS_VARIATION_MODEL_CARD_SELECTORS: List[str] = [
-        '/html/body/div/div[1]/div[2]/div/div[2]/div/div[5]/div/div[2]/div[2]/div[2]/div[3]/div[1]/div[3]',  # Primary absolute XPath selector
-        '//div[./h2[contains(text(), "Model Overview")]]',  # Stable content-based XPath - finds div containing h2 with "Model Overview"
+        '//div[./h2[contains(text(), "Model Overview")]]',  # Primary: Stable content-based XPath - finds div containing h2 with "Model Overview"
+        '/html/body/div/div[1]/div[2]/div/div[2]/div/div[5]/div/div[2]/div[2]/div[2]/div[3]/div[1]/div[3]',  # Fallback: Absolute XPath selector
     ]
 
     # Is Finetunable selector for variation (appears after selecting a variation)
