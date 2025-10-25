@@ -33,13 +33,24 @@ class DataCleaningPipeline:
         adapter = ItemAdapter(item)
 
         # Clean text fields
-        text_fields = ['name', 'short_description', 'downloads', 'usability', 'tags', 'model_card']
+        text_fields = ['name', 'short_description', 'downloads', 'tags', 'model_card']
 
         for field in text_fields:
             if field in adapter:
                 value = adapter.get(field)
                 if isinstance(value, str):
                     adapter[field] = clean_text(value)
+
+        # Convert usability to float
+        if 'usability' in adapter:
+            usability_value = adapter.get('usability')
+            if isinstance(usability_value, str):
+                try:
+                    # Convert string to float
+                    adapter['usability'] = float(clean_text(usability_value)) if usability_value else None
+                except (ValueError, TypeError):
+                    # If conversion fails, set to None
+                    adapter['usability'] = None
 
         # Clean model_metadata if present
         if 'model_metadata' in adapter:

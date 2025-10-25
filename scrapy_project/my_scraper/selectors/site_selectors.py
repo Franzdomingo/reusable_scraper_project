@@ -15,12 +15,8 @@ class KaggleSelectors:
     # Description selectors - ordered by priority (most specific first)
     # Updated 2025-10-23: Using stable selectors (meta tags, semantic HTML)
     DESCRIPTION_SELECTORS: List[str] = [
-        # Most stable: meta description tag
-        '//meta[@name="description"]/@content',
-        # Semantic: Find description after "Language models" pattern
-        '//p[contains(text(), "Language models") or contains(text(), "models pretrained")]',
-        # Structure-based: Description appears after organization name
-        '//h1[contains(@class, "sc-lgpSej")]/following-sibling::span//p[2]',
+        '/html/body/div/div[1]/div[2]/div/div[2]/div/div[2]/div[2]/div[1]/span/p[2]',
+        '.sc-ghOvAx > p:nth-child(2)',
         # Fallback: Any paragraph with margin-top styling in main content
         '//div[@class="sc-guPfGz eukZsY"]//p[@style="margin-top: 40px;"]',
     ]
@@ -49,10 +45,12 @@ class KaggleSelectors:
     ]
 
     # Usability score selectors - ordered by priority
-    # Updated 2025-10-23: Using absolute XPath selector
+    # Updated 2025-10-25: Using stable content-based selectors
     # Target: p element containing usability score (numeric value)
+    # The usability score appears after/near a "Usability" heading or label
     USABILITY_SELECTORS: List[str] = [
-        # Absolute XPath selector
+        'p.sc-fbQrwq:nth-child(5)',
+        #Absolute XPath selector
         '/html/body/div/div[1]/div[2]/div/div[2]/div/div[5]/div/div[1]/div[2]/p',
     ]
     
@@ -139,9 +137,6 @@ class KaggleSelectors:
     #              <div><div>...all model card content...</div></div>
     #            </div>
     MODEL_CARD_SELECTORS: List[str] = [
-        # Primary: Content-based XPath - finds parent div containing "Model Details" h2 (most stable)
-        '//div[.//h2[contains(text(), "Model Details")]]',
-        # Secondary: More specific - finds the wrapper div with the exact structure
         '//div[.//h2[@class and contains(text(), "Model Details")]]/ancestor::div[1]',
         # Tertiary: Class-based selector - targets the wrapper div class
         'div.sc-Acoie.hkYqwv',
@@ -323,7 +318,7 @@ class KaggleSelectors:
     ]
     
     # Fallback CSS selector for description (used with Selenium)
-    DESCRIPTION_CSS_FALLBACK: str = '.sc-fhfEft > p:nth-child(2)'
+    DESCRIPTION_CSS_FALLBACK: str = '.sc-iRTMaw:nth-child(1) > p:nth-child(1)'
     
     # Model links XPath
     MODEL_LINKS_XPATH: str = '//ul/li/div/a[contains(@href, "/models/")]'
