@@ -31,6 +31,7 @@ from my_scraper.extractors.kaggle.provenance_extractor import extract_provenance
 from my_scraper.extractors.kaggle.variations_extractor import extract_variations
 from my_scraper.extractors.kaggle.model_card_extractor import extract_model_card
 from my_scraper.extractors.retry_utils import retry_selenium_find, retry_click, retry_operation
+from twisted.internet import threads
 
 
 class KaggleMetadataSpider(scrapy.Spider):
@@ -182,27 +183,15 @@ class KaggleMetadataSpider(scrapy.Spider):
                         }
                     )
     
-    def parse(self, response):
+    def _extract_in_thread(self, response, driver, model_name, model_id):
         """
-        Parse Kaggle model page for metadata
+        Extract data in a separate thread (runs concurrently)
 
-        Args:
-            response: Scrapy response object
-
-        Yields:
-            KaggleMetadataItem with extracted metadata
+        This allows multiple extractions to run simultaneously
         """
-        model_name = response.meta.get('model_name', '')
-        model_id = response.meta.get('model_id', 0)
-
-        self.logger.info(f'Processing {model_id}: {model_name}')
-
-        # Use the driver from the middleware (already loaded with the page)
-        driver = response.meta.get('driver')
-
-        if not driver:
-            self.logger.error(f'No driver available for {model_name}')
-            return
+        import threading
+        thread_id = threading.current_thread().name
+        self.logger.info(f'[PARSE THREAD: {thread_id}] Starting extraction for {model_name}')
 
         try:
             # Parse tree from the response
@@ -214,7 +203,10 @@ class KaggleMetadataSpider(scrapy.Spider):
             item['name'] = model_name
             item['kaggle_url'] = response.url
 
-            # Extract using driver from middleware pool
+            # Extract data from page (runs in thread, so clicks/waits are OK now)
+            self.logger.info(f'[FAST PARSE] Extracting main page data for {model_name}')
+
+            # Extract all fields
             item['short_description'] = extract_description(driver, tree, self.selectors, model_name)
             item['usability'] = extract_usability(driver, tree, self.selectors, model_name)
             item['model_card'] = extract_model_card(driver, tree, self.selectors, model_name)
@@ -263,9 +255,7 @@ class KaggleMetadataSpider(scrapy.Spider):
                 'total_engagements': parse_numeric_float(total_engagements)
             }
 
-            # IMPORTANT: Extract model_metadata BEFORE variations
-            # Collaborators, authors, and provenance exist on the main model page
-            # If we extract variations first, we'll navigate away from the main page
+            # Extract model_metadata from main page
             collaborators = extract_collaborators(driver, tree, self.selectors, model_name)
             authors = extract_authors(driver, tree, self.selectors, model_name)
             provenance = extract_provenance(driver, tree, self.selectors, model_name)
@@ -275,20 +265,54 @@ class KaggleMetadataSpider(scrapy.Spider):
                 'provenance': provenance
             }
 
-            # Extract variations
-            # NOTE: Variations extraction now handles all versions within each variation
-            # No need to queue separate URLs - all versions are scraped in-place
-            # This must come AFTER model_metadata extraction since it navigates to variation pages
+            # Extract variations (runs in thread, so navigation is OK now)
+            # NOTE: Variations extraction handles all versions within each variation
+            # This navigates to variation pages but now runs concurrently in threads
             item['variations'] = extract_variations(
                 driver, self.selectors, model_name, model_id, response.url
             )
 
-            # Log concise summary
-            self.logger.info(f" {model_name} - Downloads: {total_downloads}, Views: {total_views}, Engagements: {total_engagements}, Variations: {len(item.get('variations', []))}")
+            self.logger.info(f'[PARSE THREAD: {thread_id}] ✓ Completed for {model_name} - Downloads: {total_downloads}, Views: {total_views}, Engagements: {total_engagements}, Variations: {len(item.get("variations", []))}')
 
-            yield item
+            # Return the item (will be yielded by parse method)
+            return item
 
         except Exception as e:
             self.logger.error(f'Error processing {model_name}: {e}')
             import traceback
             traceback.print_exc()
+            return None
+
+    async def parse(self, response):
+        """
+        Parse Kaggle model page for metadata (ASYNC)
+
+        Offloads heavy extraction to thread pool for concurrent processing
+        """
+        model_name = response.meta.get('model_name', '')
+        model_id = response.meta.get('model_id', 0)
+
+        self.logger.info(f'[PARSE] Received response for {model_id}: {model_name}')
+
+        # Use the driver from the middleware (already loaded with the page)
+        driver = response.meta.get('driver')
+
+        if not driver:
+            self.logger.error(f'No driver available for {model_name}')
+            return
+
+        # Offload extraction to thread pool (allows concurrent processing)
+        # Use await to properly wait for the result
+        from twisted.internet.defer import ensureDeferred
+        from scrapy.utils.defer import deferred_to_future
+
+        deferred = threads.deferToThread(
+            self._extract_in_thread, response, driver, model_name, model_id
+        )
+
+        # Convert Deferred to Future and await it
+        item = await deferred_to_future(deferred)
+
+        # Yield the complete item
+        if item:
+            yield item

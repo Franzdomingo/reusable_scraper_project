@@ -33,10 +33,11 @@ CONCURRENT_REQUESTS = 32
 
 # Configure a delay for requests for the same website (default: 0)
 # See https://docs.scrapy.org/en/latest/topics/settings.html#download-dela# See also autothrottle settings and docs
-DOWNLOAD_DELAY = 0.5
+# Reduced delay to allow concurrent Selenium requests (AutoThrottle will manage actual delays)
+DOWNLOAD_DELAY = 0.1
 # The download delay setting will honor only one of:
-CONCURRENT_REQUESTS_PER_DOMAIN = 24
-CONCURRENT_REQUESTS_PER_IP = 24
+CONCURRENT_REQUESTS_PER_DOMAIN = 32
+CONCURRENT_REQUESTS_PER_IP = 32
 
 # Disable cookies (enabled by default)
 COOKIES_ENABLED = True
@@ -80,13 +81,13 @@ ITEM_PIPELINES = {
 # Enable and configure the AutoThrottle extension (disabled by default)
 # See https://docs.scrapy.org/en/latest/topics/autothrottle.html
 AUTOTHROTTLE_ENABLED = True
-# The initial download delay
-AUTOTHROTTLE_START_DELAY = 0.5
+# The initial download delay - reduced to allow faster concurrent Selenium requests
+AUTOTHROTTLE_START_DELAY = 0.1
 # The maximum download delay to be set in case of high latencies
-AUTOTHROTTLE_MAX_DELAY = 10.0
+AUTOTHROTTLE_MAX_DELAY = 3.0
 # The average number of requests Scrapy should be sending in parallel to
-# each remote server (matches CONCURRENT_REQUESTS for optimal performance)
-AUTOTHROTTLE_TARGET_CONCURRENCY = 32.0
+# each remote server (increased to allow more concurrent Selenium drivers to be used)
+AUTOTHROTTLE_TARGET_CONCURRENCY = 8.0
 # Enable showing throttling stats for every response received:
 AUTOTHROTTLE_DEBUG = False
 
@@ -114,7 +115,7 @@ SELENIUM_DRIVER_ARGUMENTS = [
     '--disable-gpu',
     '--disable-extensions',
 ]
-SELENIUM_POOL_SIZE = 1 
+SELENIUM_POOL_SIZE = 6
 # Set settings whose default value is deprecated to a future-proof value
 REQUEST_FINGERPRINTER_IMPLEMENTATION = '2.7'
 TWISTED_REACTOR = 'twisted.internet.asyncioreactor.AsyncioSelectorReactor'

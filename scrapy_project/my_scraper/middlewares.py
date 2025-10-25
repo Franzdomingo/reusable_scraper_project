@@ -20,6 +20,7 @@ from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 from my_scraper.selectors.site_selectors import GeneralSelectors
+from twisted.internet import threads
 
 
 class SeleniumMiddleware:
@@ -154,21 +155,21 @@ class SeleniumMiddleware:
         logging.info(f'Driver Pool Shutdown Complete: {closed_count} drivers closed')
         logging.info("="*70)
     
-    def process_request(self, request, spider):
+    def _load_page_in_thread(self, request):
         """
-        Process requests that need Selenium using driver pool
+        Load page using Selenium driver (runs in thread pool)
 
-        Only processes requests with meta['selenium'] = True
+        This method runs in a separate thread to avoid blocking Scrapy's reactor
         """
-        if not request.meta.get('selenium'):
-            return None
-
-        logging.debug(f'Selenium processing: {request.url}')
+        import time
+        start_time = time.time()
+        thread_id = threading.current_thread().name
 
         driver = None
         try:
             # Get a driver from the pool (blocks if pool is empty)
             available_before = self.driver_pool.qsize()
+            logging.info(f'[SELENIUM POOL] [Thread: {thread_id}] Waiting for driver... | Available before: {available_before}')
             driver = self.driver_pool.get(timeout=30)
 
             with self.lock:
@@ -176,10 +177,10 @@ class SeleniumMiddleware:
                 self.total_requests_processed += 1
 
             available_after = self.driver_pool.qsize()
-            logging.debug(f'Acquired driver from pool | Active: {self.active_drivers}/{self.pool_size} | Available: {available_after} | Total Processed: {self.total_requests_processed}')
+            logging.info(f'[SELENIUM POOL] [Thread: {thread_id}] ✓ Acquired driver | Active: {self.active_drivers}/{self.pool_size} | Available: {available_after} | Total Processed: {self.total_requests_processed}')
 
             # Load the page
-            logging.debug(f'Loading URL in driver: {request.url}')
+            logging.info(f'[SELENIUM POOL] [Thread: {thread_id}] Loading page: {request.url[:80]}...')
             driver.get(request.url)
 
             # Wait for page to load (configurable via meta)
@@ -207,6 +208,9 @@ class SeleniumMiddleware:
             # Store flag to return driver to pool
             request.meta['driver_from_pool'] = True
 
+            elapsed = time.time() - start_time
+            logging.info(f'[SELENIUM POOL] [Thread: {thread_id}] ✓ Page loaded in {elapsed:.2f}s | Now parsing with spider...')
+
             return HtmlResponse(
                 url=request.url,
                 body=body,
@@ -215,28 +219,48 @@ class SeleniumMiddleware:
             )
 
         except Empty:
-            logging.error(f'Timeout waiting for driver from pool for {request.url}')
+            logging.error(f'[SELENIUM POOL] ✗ TIMEOUT waiting for driver (30s) | URL: {request.url[:80]}... | All {self.pool_size} drivers busy')
             return None
         except Exception as e:
-            logging.error(f'Selenium error processing {request.url}: {e}')
+            logging.error(f'[SELENIUM POOL] ✗ ERROR processing {request.url[:80]}... | Error: {e}')
             # Return driver to pool if we acquired it
             if driver:
                 with self.lock:
                     self.active_drivers -= 1
                 self.driver_pool.put(driver)
+                logging.info(f'[SELENIUM POOL] Returned driver after error | Active: {self.active_drivers}')
             return None
+
+    def process_request(self, request, spider):
+        """
+        Process requests that need Selenium using driver pool (ASYNC)
+
+        Only processes requests with meta['selenium'] = True
+        Returns a Deferred to allow concurrent processing
+        """
+        if not request.meta.get('selenium'):
+            return None
+
+        # Log incoming request
+        available_in_pool = self.driver_pool.qsize()
+        logging.info(f'[SELENIUM POOL] Incoming request | URL: {request.url[:80]}... | Pool available: {available_in_pool}/{self.pool_size} | Active: {self.active_drivers}')
+
+        # Run the blocking Selenium operation in a thread
+        # This allows multiple requests to be processed concurrently
+        return threads.deferToThread(self._load_page_in_thread, request)
 
     def process_response(self, request, response, spider):
         """Return driver to pool after processing"""
         if request.meta.get('driver_from_pool') and request.meta.get('driver'):
             driver = request.meta['driver']
+            thread_id = threading.current_thread().name
 
             with self.lock:
                 self.active_drivers -= 1
 
             self.driver_pool.put(driver)
             available = self.driver_pool.qsize()
-            logging.debug(f'Returned driver to pool | Active: {self.active_drivers}/{self.pool_size} | Available: {available}')
+            logging.info(f'[SELENIUM POOL] [Thread: {thread_id}] ← Returned driver to pool | Active: {self.active_drivers}/{self.pool_size} | Available: {available}')
         return response
 
 
