@@ -137,7 +137,6 @@ class KaggleSelectors:
     #              <div><div>...all model card content...</div></div>
     #            </div>
     MODEL_CARD_SELECTORS: List[str] = [
-        '//div[.//h2[@class and contains(text(), "Model Details")]]/ancestor::div[1]',
         # Tertiary: Class-based selector - targets the wrapper div class
         'div.sc-Acoie.hkYqwv',
         # Fallback: Absolute XPath selector
