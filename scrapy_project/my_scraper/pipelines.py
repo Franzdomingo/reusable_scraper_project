@@ -11,7 +11,7 @@ import os
 import logging
 from datetime import datetime
 from itemadapter import ItemAdapter
-from my_scraper.utils import clean_text
+from my_scraper.utils import clean_text, parse_formatted_number
 
 
 class DataCleaningPipeline:
@@ -62,6 +62,18 @@ class DataCleaningPipeline:
                 # Clean provenance text if present
                 if 'provenance' in metadata and isinstance(metadata['provenance'], str):
                     metadata['provenance'] = clean_text(metadata['provenance'])
+
+        # Process variations if present
+        if 'variations' in adapter:
+            variations = adapter.get('variations')
+            if isinstance(variations, list):
+                for variation in variations:
+                    if isinstance(variation, dict) and 'variation_downloads' in variation:
+                        # Parse formatted download numbers (e.g., "50.3k" -> 50300)
+                        if isinstance(variation['variation_downloads'], str):
+                            variation['variation_downloads'] = parse_formatted_number(
+                                variation['variation_downloads']
+                            )
 
         return item
 

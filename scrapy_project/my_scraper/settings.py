@@ -66,9 +66,9 @@ DOWNLOADER_MIDDLEWARES = {
 
 # Enable or disable extensions
 # See https://docs.scrapy.org/en/latest/topics/extensions.html
-#EXTENSIONS = {
-#    'scrapy.extensions.telnet.TelnetConsole': None,
-#}
+EXTENSIONS = {
+    'my_scraper.extensions.ColoredLoggingExtension': 0,  # Load first (priority 0)
+}
 
 # Configure item pipelines
 # See https://docs.scrapy.org/en/latest/topics/item-pipeline.html
@@ -99,7 +99,7 @@ AUTOTHROTTLE_DEBUG = False
 #HTTPCACHE_STORAGE = 'scrapy.extensions.httpcache.FilesystemCacheStorage'
 
 # Logging settings
-LOG_LEVEL = 'INFO' 
+LOG_LEVEL = 'INFO'
 LOG_FORMAT = '[%(asctime)s] %(levelname)s: %(message)s'
 LOG_DATEFORMAT = '%H:%M:%S'
 

@@ -216,7 +216,6 @@ class KaggleMetadataSpider(scrapy.Spider):
 
             # Extract using driver from middleware pool
             item['short_description'] = extract_description(driver, tree, self.selectors, model_name)
-            item['downloads'] = extract_downloads(driver, tree, self.selectors, model_name)
             item['usability'] = extract_usability(driver, tree, self.selectors, model_name)
             item['model_card'] = extract_model_card(driver, tree, self.selectors, model_name)
             item['tags'] = extract_tags(driver, tree, self.selectors, model_name)
@@ -285,7 +284,7 @@ class KaggleMetadataSpider(scrapy.Spider):
             )
 
             # Log concise summary
-            self.logger.info(f"✓ {model_name} - Downloads: {item['downloads']}, Views: {total_views}, Engagements: {total_engagements}, Variations: {len(item.get('variations', []))}")
+            self.logger.info(f" {model_name} - Downloads: {total_downloads}, Views: {total_views}, Engagements: {total_engagements}, Variations: {len(item.get('variations', []))}")
 
             yield item
 

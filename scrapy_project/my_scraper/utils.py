@@ -217,3 +217,54 @@ def is_css_selector(selector: str) -> bool:
         True if selector is CSS, False if XPath
     """
     return not is_xpath_selector(selector)
+
+
+def parse_formatted_number(value: str) -> int:
+    """
+    Parse a formatted number string into an integer.
+
+    Handles formats like:
+    - "755" -> 755
+    - "50.3k" -> 50300
+    - "1.2K" -> 1200
+    - "2.5M" -> 2500000
+    - "1.8B" -> 1800000000
+
+    Args:
+        value: Formatted number string
+
+    Returns:
+        Parsed integer value, or 0 if parsing fails
+    """
+    if not value:
+        return 0
+
+    # Remove whitespace and commas
+    value = value.strip().replace(',', '')
+
+    # Check for suffix multipliers
+    multipliers = {
+        'k': 1_000,
+        'K': 1_000,
+        'm': 1_000_000,
+        'M': 1_000_000,
+        'b': 1_000_000_000,
+        'B': 1_000_000_000,
+    }
+
+    multiplier = 1
+
+    # Check if the last character is a multiplier
+    if value and value[-1] in multipliers:
+        multiplier = multipliers[value[-1]]
+        value = value[:-1]
+
+    try:
+        # Parse the numeric part (can be float like "50.3")
+        numeric_value = float(value)
+        # Multiply and convert to integer
+        result = int(numeric_value * multiplier)
+        return result
+    except (ValueError, AttributeError):
+        logging.warning(f"Failed to parse formatted number: {value}")
+        return 0

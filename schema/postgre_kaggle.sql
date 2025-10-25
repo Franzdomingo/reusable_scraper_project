@@ -3,7 +3,6 @@ CREATE TABLE models (
     name TEXT NOT NULL,
     kaggle_url TEXT,
     short_description TEXT,
-    downloads INTEGER,
     usability NUMERIC(4,2),
     model_card TEXT
 );

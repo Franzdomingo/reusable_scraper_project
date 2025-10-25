@@ -132,9 +132,20 @@ class KaggleSelectors:
     ]
 
     # Model card selectors - ordered by priority
-    # Updated 2025-10-23: Using absolute XPath selector
+    # Updated 2025-10-25: Using stable content-based selectors
+    # Target: The entire "Model Details" section (wrapper div containing the heading and all content)
+    # Structure: <div class="sc-Acoie hkYqwv">
+    #              <div>...<h2>Model Details</h2></div>
+    #              <div><div>...all model card content...</div></div>
+    #            </div>
     MODEL_CARD_SELECTORS: List[str] = [
-        # Absolute XPath selector
+        # Primary: Content-based XPath - finds parent div containing "Model Details" h2 (most stable)
+        '//div[.//h2[contains(text(), "Model Details")]]',
+        # Secondary: More specific - finds the wrapper div with the exact structure
+        '//div[.//h2[@class and contains(text(), "Model Details")]]/ancestor::div[1]',
+        # Tertiary: Class-based selector - targets the wrapper div class
+        'div.sc-Acoie.hkYqwv',
+        # Fallback: Absolute XPath selector
         '/html/body/div/div[1]/div[2]/div/div[2]/div/div[5]/div/div[1]/div[1]/div[2]/div[1]',
     ]
 

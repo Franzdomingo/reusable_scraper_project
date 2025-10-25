@@ -217,7 +217,7 @@ def extract_versions_from_popup(
                         try:
                             popup_elements = retry_selenium_find(driver, By.CSS_SELECTOR, popup_items_selector, find_multiple=True)
                             if len(popup_elements) > 0:
-                                logger.info(f"✓ Successfully clicked versions button using {method_name} via {strategy}")
+                                logger.info(f" Successfully clicked versions button using {method_name} via {strategy}")
                                 logger.info(f"  Selector: {selector_desc}")
                                 logger.info(f"  Button text: '{button.text[:100]}'")
                                 button_clicked = True
