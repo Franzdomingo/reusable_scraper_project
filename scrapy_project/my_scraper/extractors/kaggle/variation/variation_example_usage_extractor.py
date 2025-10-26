@@ -28,28 +28,19 @@ def extract_example_usage(driver: webdriver.Chrome, example_usage_selector, vari
         try:
             example_usage_elem = retry_selenium_find(driver, By.CSS_SELECTOR, eu_selector)
 
-            # First check if it contains the "no usage guide" message
-            # Look for the specific paragraph element
-            try:
-                no_guide_elem = retry_selenium_find(example_usage_elem, By.CSS_SELECTOR, 'p.sc-hwddKA.dIsQKt')
-                if no_guide_elem and 'This variation does not have a usage guide yet.' in no_guide_elem.text:
-                    logger.info(f"Variation {variation_counter}: No usage guide available")
-                    return ''
-            except:
-                pass  # No "no guide" message found, continue with extraction
+            # Check if it contains the "no usage guide" message
+            if 'This variation does not have a usage guide yet.' in example_usage_elem.text:
+                logger.info(f"Variation {variation_counter}: No usage guide available")
+                return ''
 
-            # Try to find the content div (sibling to the header)
-            try:
-                content_elem = retry_selenium_find(example_usage_elem, By.CSS_SELECTOR, 'div.sc-lkCrJH.ghmUBs')
-                variation_example_usage = content_elem.text.strip()
-            except:
-                # Fallback: get all text from parent (includes header)
-                variation_example_usage = example_usage_elem.text.strip()
-                # Remove the "Example Use" header if present at the start
-                if variation_example_usage.startswith('Example Use\n'):
-                    variation_example_usage = variation_example_usage[12:].strip()
-                elif variation_example_usage.startswith('Example Use'):
-                    variation_example_usage = variation_example_usage[11:].strip()
+            # Get all text from the parent element
+            variation_example_usage = example_usage_elem.text.strip()
+
+            # Remove the "Example Use" header if present at the start
+            if variation_example_usage.startswith('Example Use\n'):
+                variation_example_usage = variation_example_usage[12:].strip()
+            elif variation_example_usage.startswith('Example Use'):
+                variation_example_usage = variation_example_usage[11:].strip()
 
             if variation_example_usage:
                 # Log truncated version (first 100 chars) to avoid log spam

@@ -115,7 +115,8 @@ SELENIUM_DRIVER_ARGUMENTS = [
     '--disable-gpu',
     '--disable-extensions',
 ]
-SELENIUM_POOL_SIZE = 6
+#Number of concurrent Selenium drivers (should match AUTOTHROTTLE_TARGET_CONCURRENCY)
+SELENIUM_POOL_SIZE = 8
 # Set settings whose default value is deprecated to a future-proof value
 REQUEST_FINGERPRINTER_IMPLEMENTATION = '2.7'
 TWISTED_REACTOR = 'twisted.internet.asyncioreactor.AsyncioSelectorReactor'
@@ -126,6 +127,7 @@ FEED_EXPORT_ENCODING = 'utf-8'
 # 1. Set ENABLE_PROXY_ROTATION = True
 # 2. Add proxy URLs to ROTATING_PROXIES list
 # 3. Proxy format: 'http://username:password@host:port' or 'http://host:port'
+# I disabled proxy rotation by default try not to increase selenium pool size and scrapy concurrency too much as it may lead to enabling proxies unnecessarily. - Franz 
 ENABLE_PROXY_ROTATION = False
 ROTATING_PROXIES = [
     # Example proxies (uncomment and replace with your proxies):
