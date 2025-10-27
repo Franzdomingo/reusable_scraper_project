@@ -250,8 +250,20 @@ class SeleniumMiddleware:
         return threads.deferToThread(self._load_page_in_thread, request)
 
     def process_response(self, request, response, spider):
-        """Return driver to pool after processing"""
+        """
+        Return driver to pool after processing
+
+        NOTE: If spider uses driver for async/threaded extraction (meta['keep_driver']=True),
+        the spider is responsible for returning the driver via return_driver_to_pool()
+        """
         if request.meta.get('driver_from_pool') and request.meta.get('driver'):
+            # Check if spider wants to keep the driver for async operations
+            if request.meta.get('keep_driver'):
+                # Spider will return driver later via return_driver_to_pool()
+                logging.info(f'[SELENIUM POOL] Spider requested to keep driver for async operations')
+                return response
+
+            # Otherwise return driver immediately
             driver = request.meta['driver']
             thread_id = threading.current_thread().name
 
@@ -262,6 +274,21 @@ class SeleniumMiddleware:
             available = self.driver_pool.qsize()
             logging.info(f'[SELENIUM POOL] [Thread: {thread_id}] ← Returned driver to pool | Active: {self.active_drivers}/{self.pool_size} | Available: {available}')
         return response
+
+    def return_driver_to_pool(self, driver):
+        """
+        Manually return a driver to the pool
+
+        Use this when spider keeps driver for async/threaded operations
+        """
+        thread_id = threading.current_thread().name
+
+        with self.lock:
+            self.active_drivers -= 1
+
+        self.driver_pool.put(driver)
+        available = self.driver_pool.qsize()
+        logging.info(f'[SELENIUM POOL] [Thread: {thread_id}] ← Returned driver to pool (manual) | Active: {self.active_drivers}/{self.pool_size} | Available: {available}')
 
 
 class RandomUserAgentMiddleware:
