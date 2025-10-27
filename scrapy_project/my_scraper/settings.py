@@ -16,7 +16,7 @@ BOT_NAME = 'my_scraper'
 
 # Retry settings
 RETRY_MAX_ATTEMPTS = 2  # Only try twice
-RETRY_DELAY = 0.5  # Wait less time between attempts
+RETRY_DELAY = 1  # Wait less time between attempts
 
 SPIDER_MODULES = ['my_scraper.spiders']
 NEWSPIDER_MODULE = 'my_scraper.spiders'
@@ -28,16 +28,19 @@ USER_AGENT = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTM
 ROBOTSTXT_OBEY = False
 
 # Configure maximum concurrent requests performed by Scrapy (default: 16)
-# Optimized for speed + stability: 64 concurrent (4x default, matches autothrottle target)
-CONCURRENT_REQUESTS = 32
+# IMPORTANT: Must match SELENIUM_POOL_SIZE to prevent spider from closing prematurely
+# When using Selenium, Scrapy should only schedule as many requests as there are drivers available
+# Scroll down to the variable SELENIUM_POOL_SIZE to see the number of selenium drivers it should be there - Franz
+CONCURRENT_REQUESTS_AND_SELENIUM_POOL_SIZE = 8
+CONCURRENT_REQUESTS = CONCURRENT_REQUESTS_AND_SELENIUM_POOL_SIZE
 
 # Configure a delay for requests for the same website (default: 0)
 # See https://docs.scrapy.org/en/latest/topics/settings.html#download-dela# See also autothrottle settings and docs
 # Reduced delay to allow concurrent Selenium requests (AutoThrottle will manage actual delays)
 DOWNLOAD_DELAY = 0.1
 # The download delay setting will honor only one of:
-CONCURRENT_REQUESTS_PER_DOMAIN = 32
-CONCURRENT_REQUESTS_PER_IP = 32
+CONCURRENT_REQUESTS_PER_DOMAIN = 8
+CONCURRENT_REQUESTS_PER_IP = 8
 
 # Disable cookies (enabled by default)
 COOKIES_ENABLED = True
@@ -116,7 +119,7 @@ SELENIUM_DRIVER_ARGUMENTS = [
     '--disable-extensions',
 ]
 #Number of concurrent Selenium drivers (should match AUTOTHROTTLE_TARGET_CONCURRENCY)
-SELENIUM_POOL_SIZE = 8
+SELENIUM_POOL_SIZE = CONCURRENT_REQUESTS_AND_SELENIUM_POOL_SIZE
 # Set settings whose default value is deprecated to a future-proof value
 REQUEST_FINGERPRINTER_IMPLEMENTATION = '2.7'
 TWISTED_REACTOR = 'twisted.internet.asyncioreactor.AsyncioSelectorReactor'

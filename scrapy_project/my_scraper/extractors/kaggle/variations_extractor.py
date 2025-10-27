@@ -202,10 +202,27 @@ def extract_variations_for_tab(
                     # Extract variation name from the list item
                     raw_name = ''
                     if name_selector:
-                        try:
-                            name_elem = retry_selenium_find(item, By.CSS_SELECTOR, name_selector)
-                            raw_name = name_elem.text.strip()
-                        except:
+                        # Support both single selector string and list of selectors
+                        name_selectors = name_selector if isinstance(name_selector, list) else [name_selector]
+
+                        # Try each selector in order until one works
+                        for selector in name_selectors:
+                            try:
+                                # Determine selector type (XPath or CSS)
+                                if selector.startswith('/') or selector.startswith('('):
+                                    by_type = By.XPATH
+                                else:
+                                    by_type = By.CSS_SELECTOR
+
+                                name_elem = retry_selenium_find(item, by_type, selector)
+                                raw_name = name_elem.text.strip()
+                                if raw_name:
+                                    break  # Found a working selector
+                            except:
+                                continue
+
+                        # If no selector worked, fall back to item text
+                        if not raw_name:
                             raw_name = item.text.strip()
                     else:
                         raw_name = item.text.strip()
@@ -307,7 +324,13 @@ def extract_variations_for_tab(
 
                     # Click the variation button at the specified index
                     variation_button = list_items[idx]
-                    variation_button.click()
+
+                    # Scroll into view before clicking (prevents "element not interactable" errors)
+                    driver.execute_script("arguments[0].scrollIntoView({block: 'center'});", variation_button)
+                    time.sleep(0.3)  # Wait for scroll to complete
+
+                    # Try JavaScript click (more reliable for dropdown items)
+                    driver.execute_script("arguments[0].click();", variation_button)
                     logger.info(f"Clicked variation button at index {idx}: {queued_name}")
                     time.sleep(0.8)  # Wait for variation details to load
 
