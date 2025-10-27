@@ -202,10 +202,27 @@ def extract_variations_for_tab(
                     # Extract variation name from the list item
                     raw_name = ''
                     if name_selector:
-                        try:
-                            name_elem = retry_selenium_find(item, By.CSS_SELECTOR, name_selector)
-                            raw_name = name_elem.text.strip()
-                        except:
+                        # Support both single selector string and list of selectors
+                        name_selectors = name_selector if isinstance(name_selector, list) else [name_selector]
+
+                        # Try each selector in order until one works
+                        for selector in name_selectors:
+                            try:
+                                # Determine selector type (XPath or CSS)
+                                if selector.startswith('/') or selector.startswith('('):
+                                    by_type = By.XPATH
+                                else:
+                                    by_type = By.CSS_SELECTOR
+
+                                name_elem = retry_selenium_find(item, by_type, selector)
+                                raw_name = name_elem.text.strip()
+                                if raw_name:
+                                    break  # Found a working selector
+                            except:
+                                continue
+
+                        # If no selector worked, fall back to item text
+                        if not raw_name:
                             raw_name = item.text.strip()
                     else:
                         raw_name = item.text.strip()

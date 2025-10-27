@@ -30,7 +30,9 @@ ROBOTSTXT_OBEY = False
 # Configure maximum concurrent requests performed by Scrapy (default: 16)
 # IMPORTANT: Must match SELENIUM_POOL_SIZE to prevent spider from closing prematurely
 # When using Selenium, Scrapy should only schedule as many requests as there are drivers available
-CONCURRENT_REQUESTS = 8
+# Scroll down to the variable SELENIUM_POOL_SIZE to see the number of selenium drivers it should be there - Franz
+CONCURRENT_REQUESTS_AND_SELENIUM_POOL_SIZE = 8
+CONCURRENT_REQUESTS = CONCURRENT_REQUESTS_AND_SELENIUM_POOL_SIZE
 
 # Configure a delay for requests for the same website (default: 0)
 # See https://docs.scrapy.org/en/latest/topics/settings.html#download-dela# See also autothrottle settings and docs
@@ -117,7 +119,7 @@ SELENIUM_DRIVER_ARGUMENTS = [
     '--disable-extensions',
 ]
 #Number of concurrent Selenium drivers (should match AUTOTHROTTLE_TARGET_CONCURRENCY)
-SELENIUM_POOL_SIZE = 8
+SELENIUM_POOL_SIZE = CONCURRENT_REQUESTS_AND_SELENIUM_POOL_SIZE
 # Set settings whose default value is deprecated to a future-proof value
 REQUEST_FINGERPRINTER_IMPLEMENTATION = '2.7'
 TWISTED_REACTOR = 'twisted.internet.asyncioreactor.AsyncioSelectorReactor'
