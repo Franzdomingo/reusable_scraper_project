@@ -12,13 +12,15 @@ from selenium.webdriver.support import expected_conditions as EC
 from selenium.common.exceptions import TimeoutException, StaleElementReferenceException
 from lxml import html as lxml_html
 
-from .selenium_utils import (
+from my_scraper.extractors.selenium_utils import (
     scroll_element_into_view,
     click_element_with_fallback,
     close_popup,
     get_element_text,
     get_element_attribute
 )
+from my_scraper.utils import is_css_selector, is_xpath_selector
+from my_scraper.extractors.retry_utils import retry_selenium_find, retry_xpath, retry_click, retry_operation
 
 logger = logging.getLogger(__name__)
 
@@ -60,23 +62,61 @@ def extract_tags_from_more_buttons(driver: webdriver.Chrome, selectors: Dict) ->
 
     try:
         # Get selectors from configuration
-        more_button_span = selectors.get('tag_more_button_span', 'span.eWEDa-d')
+        # tag_more_button_span can be a single selector (str) or a list of selectors (preferred)
+        more_button_span = selectors.get('tag_more_button_span', ['span.eWEDa-d'])
         popup_container = selectors.get('tag_more_popup', '.eqXpEC')
         popup_checkbox = selectors.get('tag_popup_checkbox', 'button[role="checkbox"]')
         popup_text_span = selectors.get('tag_popup_text_span', 'span.bMbEZO')
 
         logger.debug("Looking for 'more' buttons to expand tags")
 
-        # Find all buttons that contain the "more" text span
-        more_text_spans = driver.find_elements(By.CSS_SELECTOR, more_button_span)
+        # Find all elements that match the "more" selector (supports CSS or XPath)
+        more_text_spans = []
+        try:
+            # Support list of selectors (try in order), or a single selector string
+            candidates = list(more_button_span) if isinstance(more_button_span, (list, tuple)) else [more_button_span]
+        except Exception:
+            candidates = [more_button_span]
 
-        # Get the parent buttons
-        more_buttons = []
-        for span in more_text_spans:
+        for sel in candidates:
             try:
-                # Check if the span text contains "more"
-                if 'more' in span.text.lower():
-                    button = span.find_element(By.XPATH, './ancestor::button[@role="button"]')
+                if not sel:
+                    continue
+                if is_xpath_selector(sel):
+                    found = retry_selenium_find(driver, By.XPATH, sel, find_multiple=True)
+                else:
+                    found = retry_selenium_find(driver, By.CSS_SELECTOR, sel, find_multiple=True)
+
+                if found:
+                    more_text_spans = found
+                    logger.debug(f"'more' selector matched using: {sel}")
+                    break
+            except Exception:
+                # try next candidate
+                continue
+
+        # Get the parent buttons (be tolerant: the selector may already return the button)
+        more_buttons = []
+        for el in more_text_spans:
+            try:
+                text = (el.text or '').lower()
+                # Check if the element text contains "more" or a plus sign like "+3"
+                if 'more' in text or ('+' in text and any(ch.isdigit() for ch in text)):
+                    button = None
+                    try:
+                        # If the matched element is the button itself, use it
+                        if getattr(el, 'tag_name', '').lower() == 'button':
+                            button = el
+                        else:
+                            # Otherwise, search for an ancestor button
+                            button = el.find_element(By.XPATH, './ancestor::button[@role="button"]')
+                    except Exception:
+                        # fallback: try to find closest ancestor button without role
+                        try:
+                            button = el.find_element(By.XPATH, './ancestor::button')
+                        except Exception:
+                            button = None
+
                     if button and button not in more_buttons:
                         more_buttons.append(button)
             except Exception:
@@ -113,7 +153,7 @@ def extract_tags_from_more_buttons(driver: webdriver.Chrome, selectors: Dict) ->
                     popup = wait.until(EC.presence_of_element_located((By.CSS_SELECTOR, popup_container)))
 
                     # Extract all tags from the popup
-                    tag_buttons = popup.find_elements(By.CSS_SELECTOR, popup_checkbox)
+                    tag_buttons = retry_selenium_find(popup, By.CSS_SELECTOR, popup_checkbox, find_multiple=True)
 
                     for tag_button in tag_buttons:
                         # Get the aria-label which contains the tag name
@@ -124,7 +164,7 @@ def extract_tags_from_more_buttons(driver: webdriver.Chrome, selectors: Dict) ->
                                 all_tags.add(tag_name)
                         else:
                             # Fallback: get text from span
-                            tag_spans = tag_button.find_elements(By.CSS_SELECTOR, popup_text_span)
+                            tag_spans = retry_selenium_find(tag_button, By.CSS_SELECTOR, popup_text_span, find_multiple=True)
                             for span in tag_spans:
                                 tag_text = get_element_text(span)
                                 if tag_text:
@@ -193,7 +233,7 @@ def extract_tags(driver: webdriver.Chrome, tree: lxml_html.HtmlElement,
         if tag_link_selector:
             logger.debug(f"Trying specific tag link selector: {tag_link_selector}")
             try:
-                tag_links = driver.find_elements(By.CSS_SELECTOR, tag_link_selector)
+                tag_links = retry_selenium_find(driver, By.CSS_SELECTOR, tag_link_selector, find_multiple=True)
                 logger.debug(f"Found {len(tag_links)} tag links")
 
                 tags_before = len(tags)
@@ -259,12 +299,12 @@ def extract_tags(driver: webdriver.Chrome, tree: lxml_html.HtmlElement,
         # If specific selector failed, try container selectors
         for selector in selectors.get('tags', []):
             try:
-                if selector.startswith('.') or selector.startswith('#'):
+                if is_css_selector(selector):
                     # CSS selector - use Selenium
-                    tag_containers = driver.find_elements(By.CSS_SELECTOR, selector)
+                    tag_containers = retry_selenium_find(driver, By.CSS_SELECTOR, selector, find_multiple=True)
 
                     for container in tag_containers:
-                        anchor_tags = container.find_elements(By.TAG_NAME, 'a')
+                        anchor_tags = retry_selenium_find(container, By.TAG_NAME, 'a', find_multiple=True)
 
                         for anchor in anchor_tags:
                             try:
@@ -275,10 +315,10 @@ def extract_tags(driver: webdriver.Chrome, tree: lxml_html.HtmlElement,
                                 continue
                 else:
                     # XPath selector - use lxml
-                    tag_elements = tree.xpath(selector)
+                    tag_elements = retry_xpath(tree, selector)
 
                     for elem in tag_elements:
-                        anchor_elements = elem.xpath('.//a')
+                        anchor_elements = retry_xpath(elem, './/a')
 
                         for anchor in anchor_elements:
                             try:
@@ -300,7 +340,7 @@ def extract_tags(driver: webdriver.Chrome, tree: lxml_html.HtmlElement,
             logger.debug(f"Trying fallback: searching for links near 'TAGS' heading")
             try:
                 # Find TAGS heading
-                tags_heading = driver.find_elements(By.XPATH, "//*[contains(text(), 'TAGS') or contains(text(), 'Tags')]")
+                tags_heading = retry_selenium_find(driver, By.XPATH, "//*[contains(text(), 'TAGS') or contains(text(), 'Tags')]", find_multiple=True)
 
                 if tags_heading:
                     logger.debug(f"Found {len(tags_heading)} 'TAGS' headings")
@@ -309,9 +349,11 @@ def extract_tags(driver: webdriver.Chrome, tree: lxml_html.HtmlElement,
                     for heading in tags_heading[:2]:
                         try:
                             # Try to find parent container
-                            parent = heading.find_element(By.XPATH, './ancestor::div[2]')
+                            parent = retry_selenium_find(heading, By.XPATH, './ancestor::div[2]')
+                            if not parent:
+                                continue
                             # Find all links in the container
-                            links = parent.find_elements(By.TAG_NAME, 'a')
+                            links = retry_selenium_find(parent, By.TAG_NAME, 'a', find_multiple=True)
 
                             for link in links:
                                 tag_text = link.text.strip()

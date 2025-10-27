@@ -7,6 +7,7 @@ import logging
 from typing import Dict, Set, Tuple, Optional
 from lxml import html as lxml_html
 from my_scraper.utils import extract_model_name_from_url, build_full_url
+from my_scraper.extractors.retry_utils import retry_operation, retry_xpath
 
 logger = logging.getLogger(__name__)
 
@@ -37,15 +38,20 @@ def extract_model_links(
     first_model_url = None
     duplicate_count = 0
 
-    # Extract model links using configured selector
+    # Extract model links using configured selector with retry
     model_links_xpath = selectors.get('model_links_xpath')
-    list_items = tree.xpath(model_links_xpath)
+    list_items = retry_xpath(tree, model_links_xpath)
+
+    if not list_items:
+        logger.error(f'Page {page_num}: Failed to extract model links after retries')
+        return items, new_models_count, first_model_url
 
     logger.info(f'Page {page_num}: Found {len(list_items)} model links')
 
     # Extract data from each link
     for link in list_items:
-        href = link.get('href', '')
+        # Extract href with retry
+        href = retry_operation(link.get, None, None, 'link.get(href)', 'href', '')
 
         if not href or href == '/models':
             continue
@@ -66,15 +72,17 @@ def extract_model_links(
         seen_urls.add(full_url)
         new_models_count += 1
 
-        # Extract model name
+        # Extract model name with retry
         model_name_xpath = selectors.get('model_name_xpath')
-        name_elements = link.xpath(model_name_xpath)
+        name_elements = retry_xpath(link, model_name_xpath)
 
         if name_elements:
             model_name = name_elements[0].strip()
         else:
-            # Fallback: extract from link text or URL
-            model_name = link.text_content().strip()
+            # Fallback: extract from link text or URL with retry
+            model_name = retry_operation(link.text_content, None, None, 'link.text_content()')
+            if model_name:
+                model_name = model_name.strip()
             if not model_name:
                 model_name = extract_model_name_from_url(href)
 

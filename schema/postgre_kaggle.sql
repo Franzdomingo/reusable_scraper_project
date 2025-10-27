@@ -1,44 +1,55 @@
--- Table to store main Kaggle model info
-CREATE TABLE kaggle_models (
-    id SERIAL PRIMARY KEY,
-    kaggle_url TEXT UNIQUE NOT NULL,
+CREATE TABLE models (
+    model_id SERIAL PRIMARY KEY,
     name TEXT NOT NULL,
-    scraped_on TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    downloads INT,
-    usability TEXT,
+    kaggle_url TEXT,
     short_description TEXT,
-    model_card TEXT -- store README or markdown content
-    example_usage TEXT -- store example usage code snippets
-);
-
--- Table to store tags (many-to-many relationship with models)
-CREATE TABLE tags (
-    id SERIAL PRIMARY KEY,
-    name TEXT UNIQUE NOT NULL
+    usability NUMERIC(4,2),
+    model_card TEXT
 );
 
 CREATE TABLE model_tags (
-    model_id INT REFERENCES kaggle_models(id) ON DELETE CASCADE,
-    tag_id INT REFERENCES tags(id) ON DELETE CASCADE,
-    PRIMARY KEY (model_id, tag_id)
+    tag_id SERIAL PRIMARY KEY,
+    model_id INTEGER REFERENCES models(model_id) ON DELETE CASCADE,
+    tag TEXT NOT NULL
 );
 
--- Table for metadata fields
-CREATE TABLE 
- (
-    model_id INT REFERENCES kaggle_models(id) ON DELETE CASCADE PRIMARY KEY,
-    collaborators TEXT[], -- array of collaborator names
-    authors TEXT[],       -- array of metadata authors
-    provenance TEXT       -- provenance info
+CREATE TABLE model_activity_overview (
+    activity_id SERIAL PRIMARY KEY,
+    model_id INTEGER REFERENCES models(model_id) ON DELETE CASCADE,
+    last_scraped TIMESTAMPTZ,
+    total_downloads INTEGER,
+    total_views INTEGER,
+    total_engagements NUMERIC(8,5)
 );
 
-CREATE TABLE variation_info (
-    model_id INT REFERENCES kaggle_models(id) ON DELETE CASCADE PRIMARY KEY,
+CREATE TABLE model_variations (
+    variation_id SERIAL PRIMARY KEY,
+    model_id INTEGER REFERENCES models(model_id) ON DELETE CASCADE,
     variation TEXT,
+    variation_name TEXT,
     variation_version TEXT,
+    variation_created_by TEXT,
+    variation_update_description TEXT,
     variation_license TEXT,
-    variation_downloads INT,
-    model_card TEXT, -- store README or markdown content
-    is_finetunable BOOLEAN,
-    example_usage TEXT -- store example usage code snippets
+    variation_base_model TEXT,
+    variation_downloads INTEGER,
+    variations_model_card TEXT,
+    variations_is_finetunable BOOLEAN,
+    variations_example_usage TEXT
+);
+
+CREATE TABLE model_metadata (
+    metadata_id SERIAL PRIMARY KEY,
+    model_id INTEGER REFERENCES models(model_id) ON DELETE CASCADE,
+    provenance TEXT,
+    provenance_updates TEXT,
+    auto_syncing BOOLEAN DEFAULT FALSE,
+    citations TEXT
+);
+
+CREATE TABLE model_collaborators (
+    collaborator_id SERIAL PRIMARY KEY,
+    metadata_id INTEGER REFERENCES model_metadata(metadata_id) ON DELETE CASCADE,
+    name TEXT,
+    role TEXT
 );

@@ -14,3 +14,10 @@ itemadapter>=0.8.0
 beautifulsoup4>=4.12.2
 
 psutil  # for system resource monitoring
+
+# Kaggle SDK for API access (required by api/kaggle_api.py)
+kaggle
+# Optional lower-level gRPC SDK used in code
+kagglesdk
+
+colorama  # for colored terminal output

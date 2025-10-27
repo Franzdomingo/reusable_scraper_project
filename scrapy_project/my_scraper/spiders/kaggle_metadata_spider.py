@@ -19,14 +19,19 @@ from my_scraper.items import KaggleMetadataItem, TransformersVariationItem
 from my_scraper.utils import html_to_text
 from my_scraper.selectors.site_selectors import get_selectors_for_site
 from my_scraper.extractors.selenium_utils import parse_tree_from_response, click_element
-from my_scraper.extractors.description_extractor import extract_description
-from my_scraper.extractors.downloads_extractor import extract_downloads
-from my_scraper.extractors.usability_extractor import extract_usability
-from my_scraper.extractors.tags_extractor import extract_tags
-from my_scraper.extractors.collaborators_extractor import extract_collaborators
-from my_scraper.extractors.authors_extractor import extract_authors
-from my_scraper.extractors.provenance_extractor import extract_provenance
-from my_scraper.extractors.variations_extractor import extract_variations
+from my_scraper.extractors.kaggle.description_extractor import extract_description
+from my_scraper.extractors.kaggle.downloads_extractor import extract_downloads
+from my_scraper.extractors.kaggle.total_views_extractor import extract_total_views
+from my_scraper.extractors.kaggle.total_engagements_extractor import extract_total_engagements
+from my_scraper.extractors.kaggle.usability_extractor import extract_usability
+from my_scraper.extractors.kaggle.tags_extractor import extract_tags
+from my_scraper.extractors.kaggle.collaborators_extractor import extract_collaborators
+from my_scraper.extractors.kaggle.authors_extractor import extract_authors
+from my_scraper.extractors.kaggle.provenance_extractor import extract_provenance
+from my_scraper.extractors.kaggle.variations_extractor import extract_variations
+from my_scraper.extractors.kaggle.model_card_extractor import extract_model_card
+from my_scraper.extractors.retry_utils import retry_selenium_find, retry_click, retry_operation
+from twisted.internet import threads
 
 
 class KaggleMetadataSpider(scrapy.Spider):
@@ -43,11 +48,6 @@ class KaggleMetadataSpider(scrapy.Spider):
     
     name = 'kaggle_metadata'
     allowed_domains = ['kaggle.com']
-
-    custom_settings = {
-        'CONCURRENT_REQUESTS': 16,  # Process multiple requests in parallel (matches driver pool)
-        'DOWNLOAD_DELAY': 0.25,  # Reduced delay for maximum performance
-    }
 
     def __init__(self, input_file=None, *args, **kwargs):
         """
@@ -78,10 +78,19 @@ class KaggleMetadataSpider(scrapy.Spider):
             for pattern in json_patterns:
                 matching_files = glob.glob(pattern)
                 if matching_files:
-                    # Get the most recent file
-                    self.input_file = max(matching_files, key=os.path.getctime)
-                    self.logger.info(f'Found recent kaggle_links JSON output: {self.input_file}')
-                    break
+                    # Filter out empty files (files with size 0 or just whitespace)
+                    non_empty_files = [
+                        f for f in matching_files
+                        if os.path.getsize(f) > 2  # More than just "[]" or "{}"
+                    ]
+
+                    if non_empty_files:
+                        # Get the most recent non-empty file
+                        self.input_file = max(non_empty_files, key=os.path.getctime)
+                        self.logger.info(f'Found recent kaggle_links JSON output: {self.input_file}')
+                        break
+                    else:
+                        self.logger.warning(f'Found {len(matching_files)} files matching {pattern}, but all are empty')
 
             # Fallback to CSV files if no JSON found
             if not self.input_file:
@@ -174,27 +183,15 @@ class KaggleMetadataSpider(scrapy.Spider):
                         }
                     )
     
-    def parse(self, response):
+    def _extract_in_thread(self, response, driver, model_name, model_id):
         """
-        Parse Kaggle model page for metadata
+        Extract data in a separate thread (runs concurrently)
 
-        Args:
-            response: Scrapy response object
-
-        Yields:
-            KaggleMetadataItem with extracted metadata
+        This allows multiple extractions to run simultaneously
         """
-        model_name = response.meta.get('model_name', '')
-        model_id = response.meta.get('model_id', 0)
-
-        self.logger.info(f'Processing {model_id}: {model_name}')
-
-        # Use the driver from the middleware (already loaded with the page)
-        driver = response.meta.get('driver')
-
-        if not driver:
-            self.logger.error(f'No driver available for {model_name}')
-            return
+        import threading
+        thread_id = threading.current_thread().name
+        self.logger.info(f'[PARSE THREAD: {thread_id}] Starting extraction for {model_name}')
 
         try:
             # Parse tree from the response
@@ -206,20 +203,59 @@ class KaggleMetadataSpider(scrapy.Spider):
             item['name'] = model_name
             item['kaggle_url'] = response.url
 
-            # Add timestamp when data is scraped
-            item['scraped_on'] = datetime.now().isoformat()
+            # Extract data from page (runs in thread, so clicks/waits are OK now)
+            self.logger.info(f'[FAST PARSE] Extracting main page data for {model_name}')
 
-            # Extract using driver from middleware pool
+            # Extract all fields
             item['short_description'] = extract_description(driver, tree, self.selectors, model_name)
-            item['downloads'] = extract_downloads(driver, tree, self.selectors, model_name)
             item['usability'] = extract_usability(driver, tree, self.selectors, model_name)
-            item['model_card'] = self.extract_model_card(driver, tree, self.selectors, model_name)
+            item['model_card'] = extract_model_card(driver, tree, self.selectors, model_name)
             item['tags'] = extract_tags(driver, tree, self.selectors, model_name)
-            item['variations'] = extract_variations(
-                driver, self.selectors, model_name, model_id
-            )
 
-            # Extract collaborators, authors, and provenance, then build model_metadata
+            # Extract activity overview data
+            total_downloads = extract_downloads(driver, tree, self.selectors, model_name)
+            total_views = extract_total_views(driver, tree, self.selectors, model_name)
+            total_engagements = extract_total_engagements(driver, tree, self.selectors, model_name)
+
+            # Convert string values to integers/floats for activity_overview
+            def parse_numeric_int(value_str):
+                """Parse numeric string to integer (handles K, M, B suffixes)"""
+                if not value_str:
+                    return 0
+                try:
+                    value_str = value_str.strip().upper()
+                    multipliers = {'K': 1000, 'M': 1000000, 'B': 1000000000}
+                    for suffix, multiplier in multipliers.items():
+                        if suffix in value_str:
+                            return int(float(value_str.replace(suffix, '').replace(',', '')) * multiplier)
+                    return int(value_str.replace(',', ''))
+                except (ValueError, AttributeError):
+                    return 0
+
+            def parse_numeric_float(value_str):
+                """Parse numeric string to float (handles K, M, B suffixes)"""
+                if not value_str:
+                    return 0.0
+                try:
+                    value_str = value_str.strip().upper()
+                    multipliers = {'K': 1000, 'M': 1000000, 'B': 1000000000}
+                    for suffix, multiplier in multipliers.items():
+                        if suffix in value_str:
+                            return float(value_str.replace(suffix, '').replace(',', '')) * multiplier
+                    return float(value_str.replace(',', ''))
+                except (ValueError, AttributeError):
+                    return 0.0
+
+            # Build activity_overview structure
+            current_time = datetime.now().isoformat()
+            item['activity_overview'] = {
+                'last_scraped': current_time,
+                'total_downloads': parse_numeric_int(total_downloads),
+                'total_views': parse_numeric_int(total_views),
+                'total_engagements': parse_numeric_float(total_engagements)
+            }
+
+            # Extract model_metadata from main page
             collaborators = extract_collaborators(driver, tree, self.selectors, model_name)
             authors = extract_authors(driver, tree, self.selectors, model_name)
             provenance = extract_provenance(driver, tree, self.selectors, model_name)
@@ -229,99 +265,54 @@ class KaggleMetadataSpider(scrapy.Spider):
                 'provenance': provenance
             }
 
-            # Log concise summary
-            self.logger.info(f"✓ {model_name} - Downloads: {item['downloads']}")
+            # Extract variations (runs in thread, so navigation is OK now)
+            # NOTE: Variations extraction handles all versions within each variation
+            # This navigates to variation pages but now runs concurrently in threads
+            item['variations'] = extract_variations(
+                driver, self.selectors, model_name, model_id, response.url
+            )
 
-            yield item
+            self.logger.info(f'[PARSE THREAD: {thread_id}] ✓ Completed for {model_name} - Downloads: {total_downloads}, Views: {total_views}, Engagements: {total_engagements}, Variations: {len(item.get("variations", []))}')
+
+            # Return the item (will be yielded by parse method)
+            return item
 
         except Exception as e:
             self.logger.error(f'Error processing {model_name}: {e}')
             import traceback
             traceback.print_exc()
-    
-    def extract_model_card(self, driver, tree, selectors: Dict, name: str) -> str:
+            return None
+
+    async def parse(self, response):
         """
-        Extract the model card text and links
-        
-        Args:
-            driver: Selenium driver instance
-            tree: lxml tree object
-            selectors: Selectors configuration dictionary
-            name: Model name for logging
-            
-        Returns:
-            Model card text with links
+        Parse Kaggle model page for metadata (ASYNC)
+
+        Offloads heavy extraction to thread pool for concurrent processing
         """
-        result = {'text': '', 'links': []}
-        
-        # Try to click action button if configured
-        action_selector = selectors.get('model_card_action')
-        if action_selector:
-            try:
-                if click_element(driver, action_selector):
-                    time.sleep(1)
-                    # Refresh tree after click (using driver's page source)
-                    tree = lxml_html.fromstring(driver.page_source)
-            except Exception:
-                pass
-        
-        # Try CSS selectors via Selenium first
-        for sel in selectors.get('model_card_selectors', []):
-            try:
-                el = driver.find_element(By.CSS_SELECTOR, sel)
-                text = el.text.strip()
-                if text:
-                    result['text'] = text
+        model_name = response.meta.get('model_name', '')
+        model_id = response.meta.get('model_id', 0)
 
-                    # Extract anchor hrefs
-                    try:
-                        anchors = el.find_elements(By.TAG_NAME, 'a')
-                        for a in anchors:
-                            href = a.get_attribute('href')
-                            if href:
-                                result['links'].append(href)
-                    except Exception:
-                        pass
+        self.logger.info(f'[PARSE] Received response for {model_id}: {model_name}')
 
-                    break
-            except Exception:
-                pass
-        
-        # Fallback to XPath using lxml
-        if not result['text']:
-            fallback_xpaths = [
-                '//div[contains(@class, "sc-lkCrJH")][1]',
-                '//div[contains(@class, "sc-chzmIZ")]/div[1]'
-            ]
-            
-            for xp in fallback_xpaths:
-                try:
-                    elems = tree.xpath(xp)
-                    if elems:
-                        text = elems[0].text_content().strip()
-                        if text:
-                            result['text'] = text
+        # Use the driver from the middleware (already loaded with the page)
+        driver = response.meta.get('driver')
 
-                            # Extract links
-                            try:
-                                anchor_nodes = elems[0].xpath('.//a')
-                                for node in anchor_nodes:
-                                    href = node.get('href')
-                                    if href:
-                                        result['links'].append(href)
-                            except Exception:
-                                pass
+        if not driver:
+            self.logger.error(f'No driver available for {model_name}')
+            return
 
-                            break
-                except Exception:
-                    pass
-        
-        if not result['text']:
-            self.logger.warning(f"Could not find model_card for {name}")
-        
-        # Combine text and links
-        model_card_text = result['text']
-        if result['links']:
-            model_card_text += '\n\nLinks:\n' + '\n'.join([f"- {l}" for l in result['links']])
+        # Offload extraction to thread pool (allows concurrent processing)
+        # Use await to properly wait for the result
+        from twisted.internet.defer import ensureDeferred
+        from scrapy.utils.defer import deferred_to_future
 
-        return model_card_text
+        deferred = threads.deferToThread(
+            self._extract_in_thread, response, driver, model_name, model_id
+        )
+
+        # Convert Deferred to Future and await it
+        item = await deferred_to_future(deferred)
+
+        # Yield the complete item
+        if item:
+            yield item

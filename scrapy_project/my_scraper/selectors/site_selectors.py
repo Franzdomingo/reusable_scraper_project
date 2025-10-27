@@ -13,130 +13,162 @@ class KaggleSelectors:
     """Configuration class for Kaggle scraping selectors"""
     
     # Description selectors - ordered by priority (most specific first)
+    # Updated 2025-10-23: Using stable selectors (meta tags, semantic HTML)
     DESCRIPTION_SELECTORS: List[str] = [
-        '//p[@class="sc-gGKoUb jJPcnF"]',
-        '//div[@class="sc-fhfEft"]//p[2]',
-        './/span/p[1]',
-        '.sc-fhfEft > p:nth-child(2)'  # CSS selector for Selenium fallback
+        '/html/body/div/div[1]/div[2]/div/div[2]/div/div[2]/div[2]/div[1]/span/p[2]',
+        '.sc-ghOvAx > p:nth-child(2)',
+        # Fallback: Any paragraph with margin-top styling in main content
+        '//div[@class="sc-guPfGz eukZsY"]//p[@style="margin-top: 40px;"]',
     ]
     
     # Download count selectors - ordered by priority
-    # CSS selectors first (for Selenium), then XPath (for lxml)
-    # Updated 2025-10-13: Precise selectors targeting downloads section
-    # Target: span element containing download count (NOT views)
-    # NOTE: Excludes Engagement/Views section
+    # Updated 2025-10-23: Using absolute XPath selector
+    # Target: span element containing download count at specific path
     DOWNLOAD_SELECTORS: List[str] = [
-        # CSS selectors (try these first with Selenium for dynamic content)
-        # Most specific - user-provided selectors that correctly target downloads
-        '.sc-jTpuXY > div:nth-child(1) > div:nth-child(2) > div:nth-child(1) > span:nth-child(1)',
-        'div.sc-gUYSAC:nth-child(2) > div:nth-child(2) > div:nth-child(2) > span:nth-child(1)',
-        # Original selectors (fallback)
-        'span.sc-kCuUfV.sc-hoocXy.iPCsnU.eqfbZr',  # Index [388]: '430' - exact match
-        'span.sc-hoocXy.eqfbZr',  # Downloads-specific classes (excludes Engagement)
-        '.sc-jTpuXY > div:nth-child(1) > div:nth-child(2) > div:nth-child(1)',
-        # Fallback with class filtering
-        'span.iPCsnU.eqfbZr',  # Partial class match - still excludes Engagement
-        # XPath selectors (fallback for lxml parsing)
-        '//span[contains(@class, "sc-kCuUfV") and contains(@class, "sc-hoocXy") and contains(@class, "iPCsnU") and contains(@class, "eqfbZr")]',
-        '//span[contains(@class, "sc-hoocXy") and contains(@class, "eqfbZr")]',
-        '//span[contains(@class, "iPCsnU") and contains(@class, "eqfbZr")]'
+        '/html/body/div/div[1]/div[2]/div/div[2]/div/div[5]/div/div[1]/div[2]/div[1]/div[2]/div[1]/span',
+    ]
+
+    # Total views selectors - ordered by priority
+    # Updated 2025-10-23: Using absolute XPath and CSS selectors for total views
+    # Target: span element containing total views count
+    TOTAL_VIEWS_SELECTORS: List[str] = [
+        '/html/body/div/div[1]/div[2]/div/div[2]/div/div[5]/div/div[4]/div[2]/div[1]/div[2]/div[2]/span',
+        '.sc-ffeAVz > div:nth-child(1) > div:nth-child(2) > div:nth-child(2) > span:nth-child(1)',
+    ]
+
+    # Total engagements selectors - ordered by priority
+    # Updated 2025-10-23: Using absolute XPath and CSS selectors for total engagements
+    # Target: span element containing total engagements count
+    TOTAL_ENGAGEMENTS_SELECTORS: List[str] = [
+        '/html/body/div/div[1]/div[2]/div/div[2]/div/div[5]/div/div[4]/div[2]/div[3]/div[2]/div[2]/span',
+        'div.sc-fEaSUP:nth-child(3) > div:nth-child(2) > div:nth-child(2) > span:nth-child(1)',
     ]
 
     # Usability score selectors - ordered by priority
-    # CSS selectors first (for Selenium), then XPath (for lxml)
-    # Target: p element containing usability score
+    # Updated 2025-10-25: Using stable content-based selectors
+    # Target: p element containing usability score (numeric value)
+    # The usability score appears after/near a "Usability" heading or label
     USABILITY_SELECTORS: List[str] = [
-        # CSS selector - user-provided selector
-        'p.sc-hwddKA:nth-child(5)',
-        # Fallback - broader class match
-        'p.sc-hwddKA',
-        # XPath fallback
-        '//p[contains(@class, "sc-hwddKA")]'
+        'p.sc-fbQrwq:nth-child(5)',
+        #Absolute XPath selector
+        '/html/body/div/div[1]/div[2]/div/div[2]/div/div[5]/div/div[1]/div[2]/p',
     ]
     
-    # Tag selectors - ordered by priority (based on actual HTML structure)
+    # Tag selectors - ordered by priority
+    # Updated 2025-10-23: Using stable selectors (heading anchors, semantic links)
     TAG_SELECTORS: List[str] = [
-        '.sc-hfCsLp.hNfILY',  # Main container for tags section
-        '//div[contains(@class, "sc-hfCsLp") and contains(@class, "hNfILY")]',  # XPath equivalent
-        '.sc-hfCsLp',  # Fallback: broader tag container
-        '//div[contains(@class, "sc-hfCsLp")]'  # XPath fallback
+        # MOST STABLE: Find div containing h2 "Tags"
+        '//div[.//h2[contains(text(), "Tags ")]]',
+        '//h2[contains(text(), "Tags ")]/following-sibling::div[1]',
     ]
-    
-    # Individual tag link selector
-    TAG_LINK_SELECTOR: str = 'a.sc-hZpmlk.kpuQUO'
 
-    # Tags "more" button selectors (for expanding hidden tags)
-    TAG_MORE_BUTTON_TEXT_SPAN: str = 'span.eWEDa-d'  # Span containing "X more" text
+    # Individual tag link selector
+    # Updated 2025-10-23: Using stable selectors (target attribute, href pattern)
+    TAG_LINK_SELECTOR: str = 'a[target="_blank"][href*="/models?"]'
+
+    # Tags "more" button selector (for expanding hidden tags)
+    # Updated: prefer absolute XPath but keep original CSS class as a fallback
+    # Stored as a list so callers can provide multiple selector types (XPath first, CSS fallback)
+    TAG_MORE_BUTTON_TEXT_SPAN: List[str] = [
+        '/html/body/div/div[1]/div[2]/div/div[2]/div/div[5]/div/div[2]/div[2]/div[2]/div[1]/div/button',  # XPath to the "more" button  # Fallback CSS selector (previous fragile class)
+    ]
     TAG_MORE_POPUP_CONTAINER: str = '.eqXpEC'  # Popup container that appears when "more" is clicked
     TAG_POPUP_CHECKBOX_BUTTON: str = 'button[role="checkbox"]'  # Tag buttons within popup
     TAG_POPUP_TEXT_SPAN: str = 'span.bMbEZO'  # Span containing tag text within popup buttons
 
     # Collaborators action button (to expand/collapse the section if needed)
-    COLLABORATORS_ACTION_BUTTON: str = 'div.sc-bBhMX:nth-child(1) > div:nth-child(1) > button:nth-child(2)'
+    # Updated 2025-10-22: New Kaggle redesign selectors
+    COLLABORATORS_ACTION_BUTTON: str = 'button[aria-label="Expand Collaborators"]'
 
     # Collaborators selectors - ordered by priority
     # Target: p elements with margin-left style containing collaborator names
+    # Updated 2025-10-22: Collaborators section is now collapsed by default
     COLLABORATORS_SELECTORS: List[str] = [
-        # Most specific - target p elements within each collaborator div
+        # CSS selector - 2025-10-22 redesign
+        # After clicking expand button, content appears in a div
+        '//h3[text()="Collaborators"]/following::div//p',
+        # Fallback - older selectors
         'p.sc-gGKoUb.bEqAGC',
-        # Alternative - target p elements with margin-left style
         'p[style*="margin-left"]',
-        # Fallback - find all p elements within the collaborators container
         '.sc-cFFDlC p',
         # XPath fallback
         '//div[contains(@class, "sc-cFFDlC")]//p[contains(@class, "sc-gGKoUb")]'
     ]
 
     # Authors action button (to expand the authors section)
-    AUTHORS_ACTION_BUTTON: str = 'div.sc-bBhMX:nth-child(2) > div:nth-child(1) > button:nth-child(2)'
+    # Updated 2025-10-22: New Kaggle redesign selectors
+    AUTHORS_ACTION_BUTTON: str = 'button[aria-label="Expand Authors"]'
 
     # Authors selectors - ordered by priority
     # Target: p element containing authors/contributors information
-    # NOTE: Authors section is typically div.sc-bBhMX:nth-child(2)
-    # Avoid using 'p.sc-gGKoUb.bEqAGC' as fallback - it matches collaborators!
+    # Updated 2025-10-22: Authors section is now collapsed by default
     AUTHORS_SELECTORS: List[str] = [
-        # Most specific - target the authors container (2nd sc-bBhMX div)
+        # XPath selector - 2025-10-22 redesign
+        # After clicking expand button, content appears in a div
+        '//h3[text()="Authors"]/following::div//p',
+        # Fallback - older selectors
         'div.sc-bBhMX:nth-child(2) > div:nth-child(2)',
-        # Alternative - target p elements ONLY within 2nd sc-bBhMX div
         'div.sc-bBhMX:nth-child(2) p.sc-gGKoUb',
-        # Fallback - XPath targeting specifically the 2nd sc-bBhMX section
         '//div[contains(@class, "sc-bBhMX")][2]//p[contains(@class, "sc-gGKoUb")]'
     ]
 
     # Provenance action button (to expand the provenance section)
-    PROVENANCE_ACTION_BUTTON: str = 'div.sc-bBhMX:nth-child(4) > div:nth-child(1) > button:nth-child(2)'
+    # Updated 2025-10-22: New Kaggle redesign selectors
+    PROVENANCE_ACTION_BUTTON: str = 'button[aria-label="Expand Provenance"]'
 
     # Provenance selectors - ordered by priority
     # Target: div containing provenance updates, sources, and citations
+    # Updated 2025-10-22: Provenance section is now collapsed by default
     PROVENANCE_SELECTORS: List[str] = [
-        # Most specific - target the provenance container
+        # XPath selector - 2025-10-22 redesign
+        # After clicking expand button, content appears in a div
+        '//h3[text()="Provenance"]/following::div[1]',
+        # Fallback - older selectors
         '.sc-fPzfn',
         'div.sc-cFFDlC.sc-fPzfn.esaBZM.hMDRMp',
-        # Fallback - XPath
         '//div[contains(@class, "sc-fPzfn")]'
     ]
 
-    # Model card selectors (CSS) - ordered by priority
+    # Model card selectors - ordered by priority
+    # Updated 2025-10-25: Using stable content-based selectors
+    # Target: The entire "Model Details" section (wrapper div containing the heading and all content)
+    # Structure: <div class="sc-Acoie hkYqwv">
+    #              <div>...<h2>Model Details</h2></div>
+    #              <div><div>...all model card content...</div></div>
+    #            </div>
     MODEL_CARD_SELECTORS: List[str] = [
-        'div.sc-lkCrJH:nth-child(1)',
-        '.sc-chzmIZ > div:nth-child(1)'
+        # Tertiary: Class-based selector - targets the wrapper div class
+        'div.sc-Acoie.hkYqwv',
+        # Fallback: Absolute XPath selector
+        '/html/body/div/div[1]/div[2]/div/div[2]/div/div[5]/div/div[1]/div[1]/div[2]/div[1]',
     ]
 
     # Optional action button to reveal model card (click before scraping)
-    MODEL_CARD_ACTION_BUTTON: str = '.sc-kHBIib > span:nth-child(2)'
+    # Using role and aria attributes for stability
+    MODEL_CARD_ACTION_BUTTON: str = 'button[aria-label*="Read more"]'
     
     # All tab buttons (to extract all tabs for processing)
     # Target: All tab buttons with role="tab" containing tab names
-    # The text is within: <div class="sc-biDvOf cFgyMf">Transformers</div>
-    VARIATION_TABS_ALL: str = 'button[role="tab"]'
+    # Updated 2025-10-24: Made selector more specific to avoid matching popup tabs
+    # Uses div[role="tablist"] to scope to framework tabs only, excluding version popup tabs
+    VARIATION_TABS_ALL: str = 'div[role="tablist"] > button[role="tab"]'
 
     # Tab text selector (within each tab button)
-    # Target: The div containing the tab name text
-    VARIATION_TAB_TEXT: str = 'div.sc-biDvOf'
+    # Updated 2025-10-23: Using stable selectors (direct text extraction from button)
+    # NOTE: Extract text directly from button[role="tab"] instead of relying on span classes
+    VARIATION_TAB_TEXT: str = 'span'  # Generic span within tab button
 
     # Transformers variation dropdown action selector (click to open the list)
-    # Target: The combobox button with aria-label="Select Variation"
-    TRANSFORMERS_VARIATION_ACTION: str = 'div[role="combobox"][aria-label="Select Variation"]'
+    # Target: The combobox element with aria-label="Select Variation"
+    # Updated 2025-10-25: Using only stable ARIA attributes (no fragile CSS classes)
+    # Structure: <div role="combobox" aria-label="Select Variation" aria-haspopup="listbox">
+    # Multiple selectors for fallback (ordered by specificity)
+    TRANSFORMERS_VARIATION_ACTION: List[str] = [
+        'div[role="combobox"][aria-label="Select Variation"]',  # Most specific - uses semantic ARIA attributes
+        'div[role="combobox"][aria-haspopup="listbox"]',  # Listbox pattern - identifies dropdown type
+        'div[role="combobox"]',  # Generic - any combobox
+        'div[aria-label="Select Variation"]',  # aria-label only
+    ]
 
     # Transformers variation list container (the opened dropdown)
     # Target: ul element with role="listbox" that contains all variation options
@@ -157,51 +189,135 @@ class KaggleSelectors:
     TRANSFORMERS_VARIATION_SELECTED_NAME: str = 'div.sc-jaGrhB.hYa-DAr'
 
     # Version selector (appears after selecting a variation)
-    # Target: a element with class "sc-eVqvcJ iRcjJz" containing version info
-    TRANSFORMERS_VARIATION_VERSION: str = 'a.sc-eVqvcJ.iRcjJz'
+    # Updated 2025-10-23: Using absolute XPath selector
+    # Target: a element containing version info at specific path
+    TRANSFORMERS_VARIATION_VERSION: List[str] = [
+        '/html/body/div/div[1]/div[2]/div/div[2]/div/div[5]/div/div[2]/div[2]/div[2]/div[1]/div[1]/div[2]/div[1]/p/a',
+        'a.sc-cOpnSz',  # Fallback CSS selector
+    ]
+
+    # Version popup button selector (button to open versions list popup)
+    # NOTE: This may be the same selector as TRANSFORMERS_VARIATION_VERSION
+    # Updated 2025-10-23: Button that opens popup showing all available versions
+    VARIATION_VERSIONS_BUTTON: List[str] = [
+        '/html/body/div/div[1]/div[2]/div/div[2]/div/div[5]/div/div[2]/div[2]/div[2]/div[1]/div[1]/div[2]/div[1]/p/a',
+        '.sc-cOpnSz',  # Fallback CSS selector
+    ]
+
+    # Version popup list items (all version items in the popup)
+    # Target: All li elements with class MuiListItem-divider containing version data
+    VARIATION_VERSIONS_POPUP_ITEMS: str = 'li.MuiListItem-divider'
+
+    # Version popup - created by field (within each version item)
+    # Target: span containing the creator/author name (e.g., "Created by Matt Watson")
+    # XPath: /html/body/div[2]/div[3]/div/div/div[2]/div/ul/li[1]/div/a/div/div[2]/span[1]
+    # Updated 2025-10-25: Using stable class-based and structure-based selectors
+    # Structure: li.MuiListItem-divider > div > a > div > div[2] > span[1]
+    VARIATION_VERSION_CREATED_BY: List[str] = [
+        'span.sc-eqNDNG.sc-fYRIQK',  # Stable: Uses actual class combination from spans
+        'div > a > div > div span:first-of-type',  # Structure-based: first span in any div
+        'div > a > div > div:nth-child(2) > span:first-of-type',  # More specific structure
+        'div > a > div > div:nth-child(2) > span:nth-child(1)',  # Fallback: absolute position
+    ]
+
+    # Version popup - update description field (within each version item)
+    # Target: span containing the update/change description (e.g., "updated json files")
+    # XPath: /html/body/div[2]/div[3]/div/div/div[2]/div/ul/li[1]/div/a/div/div[2]/span[2]
+    # Updated 2025-10-25: Using stable class-based and structure-based selectors
+    # Structure: li.MuiListItem-divider > div > a > div > div[2] > span[2]
+    VARIATION_VERSION_UPDATE_DESC: List[str] = [
+        'div > a > div > div span:nth-of-type(2)',  # Structure-based: second span in any div
+        'div > a > div > div:nth-child(2) > span:nth-of-type(2)',  # More specific structure
+        'span.sc-eqNDNG.sc-fYRIQK',  # Fallback: class-based (matches both spans)
+        'div > a > div > div:nth-child(2) > span:nth-child(2)',  # Last resort: absolute position
+    ]
+
+    # Version popup - version number field (within each version item)
+    # Target: div containing version text like "Version 4"
+    # XPath: /html/body/div[2]/div[3]/div/div/div[2]/div/ul/li[1]/div/a/div/div[2]/div[1]
+    # Updated 2025-10-25: Using stable class-based and structure-based selectors
+    # Structure: li.MuiListItem-divider > div > a > div > div[2] > div[1]
+    VARIATION_VERSION_NUMBER: List[str] = [
+        'div.sc-kCuUfV.sc-bjxVRI',  # Most stable: Uses actual version div classes
+        'div > a > div > div div:first-of-type',  # Structure-based: first div in any div
+        'div > a > div > div:nth-child(2) > div:first-of-type',  # More specific structure
+        'div.bXQAUF.dEeLno',  # Alternative class combination
+        'div > a > div > div:nth-child(2) > div:nth-child(1)',  # Last resort: absolute position
+    ]
 
     # Downloads selector (appears after selecting a variation)
     # Target: span element with classes for download count
     # IMPORTANT: This must be the variation-specific downloads, NOT the main model downloads
-    # The correct element is: <span class="sc-kCuUfV sc-hoocXy iPCsnU eqfbZr">398</span>
-    # within the variation details section only
-    TRANSFORMERS_VARIATION_DOWNLOADS: str = '.sc-sphZQ > div:nth-child(2) > p:nth-child(2) > div:nth-child(1) > span:nth-child(1)'
+    # Updated 2025-10-23: Using new XPath and CSS selectors
+    # XPath: /html/body/div/div[1]/div[2]/div/div[2]/div/div[5]/div/div[2]/div[2]/div[2]/div[1]/div[1]/div[2]/div[2]/p/div/span
+    # CSS: .sc-ftYudu > div:nth-child(2) > p:nth-child(2) > div:nth-child(1) > span:nth-child(1)
+    TRANSFORMERS_VARIATION_DOWNLOADS_XPATH: str = '/html/body/div/div[1]/div[2]/div/div[2]/div/div[5]/div/div[2]/div[2]/div[2]/div[1]/div[1]/div[2]/div[2]/p/div/span'
+    TRANSFORMERS_VARIATION_DOWNLOADS_CSS: str = '.sc-ftYudu > div:nth-child(2) > p:nth-child(2) > div:nth-child(1) > span:nth-child(1)'
+
+    # Legacy selector for backward compatibility
+    TRANSFORMERS_VARIATION_DOWNLOADS: str = TRANSFORMERS_VARIATION_DOWNLOADS_CSS
 
     # License selectors (appears after selecting a variation)
     # License can appear in different formats (link or plain text)
+    # Updated 2025-10-25: Using stable content-based and structure-based selectors
+    # Structure: <div><span>License</span><p>License value</p></div>
+    # Example: <div><span class="sc-eQwNpu hIQOKp">License</span><p class="sc-dNdcvo ktDYxp">Gemma</p></div>
     TRANSFORMERS_VARIATION_LICENSE_SELECTORS: List[str] = [
-        'a.sc-bbbBoY.hzCdJV',  # Link format (e.g., "Apache 2.0")
-        'p.sc-gGKoUb.bEqAGC',  # Plain text format (e.g., "Gemma")
+        '//div[.//span[contains(text(), "License")]]/p',  # Most stable: Content-based XPath - finds div containing "License" span, gets p
+        '//span[contains(text(), "License")]/following-sibling::p',  # Alternative: finds p after "License" span
+        'p.sc-dNdcvo.ktDYxp',  # Class-based: uses actual p tag classes
+        'div > span.sc-eQwNpu + p',  # Structure-based: p following span with label class
+        '/html/body/div/div[1]/div[2]/div/div[2]/div/div[5]/div/div[2]/div[2]/div[2]/div[3]/div[1]/div[2]/div[2]/p/a',  # Fallback: Original absolute XPath (for link format)
+        'a.sc-kjwdDK',  # Last resort: CSS selector for link format
+    ]
+
+    # Base Model selectors (appears after selecting a variation)
+    # Target: a (link) element containing the base model URL
+    # Updated 2025-10-25: Using stable content-based and structure-based selectors
+    # Structure: <div><span>Base Model</span><p><a href="/models/...">model name</a></p></div>
+    # Example: <div><span class="sc-eQwNpu hIQOKp">Base Model</span><p class="sc-dNdcvo ktDYxp"><a href="/models/keras/gemma/keras/gemma_2b_en">gemma · Keras · gemma_2b_en</a></p></div>
+    # Extract the href attribute to get the base model URL path
+    TRANSFORMERS_VARIATION_BASE_MODEL_SELECTORS: List[str] = [
+        '//div[.//span[contains(text(), "Base Model")]]/p/a',  # Most stable: Content-based XPath - finds div with "Base Model" span, gets a in p
+        '//span[contains(text(), "Base Model")]/following-sibling::p/a',  # Alternative: finds a in p after "Base Model" span
+        'a.sc-kjwdDK.fDGKWq[href*="/models/"]',  # Class-based: uses actual link classes with href pattern
+        'div > span.sc-eQwNpu + p > a',  # Structure-based: a in p following span with label class
+        '/html/body/div/div[1]/div[2]/div/div[2]/div/div[5]/div/div[3]/div[2]/div[2]/div[3]/div[1]/div[2]/div[4]/p/a',  # Fallback: Original absolute XPath
     ]
 
     # Model card selector for variation (appears after selecting a variation)
-    # Target: div.sc-lkCrJH element containing the model card (Model Overview section)
-    # This is the third child div within the variation container
+    # Target: div element containing the model card (Model Overview section)
+    # This section contains an h2 with "Model Overview" text
+    # Updated 2025-10-25: Prioritizing content-based XPath selector for stability
+    # Structure: <div class="sc-iRTMaw buAyFc"><h2>Model Overview</h2>...</div>
     TRANSFORMERS_VARIATION_MODEL_CARD_SELECTORS: List[str] = [
-        'div.sc-lkCrJH:nth-child(3)',  # Third child div containing model card content
+        '//div[./h2[contains(text(), "Model Overview")]]',  # Primary: Stable content-based XPath - finds div containing h2 with "Model Overview"
+        '/html/body/div/div[1]/div[2]/div/div[2]/div/div[5]/div/div[2]/div[2]/div[2]/div[3]/div[1]/div[3]',  # Fallback: Absolute XPath selector
     ]
 
     # Is Finetunable selector for variation (appears after selecting a variation)
     # Target: p element with "Yes" or "No" indicating if the model is finetunable
-    # Note: Uses same class as license plain text, need to differentiate by context/position
+    # Updated 2025-10-25: Using content-based XPath selector (is_contain approach)
+    # Finds the div containing "Fine-Tunable" span, then gets the p element with the Yes/No value
+    # Structure: <div><span>Fine-Tunable</span><p style="margin-top: 8px;">Yes</p></div>
     TRANSFORMERS_IS_FINETUNABLE_SELECTORS: List[str] = [
-        'p.sc-gGKoUb.bEqAGC[style*="margin-top"]',  # With margin-top style
-        'p.sc-gGKoUb.bEqAGC',  # Fallback - may match multiple, need to filter
+        '//div[.//span[contains(text(), "Fine-Tunable")]]/p',  # Primary content-based XPath - stable
+        '/html/body/div/div[1]/div[2]/div/div[2]/div/div[5]/div/div[2]/div[2]/div[2]/div[3]/div[1]/div[2]/div[1]/p',  # Fallback absolute XPath
+        '.sc-huUlgU > div:nth-child(1) > p:nth-child(2)',  # Last resort CSS selector
     ]
 
     # Example Usage selector for variation (appears after selecting a variation)
     # Target: Parent container that holds both the header and content
-    # The structure is: parent div.sc-cfYtRh.eiwGaI contains:
+    # The structure is: parent div contains:
     #   - div#example-use (header)
     #   - div.sc-lkCrJH.ghmUBs (actual content) OR p.sc-hwddKA.dIsQKt (no guide message)
     # If it contains "This variation does not have a usage guide yet.", the field should be empty
     TRANSFORMERS_EXAMPLE_USAGE_SELECTORS: List[str] = [
-        'div.sc-cfYtRh.eiwGaI',  # Main container with example usage
         'div:has(> div#example-use)',  # Parent div containing example-use
     ]
     
     # Fallback CSS selector for description (used with Selenium)
-    DESCRIPTION_CSS_FALLBACK: str = '.sc-fhfEft > p:nth-child(2)'
+    DESCRIPTION_CSS_FALLBACK: str = '.sc-iRTMaw:nth-child(1) > p:nth-child(1)'
     
     # Model links XPath
     MODEL_LINKS_XPATH: str = '//ul/li/div/a[contains(@href, "/models/")]'
@@ -298,6 +414,8 @@ def get_selectors_for_site(site: str) -> Dict:
         'kaggle': {
             'description': KaggleSelectors.DESCRIPTION_SELECTORS,
             'downloads': KaggleSelectors.DOWNLOAD_SELECTORS,
+            'total_views': KaggleSelectors.TOTAL_VIEWS_SELECTORS,
+            'total_engagements': KaggleSelectors.TOTAL_ENGAGEMENTS_SELECTORS,
             'usability': KaggleSelectors.USABILITY_SELECTORS,
             'description_css_fallback': KaggleSelectors.DESCRIPTION_CSS_FALLBACK,
             'model_card_selectors': KaggleSelectors.MODEL_CARD_SELECTORS,
@@ -310,8 +428,15 @@ def get_selectors_for_site(site: str) -> Dict:
             'variation_name': KaggleSelectors.TRANSFORMERS_VARIATION_NAME,
             'variation_selected_name': KaggleSelectors.TRANSFORMERS_VARIATION_SELECTED_NAME,
             'variation_version': KaggleSelectors.TRANSFORMERS_VARIATION_VERSION,
-            'variation_downloads': KaggleSelectors.TRANSFORMERS_VARIATION_DOWNLOADS,
+            'variation_versions_button': KaggleSelectors.VARIATION_VERSIONS_BUTTON,
+            'variation_versions_popup_items': KaggleSelectors.VARIATION_VERSIONS_POPUP_ITEMS,
+            'variation_version_created_by': KaggleSelectors.VARIATION_VERSION_CREATED_BY,
+            'variation_version_update_desc': KaggleSelectors.VARIATION_VERSION_UPDATE_DESC,
+            'variation_version_number': KaggleSelectors.VARIATION_VERSION_NUMBER,
+            'variation_downloads': KaggleSelectors.TRANSFORMERS_VARIATION_DOWNLOADS_CSS,
+            'variation_downloads_xpath': KaggleSelectors.TRANSFORMERS_VARIATION_DOWNLOADS_XPATH,
             'variation_license': KaggleSelectors.TRANSFORMERS_VARIATION_LICENSE_SELECTORS,
+            'variation_base_model': KaggleSelectors.TRANSFORMERS_VARIATION_BASE_MODEL_SELECTORS,
             'variation_model_card': KaggleSelectors.TRANSFORMERS_VARIATION_MODEL_CARD_SELECTORS,
             'is_finetunable': KaggleSelectors.TRANSFORMERS_IS_FINETUNABLE_SELECTORS,
             'example_usage': KaggleSelectors.TRANSFORMERS_EXAMPLE_USAGE_SELECTORS,

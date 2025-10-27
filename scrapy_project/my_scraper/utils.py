@@ -40,26 +40,42 @@ def html_to_text(html_snippet: str) -> str:
 def is_numeric_value(text: str) -> bool:
     """
     Check if text represents a numeric value (including K/M suffixes)
-    
+
     Args:
         text: Text to check
-        
+
     Returns:
         True if text appears to be a numeric value
     """
+    # Reject strings that contain non-numeric words or special characters (except K/M/B, commas, periods)
+    # This filters out text like "QWENLM · CREATED ON 2025.09.10"
+    cleaned = text.replace(',', '').replace('.', '').upper()
+    # Remove valid suffixes
+    for suffix in ['K', 'M', 'B']:
+        if cleaned.endswith(suffix):
+            cleaned = cleaned[:-1]
+
+    # After removing suffixes, periods, and commas, should only have digits
+    # Allow single space for numbers like "1 234" but reject multiple words
+    if not cleaned.replace(' ', '').isdigit():
+        return False
+
+    # If there are multiple spaces or other text patterns, reject
+    if text.count(' ') > 2 or '·' in text or any(c.isalpha() for c in text.replace('K', '').replace('M', '').replace('B', '').replace('k', '').replace('m', '').replace('b', '')):
+        return False
+
     # Simple digit check
     if text.isdigit():
         return True
-    
+
     # Check against numeric patterns from config
     for pattern in GeneralSelectors.NUMERIC_PATTERNS:
         if re.match(pattern, text):
             return True
-    
+
     # Fallback: check for common download indicators
-    return bool(re.match(r'\d+[KkMmBb]?', text) or 
-               ('K' in text and any(char.isdigit() for char in text)) or
-               ('M' in text and any(char.isdigit() for char in text)))
+    return bool(re.match(r'^\d+[KkMmBb]?$', text) or
+               re.match(r'^\d+[\.,]\d+[KkMmBb]?$', text))
 
 
 def clean_text(text: str) -> str:
@@ -137,18 +153,118 @@ def safe_extract(elements: List, index: int = 0, default: str = '') -> str:
 def build_full_url(base_url: str, href: str) -> str:
     """
     Build a full URL from a base URL and href
-    
+
     Args:
         base_url: Base URL (e.g., 'https://www.kaggle.com')
         href: Relative or absolute URL
-        
+
     Returns:
         Full URL
     """
     if href.startswith('http'):
         return href
-    
+
     if href.startswith('/'):
         return f"{base_url.rstrip('/')}{href}"
-    
+
     return f"{base_url.rstrip('/')}/{href.lstrip('/')}"
+
+
+def is_xpath_selector(selector: str) -> bool:
+    """
+    Determine if a selector is XPath (as opposed to CSS)
+
+    XPath selectors start with:
+    - // (absolute path)
+    - .// (relative path)
+    - / (document root)
+
+    CSS selectors start with:
+    - . (class)
+    - # (ID)
+    - tag name
+    - [ (attribute selector)
+
+    Args:
+        selector: The selector string to check
+
+    Returns:
+        True if selector is XPath, False if CSS
+    """
+    if not selector:
+        return False
+
+    # XPath always starts with // or / or .//
+    # Also check for XPath-specific patterns
+    return (selector.startswith('//') or
+            selector.startswith('/') or
+            selector.startswith('.//') or
+            selector.startswith('(') or  # XPath expressions can start with parentheses
+            '::' in selector or  # XPath axes like 'ancestor::div'
+            '@' in selector[:20])  # XPath attributes like '//div[@class]'
+
+
+def is_css_selector(selector: str) -> bool:
+    """
+    Determine if a selector is CSS (as opposed to XPath)
+
+    This is the inverse of is_xpath_selector() for clarity
+
+    Args:
+        selector: The selector string to check
+
+    Returns:
+        True if selector is CSS, False if XPath
+    """
+    return not is_xpath_selector(selector)
+
+
+def parse_formatted_number(value: str) -> int:
+    """
+    Parse a formatted number string into an integer.
+
+    Handles formats like:
+    - "755" -> 755
+    - "50.3k" -> 50300
+    - "1.2K" -> 1200
+    - "2.5M" -> 2500000
+    - "1.8B" -> 1800000000
+
+    Args:
+        value: Formatted number string
+
+    Returns:
+        Parsed integer value, or 0 if parsing fails
+    """
+    if not value:
+        return 0
+
+    # Remove whitespace and commas
+    value = value.strip().replace(',', '')
+
+    # Check for suffix multipliers
+    multipliers = {
+        'k': 1_000,
+        'K': 1_000,
+        'm': 1_000_000,
+        'M': 1_000_000,
+        'b': 1_000_000_000,
+        'B': 1_000_000_000,
+    }
+
+    multiplier = 1
+
+    # Check if the last character is a multiplier
+    if value and value[-1] in multipliers:
+        multiplier = multipliers[value[-1]]
+        value = value[:-1]
+
+    try:
+        # Parse the numeric part (can be float like "50.3")
+        numeric_value = float(value)
+        # Multiply and convert to integer
+        result = int(numeric_value * multiplier)
+        return result
+    except (ValueError, AttributeError):
+        logging.warning(f"Failed to parse formatted number: {value}")
+        return 0

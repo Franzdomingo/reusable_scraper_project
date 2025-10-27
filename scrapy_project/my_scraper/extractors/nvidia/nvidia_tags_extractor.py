@@ -11,7 +11,7 @@ from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.common.exceptions import TimeoutException, NoSuchElementException
 
-from .selenium_utils import (
+from my_scraper.extractors.selenium_utils import (
     scroll_element_into_view,
     click_element_with_fallback,
     get_element_text,

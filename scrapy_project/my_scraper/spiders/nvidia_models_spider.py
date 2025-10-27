@@ -15,9 +15,9 @@ from lxml import html as lxml_html
 from my_scraper.items import NvidiaModelItem
 from my_scraper.selectors.site_selectors import get_selectors_for_site
 from my_scraper.extractors.selenium_utils import parse_tree_from_response
-from my_scraper.extractors.nvidia_tags_extractor import extract_nvidia_tags
-from my_scraper.extractors.nvidia_modelcard_extractor import extract_modelcard
-from my_scraper.extractors.nvidia_url_extractor import (
+from my_scraper.extractors.nvidia.nvidia_tags_extractor import extract_nvidia_tags
+from my_scraper.extractors.nvidia.nvidia_modelcard_extractor import extract_modelcard
+from my_scraper.extractors.nvidia.nvidia_url_extractor import (
     extract_model_name_from_card,
     extract_model_url_from_card,
     extract_parent_container,
@@ -37,16 +37,6 @@ class NvidiaModelsSpider(scrapy.Spider):
     name = 'nvidia_models'
     allowed_domains = ['build.nvidia.com']
     start_urls = ['https://build.nvidia.com/models']
-
-    custom_settings = {
-        'CONCURRENT_REQUESTS': 8,  # Increased from 4 for better throughput
-        'DOWNLOAD_DELAY': 0.5,  # Reduced from 1.0 for faster scraping
-        'RANDOMIZE_DOWNLOAD_DELAY': True,  # Randomize delays
-        'AUTOTHROTTLE_ENABLED': True,  # Enable auto-throttling
-        'AUTOTHROTTLE_START_DELAY': 0.5,  # Reduced from 1.0
-        'AUTOTHROTTLE_MAX_DELAY': 5.0,  # Reduced from 10.0
-        'AUTOTHROTTLE_TARGET_CONCURRENCY': 4.0,  # Increased from 2.0
-    }
 
     def __init__(self, *args, skip_modelcard=False, **kwargs):
         """

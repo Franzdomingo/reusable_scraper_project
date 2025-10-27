@@ -1,0 +1,57 @@
+"""
+Example usage field extraction for variations
+"""
+
+import logging
+from selenium import webdriver
+from selenium.webdriver.common.by import By
+from my_scraper.extractors.retry_utils import retry_selenium_find, retry_xpath, retry_click, retry_operation
+
+logger = logging.getLogger(__name__)
+
+
+def extract_example_usage(driver: webdriver.Chrome, example_usage_selector, variation_counter: int) -> str:
+    """
+    Extract example usage field using multiple selectors
+
+    Args:
+        driver: Selenium driver instance
+        example_usage_selector: Single selector or list of selectors
+        variation_counter: Current variation number for logging
+
+    Returns:
+        Example usage text or empty string if not found
+    """
+    example_usage_selectors = example_usage_selector if isinstance(example_usage_selector, list) else [example_usage_selector] if example_usage_selector else []
+
+    for idx, eu_selector in enumerate(example_usage_selectors):
+        try:
+            example_usage_elem = retry_selenium_find(driver, By.CSS_SELECTOR, eu_selector)
+
+            # Check if it contains the "no usage guide" message
+            if 'This variation does not have a usage guide yet.' in example_usage_elem.text:
+                logger.info(f"Variation {variation_counter}: No usage guide available")
+                return ''
+
+            # Get all text from the parent element
+            variation_example_usage = example_usage_elem.text.strip()
+
+            # Remove the "Example Use" header if present at the start
+            if variation_example_usage.startswith('Example Use\n'):
+                variation_example_usage = variation_example_usage[12:].strip()
+            elif variation_example_usage.startswith('Example Use'):
+                variation_example_usage = variation_example_usage[11:].strip()
+
+            if variation_example_usage:
+                # Log truncated version (first 100 chars) to avoid log spam
+                preview = variation_example_usage[:100] + '...' if len(variation_example_usage) > 100 else variation_example_usage
+                logger.info(f"Variation {variation_counter}: Found example usage using selector {idx + 1}/{len(example_usage_selectors)} - Preview: {preview}")
+                return variation_example_usage
+        except Exception as e:
+            logger.info(f"Variation {variation_counter}: Example usage selector {idx + 1}/{len(example_usage_selectors)} failed: {e}")
+            continue
+
+    if example_usage_selectors:
+        logger.info(f"Variation {variation_counter}: Could not find example usage with any selector")
+
+    return ''

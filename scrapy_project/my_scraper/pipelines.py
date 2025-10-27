@@ -11,7 +11,7 @@ import os
 import logging
 from datetime import datetime
 from itemadapter import ItemAdapter
-from my_scraper.utils import clean_text
+from my_scraper.utils import clean_text, parse_formatted_number
 
 
 class DataCleaningPipeline:
@@ -33,13 +33,24 @@ class DataCleaningPipeline:
         adapter = ItemAdapter(item)
 
         # Clean text fields
-        text_fields = ['name', 'short_description', 'downloads', 'usability', 'tags', 'model_card']
+        text_fields = ['name', 'short_description', 'downloads', 'tags', 'model_card']
 
         for field in text_fields:
             if field in adapter:
                 value = adapter.get(field)
                 if isinstance(value, str):
                     adapter[field] = clean_text(value)
+
+        # Convert usability to float
+        if 'usability' in adapter:
+            usability_value = adapter.get('usability')
+            if isinstance(usability_value, str):
+                try:
+                    # Convert string to float
+                    adapter['usability'] = float(clean_text(usability_value)) if usability_value else None
+                except (ValueError, TypeError):
+                    # If conversion fails, set to None
+                    adapter['usability'] = None
 
         # Clean model_metadata if present
         if 'model_metadata' in adapter:
@@ -62,6 +73,18 @@ class DataCleaningPipeline:
                 # Clean provenance text if present
                 if 'provenance' in metadata and isinstance(metadata['provenance'], str):
                     metadata['provenance'] = clean_text(metadata['provenance'])
+
+        # Process variations if present
+        if 'variations' in adapter:
+            variations = adapter.get('variations')
+            if isinstance(variations, list):
+                for variation in variations:
+                    if isinstance(variation, dict) and 'variation_downloads' in variation:
+                        # Parse formatted download numbers (e.g., "50.3k" -> 50300)
+                        if isinstance(variation['variation_downloads'], str):
+                            variation['variation_downloads'] = parse_formatted_number(
+                                variation['variation_downloads']
+                            )
 
         return item
 

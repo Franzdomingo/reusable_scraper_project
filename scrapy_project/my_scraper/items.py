@@ -20,13 +20,12 @@ class KaggleMetadataItem(scrapy.Item):
     name = scrapy.Field()
     kaggle_url = scrapy.Field()
     short_description = scrapy.Field()
-    downloads = scrapy.Field()
     usability = scrapy.Field()
     model_card = scrapy.Field()
     tags = scrapy.Field()
     variations = scrapy.Field()  # List of TransformersVariationItem
     model_metadata = scrapy.Field()  # Array containing collaborators and other metadata
-    scraped_on = scrapy.Field()  # Timestamp when data was scraped
+    activity_overview = scrapy.Field()  # Dict containing total_downloads, total_views, total_engagements, last_scraped timestamp
 
 
 class TransformersVariationItem(scrapy.Item):
@@ -34,11 +33,14 @@ class TransformersVariationItem(scrapy.Item):
     variation = scrapy.Field()
     variation_name = scrapy.Field()
     variation_version = scrapy.Field()
+    variation_created_by = scrapy.Field()
+    variation_update_description = scrapy.Field()
     variation_license = scrapy.Field()
+    variation_base_model = scrapy.Field()
     variation_downloads = scrapy.Field()
-    model_card = scrapy.Field()
-    is_finetunable = scrapy.Field()
-    example_usage = scrapy.Field()
+    variations_model_card = scrapy.Field()
+    variations_is_finetunable = scrapy.Field()
+    variations_example_usage = scrapy.Field()
 
 
 class NvidiaModelItem(scrapy.Item):

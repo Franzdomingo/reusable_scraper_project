@@ -219,3 +219,9 @@ nul
 
 .github/
 .claude/
+
+
+
+# Ignore top-level api_output folder (API data persisted outside the scrapy project)
+/api_output/
+

@@ -10,6 +10,8 @@ from selenium import webdriver
 from selenium.webdriver.common.by import By
 from lxml import html as lxml_html
 from my_scraper.extractors.selenium_utils import click_element
+from my_scraper.utils import is_css_selector, is_xpath_selector
+from my_scraper.extractors.retry_utils import retry_selenium_find, retry_xpath, retry_click, retry_operation
 
 logger = logging.getLogger(__name__)
 
@@ -43,7 +45,7 @@ def extract_authors(driver: webdriver.Chrome, tree: lxml_html.HtmlElement,
         if action_selector:
             try:
                 logger.debug(f"Looking for authors action button: {action_selector}")
-                button = driver.find_element(By.CSS_SELECTOR, action_selector)
+                button = retry_selenium_find(driver, By.CSS_SELECTOR, action_selector)
 
                 # Check if the section is collapsed (aria-expanded="false")
                 aria_expanded = button.get_attribute('aria-expanded')
@@ -61,10 +63,10 @@ def extract_authors(driver: webdriver.Chrome, tree: lxml_html.HtmlElement,
         # Try CSS selectors via Selenium first
         for selector in selectors.get('authors', []):
             try:
-                if selector.startswith('.') or selector.startswith('#') or selector.startswith('p') or selector.startswith('div'):
+                if is_css_selector(selector):
                     # CSS selector - use Selenium
                     logger.debug(f"Trying authors CSS selector: {selector}")
-                    elements = driver.find_elements(By.CSS_SELECTOR, selector)
+                    elements = retry_selenium_find(driver, By.CSS_SELECTOR, selector, find_multiple=True)
                     logger.debug(f"Found {len(elements)} author elements")
 
                     for elem in elements:
@@ -112,7 +114,7 @@ def extract_authors(driver: webdriver.Chrome, tree: lxml_html.HtmlElement,
                 else:
                     # XPath selector - use lxml
                     logger.debug(f"Trying authors XPath selector: {selector}")
-                    elements = tree.xpath(selector)
+                    elements = retry_xpath(tree, selector)
                     logger.debug(f"Found {len(elements)} author elements via XPath")
 
                     for elem in elements:

@@ -183,7 +183,7 @@ def extract_modelcard(driver: webdriver.Chrome, selectors: Dict, model_name: str
                 if model_card_html and model_card_html.strip():
                     # Clean the HTML to remove UI elements
                     cleaned_html = clean_model_card_html(model_card_html)
-                    logger.info(f"✓ Extracted model card for {model_name} ({len(model_card_html)} chars -> {len(cleaned_html)} chars after cleaning)")
+                    logger.info(f" Extracted model card for {model_name} ({len(model_card_html)} chars -> {len(cleaned_html)} chars after cleaning)")
                     return cleaned_html
                 else:
                     # Fallback to text content if outerHTML is empty
@@ -202,7 +202,7 @@ def extract_modelcard(driver: webdriver.Chrome, selectors: Dict, model_name: str
                                 break
 
                     if model_card_text:
-                        logger.info(f"✓ Extracted model card text for {model_name} ({len(model_card_text)} chars)")
+                        logger.info(f" Extracted model card text for {model_name} ({len(model_card_text)} chars)")
                         return model_card_text
                     else:
                         logger.warning(f"Model card element found but empty for {model_name}")

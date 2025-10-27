@@ -1,0 +1,13 @@
+  Recommendation Priority:
+
+  🔥 Fix Immediately:
+
+  1. variation_example_usage_extractor.py - Move hardcoded selectors to site_selectors.py
+  2. tab_handler.py - Move hardcoded JavaScript selectors to site_selectors.py
+
+  ⚠️ Fix Soon:
+
+  3. TOTAL_VIEWS_SELECTORS - Add content-based XPath
+  4. TOTAL_ENGAGEMENTS_SELECTORS - Add content-based XPath
+  5. TRANSFORMERS_VARIATION_DOWNLOADS_CSS - Add content-based selector
+  6. AUTHORS_SELECTORS - Already has content-based primary, but fallbacks need improvement
