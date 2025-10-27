@@ -1,5 +1,10 @@
 name,kaggle_url
-Magistral Small 2506,https://www.kaggle.com/models/mistral-ai/magistral-small-2506
-sup-100,https://www.kaggle.com/models/vtab/sup-100
-deepcogito,https://www.kaggle.com/models/deep-cogito/deepcogito
-SAM,https://www.kaggle.com/models/kerashub/sam
+Granite 4.0,https://www.kaggle.com/models/ibm-granite/granite-4.0
+EmbeddingGemma,https://www.kaggle.com/models/google/embeddinggemma
+Gemma 3,https://www.kaggle.com/models/google/gemma-3
+Qwen 3 Guard,https://www.kaggle.com/models/qwen-lm/qwen-3-guard
+VaultGemma,https://www.kaggle.com/models/keras/vaultgemma
+OpenPeerLLM,https://www.kaggle.com/models/openpeer-ai/openpeerllm
+DeepSeek R1,https://www.kaggle.com/models/deepseek-ai/deepseek-r1
+Qwen2.5 Math,https://www.kaggle.com/models/qwen-lm/qwen2.5-math
+movenet,https://www.kaggle.com/models/google/movenet
