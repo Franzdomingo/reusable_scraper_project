@@ -307,7 +307,13 @@ def extract_variations_for_tab(
 
                     # Click the variation button at the specified index
                     variation_button = list_items[idx]
-                    variation_button.click()
+
+                    # Scroll into view before clicking (prevents "element not interactable" errors)
+                    driver.execute_script("arguments[0].scrollIntoView({block: 'center'});", variation_button)
+                    time.sleep(0.3)  # Wait for scroll to complete
+
+                    # Try JavaScript click (more reliable for dropdown items)
+                    driver.execute_script("arguments[0].click();", variation_button)
                     logger.info(f"Clicked variation button at index {idx}: {queued_name}")
                     time.sleep(0.8)  # Wait for variation details to load
 
