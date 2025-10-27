@@ -153,7 +153,8 @@ class KaggleMetadataSpider(scrapy.Spider):
                             'selenium_wait': 3,
                             'selenium_wait_selector': 'h2',
                             'model_name': name,
-                            'model_id': self.model_counter
+                            'model_id': self.model_counter,
+                            'keep_driver': True  # Keep driver for threaded extraction
                         }
                     )
         else:
@@ -179,15 +180,23 @@ class KaggleMetadataSpider(scrapy.Spider):
                             'selenium_wait': 3,
                             'selenium_wait_selector': 'h2',
                             'model_name': name,
-                            'model_id': self.model_counter
+                            'model_id': self.model_counter,
+                            'keep_driver': True  # Keep driver for threaded extraction
                         }
                     )
     
-    def _extract_in_thread(self, response, driver, model_name, model_id):
+    def _extract_in_thread(self, response, driver, model_name, model_id, middleware):
         """
         Extract data in a separate thread (runs concurrently)
 
         This allows multiple extractions to run simultaneously
+
+        Args:
+            response: Scrapy response
+            driver: Selenium driver
+            model_name: Name of the model
+            model_id: ID of the model
+            middleware: Selenium middleware instance (for returning driver to pool)
         """
         import threading
         thread_id = threading.current_thread().name
@@ -282,6 +291,11 @@ class KaggleMetadataSpider(scrapy.Spider):
             import traceback
             traceback.print_exc()
             return None
+        finally:
+            # Always return driver to pool when done
+            if driver and middleware:
+                self.logger.info(f'[PARSE THREAD: {thread_id}] Returning driver to pool for {model_name}')
+                middleware.return_driver_to_pool(driver)
 
     async def parse(self, response):
         """
@@ -301,13 +315,23 @@ class KaggleMetadataSpider(scrapy.Spider):
             self.logger.error(f'No driver available for {model_name}')
             return
 
+        # Get the middleware instance to return driver later
+        middleware = None
+        for mw in self.crawler.engine.downloader.middleware.middlewares:
+            if hasattr(mw, 'return_driver_to_pool'):
+                middleware = mw
+                break
+
+        if not middleware:
+            self.logger.warning(f'Could not find SeleniumMiddleware instance')
+
         # Offload extraction to thread pool (allows concurrent processing)
         # Use await to properly wait for the result
         from twisted.internet.defer import ensureDeferred
         from scrapy.utils.defer import deferred_to_future
 
         deferred = threads.deferToThread(
-            self._extract_in_thread, response, driver, model_name, model_id
+            self._extract_in_thread, response, driver, model_name, model_id, middleware
         )
 
         # Convert Deferred to Future and await it

@@ -125,6 +125,10 @@ REQUEST_FINGERPRINTER_IMPLEMENTATION = '2.7'
 TWISTED_REACTOR = 'twisted.internet.asyncioreactor.AsyncioSelectorReactor'
 FEED_EXPORT_ENCODING = 'utf-8'
 
+# Increase connection pool size to match concurrency settings
+# This prevents "Connection pool is full" warnings
+CONCURRENT_REQUESTS_TO_REMOTE_SERVER = CONCURRENT_REQUESTS_AND_SELENIUM_POOL_SIZE * 2
+
 # Proxy rotation settings (disabled by default)
 # To enable proxy rotation:
 # 1. Set ENABLE_PROXY_ROTATION = True
@@ -146,3 +150,9 @@ SYSTEM_MEMORY_GB = os.sysconf('SC_PAGE_SIZE') * os.sysconf('SC_PHYS_PAGES') / (1
 # Display configuration on startup
 import logging
 logger = logging.getLogger(__name__)
+
+# Suppress urllib3 connection pool warnings
+import warnings
+from urllib3.exceptions import InsecureRequestWarning
+warnings.simplefilter('ignore', InsecureRequestWarning)
+logging.getLogger('urllib3.connectionpool').setLevel(logging.ERROR)
