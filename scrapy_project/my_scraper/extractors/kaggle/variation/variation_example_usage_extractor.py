@@ -6,6 +6,7 @@ import logging
 from selenium import webdriver
 from selenium.webdriver.common.by import By
 from my_scraper.extractors.retry_utils import retry_selenium_find, retry_xpath, retry_click, retry_operation
+from my_scraper.extractors.html_utils import convert_html_to_markdown
 
 logger = logging.getLogger(__name__)
 
@@ -33,8 +34,8 @@ def extract_example_usage(driver: webdriver.Chrome, example_usage_selector, vari
                 logger.info(f"Variation {variation_counter}: No usage guide available")
                 return ''
 
-            # Get all text from the parent element
-            variation_example_usage = example_usage_elem.text.strip()
+            # Convert HTML to Markdown with inline links
+            variation_example_usage = convert_html_to_markdown(example_usage_elem, driver)
 
             # Remove the "Example Use" header if present at the start
             if variation_example_usage.startswith('Example Use\n'):
@@ -46,6 +47,12 @@ def extract_example_usage(driver: webdriver.Chrome, example_usage_selector, vari
                 # Log truncated version (first 100 chars) to avoid log spam
                 preview = variation_example_usage[:100] + '...' if len(variation_example_usage) > 100 else variation_example_usage
                 logger.info(f"Variation {variation_counter}: Found example usage using selector {idx + 1}/{len(example_usage_selectors)} - Preview: {preview}")
+
+                # Count and log markdown links
+                link_count = variation_example_usage.count('](')
+                if link_count > 0:
+                    logger.info(f"Variation {variation_counter}: Converted {link_count} links to Markdown format in example usage")
+
                 return variation_example_usage
         except Exception as e:
             logger.info(f"Variation {variation_counter}: Example usage selector {idx + 1}/{len(example_usage_selectors)} failed: {e}")

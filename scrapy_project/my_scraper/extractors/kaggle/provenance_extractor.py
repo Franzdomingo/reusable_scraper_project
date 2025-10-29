@@ -11,6 +11,7 @@ from lxml import html as lxml_html
 from my_scraper.extractors.selenium_utils import click_element
 from my_scraper.utils import is_css_selector, is_xpath_selector
 from my_scraper.extractors.retry_utils import retry_selenium_find, retry_xpath, retry_click, retry_operation
+from my_scraper.extractors.html_utils import convert_html_to_markdown
 
 logger = logging.getLogger(__name__)
 
@@ -70,10 +71,17 @@ def extract_provenance(driver: webdriver.Chrome, tree: lxml_html.HtmlElement,
 
                     for elem in elements:
                         try:
-                            text = elem.text.strip()
+                            # Convert HTML to Markdown with inline links
+                            text = convert_html_to_markdown(elem, driver)
                             if text:
                                 provenance_text = text
                                 logger.info(f"Found provenance using CSS selector: {selector}")
+
+                                # Count and log markdown links
+                                link_count = text.count('](')
+                                if link_count > 0:
+                                    logger.info(f"Converted {link_count} links to Markdown format in provenance")
+
                                 break
                         except Exception as e:
                             logger.debug(f"Error extracting text from element: {e}")
@@ -89,10 +97,17 @@ def extract_provenance(driver: webdriver.Chrome, tree: lxml_html.HtmlElement,
 
                     for elem in elements:
                         try:
-                            text = elem.text_content().strip()
+                            # Convert lxml element to Markdown with inline links
+                            text = convert_html_to_markdown(elem)
                             if text:
                                 provenance_text = text
                                 logger.info(f"Found provenance using XPath: {selector}")
+
+                                # Count and log markdown links
+                                link_count = text.count('](')
+                                if link_count > 0:
+                                    logger.info(f"Converted {link_count} links to Markdown format in provenance")
+
                                 break
                         except Exception as e:
                             logger.debug(f"Error extracting text from XPath element: {e}")
