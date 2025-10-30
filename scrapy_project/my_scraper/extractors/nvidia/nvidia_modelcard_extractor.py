@@ -13,19 +13,24 @@ from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.common.exceptions import StaleElementReferenceException
 from bs4 import BeautifulSoup
+from my_scraper.extractors.html_utils import convert_html_to_markdown
 
 logger = logging.getLogger(__name__)
 
 
 def clean_model_card_html(html_content: str) -> str:
     """
-    Convert model card HTML to clean plain text
+    Convert model card HTML to clean plain text with Markdown links
+
+    Note: This function uses BeautifulSoup for cleaning and formatting.
+    For simple HTML to Markdown conversion, you can also use:
+    convert_html_to_markdown() from html_utils
 
     Args:
         html_content: Raw HTML string from model card page
 
     Returns:
-        Clean plain text string without HTML tags
+        Clean plain text string with Markdown-formatted links
     """
     if not html_content:
         return ''
@@ -63,10 +68,10 @@ def clean_model_card_html(html_content: str) -> str:
             elif element.name == 'li':
                 text_lines.append('• ' + text)
             elif element.name == 'a' and element.get('href'):
-                # Include link URL in parentheses
+                # Convert to Markdown link format
                 href = element.get('href')
                 if href and href != text:
-                    text_lines.append(f'{text} ({href})')
+                    text_lines.append(f'[{text}]({href})')
                 else:
                     text_lines.append(text)
             else:

@@ -80,23 +80,26 @@ def is_numeric_value(text: str) -> bool:
 
 def clean_text(text: str) -> str:
     """
-    Clean text by removing excessive whitespace and special characters
-    
+    Clean text by removing excessive whitespace while preserving newlines
+
     Args:
         text: Text to clean
-        
+
     Returns:
-        Cleaned text
+        Cleaned text with preserved line breaks
     """
     if not text:
         return ''
-    
-    # Remove extra whitespace
-    text = re.sub(r'\s+', ' ', text)
-    
+
+    # Collapse multiple spaces and tabs (but preserve newlines)
+    text = re.sub(r'[ \t]+', ' ', text)
+
+    # Collapse excessive newlines (3+ consecutive newlines become 2)
+    text = re.sub(r'\n\s*\n\s*\n+', '\n\n', text)
+
     # Strip leading/trailing whitespace
     text = text.strip()
-    
+
     return text
 
 

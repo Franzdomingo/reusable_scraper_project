@@ -25,6 +25,14 @@ class KaggleLinksSpider(scrapy.Spider):
     allowed_domains = ['kaggle.com']
     start_urls = ['https://www.kaggle.com/models?owner-type=organization']
 
+    # Custom settings - override global settings to use only 1 concurrent request
+    custom_settings = {
+        'CONCURRENT_REQUESTS': 1,
+        'CONCURRENT_REQUESTS_PER_DOMAIN': 1,
+        'SELENIUM_POOL_SIZE': 1,
+        'AUTOTHROTTLE_TARGET_CONCURRENCY': 1.0,
+    }
+
     def __init__(self, max_pages=100, *args, **kwargs):
         """
         Initialize spider

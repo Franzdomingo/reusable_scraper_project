@@ -2,13 +2,18 @@
 FROM python:3.11-slim
 
 # Set environment variables
+# Set DEBIAN_FRONTEND to noninteractive to avoid tzdata prompts during build
 ENV PYTHONUNBUFFERED=1 \
     PYTHONDONTWRITEBYTECODE=1 \
     PIP_NO_CACHE_DIR=1 \
-    PIP_DISABLE_PIP_VERSION_CHECK=1
+    PIP_DISABLE_PIP_VERSION_CHECK=1 \
+    DEBIAN_FRONTEND=noninteractive \
+    TZ=Asia/Manila
 
 # Install system dependencies for Chrome/Chromium and Scrapy
-RUN apt-get update && apt-get install -y \
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    # timezone data so the container can be set to PH time
+    tzdata \
     # Chrome dependencies
     wget \
     gnupg2 \
@@ -19,6 +24,9 @@ RUN apt-get update && apt-get install -y \
     chromium-driver \
     # Additional dependencies
     xvfb \
+    && ln -snf /usr/share/zoneinfo/Asia/Manila /etc/localtime \
+    && echo "Asia/Manila" > /etc/timezone \
+    && dpkg-reconfigure -f noninteractive tzdata || true \
     # Clean up
     && rm -rf /var/lib/apt/lists/*
 

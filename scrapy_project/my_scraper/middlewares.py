@@ -73,7 +73,8 @@ class SeleniumMiddleware:
     def _create_driver(self):
         """Create a new Selenium driver instance"""
         if self.driver_name == 'chrome':
-            chrome_options = Options()
+            from selenium.webdriver.chrome.options import Options as ChromeOptions
+            chrome_options = ChromeOptions()
 
             # Add configured arguments
             for arg in self.driver_arguments:
@@ -99,6 +100,17 @@ class SeleniumMiddleware:
                 service.path = self.driver_executable_path
 
             return webdriver.Chrome(service=service, options=chrome_options)
+
+        elif self.driver_name == 'firefox':
+            from selenium.webdriver.firefox.options import Options as FirefoxOptions
+            firefox_options = FirefoxOptions()
+
+            # Add configured arguments
+            for arg in self.driver_arguments:
+                firefox_options.add_argument(arg)
+
+            # Create driver
+            return webdriver.Firefox(options=firefox_options)
 
         else:
             raise NotImplementedError(f'Driver {self.driver_name} is not supported')

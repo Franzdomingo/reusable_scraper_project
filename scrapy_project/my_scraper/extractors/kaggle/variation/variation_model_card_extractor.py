@@ -6,6 +6,7 @@ import logging
 from selenium import webdriver
 from selenium.webdriver.common.by import By
 from my_scraper.extractors.retry_utils import retry_selenium_find, retry_xpath, retry_click, retry_operation
+from my_scraper.extractors.html_utils import convert_html_to_markdown
 
 logger = logging.getLogger(__name__)
 
@@ -48,14 +49,20 @@ def extract_model_card(driver: webdriver.Chrome, model_card_selector, variation_
             # Try each element until we find one with content
             for elem_idx, model_card_elem in enumerate(model_card_elems):
                 try:
-                    # Get text content
-                    text_content = model_card_elem.text.strip()
+                    # Convert HTML to Markdown with inline links
+                    text_content = convert_html_to_markdown(model_card_elem, driver)
 
                     # Only accept if it has meaningful content (> 5 chars)
                     if text_content and len(text_content) > 5:
                         # Log truncated version (first 100 chars) to avoid log spam
                         preview = text_content[:100] + '...' if len(text_content) > 100 else text_content
                         logger.info(f"Variation {variation_counter}: Found model card - Preview: {preview}")
+
+                        # Count and log markdown links
+                        link_count = text_content.count('](')
+                        if link_count > 0:
+                            logger.info(f"Variation {variation_counter}: Converted {link_count} links to Markdown format")
+
                         return text_content
                     else:
                         logger.info(f"Variation {variation_counter}: Element {elem_idx + 1} has content too short ({len(text_content)} chars)")

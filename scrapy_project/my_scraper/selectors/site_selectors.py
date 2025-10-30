@@ -138,14 +138,22 @@ class KaggleSelectors:
     #            </div>
     MODEL_CARD_SELECTORS: List[str] = [
         # Tertiary: Class-based selector - targets the wrapper div class
-        'div.sc-Acoie.hkYqwv',
+
         # Fallback: Absolute XPath selector
-        '/html/body/div/div[1]/div[2]/div/div[2]/div/div[5]/div/div[1]/div[1]/div[2]/div[1]',
+        '/html/body/div/div[1]/div[2]/div/div[2]/div/div[5]/div/div[1]/div[1]',
+        'div.sc-Acoie.hkYqwv',
     ]
 
     # Optional action button to reveal model card (click before scraping)
-    # Using role and aria attributes for stability
-    MODEL_CARD_ACTION_BUTTON: str = 'button[aria-label*="Read more"]'
+    # Updated 2025-10-30: Using more specific XPath and class-based selectors
+    # Target: Button with "Read more" text and expand_more icon
+    # Structure: <button class="sc-pYNGo jwTgeH sc-ftlDjJ bEqNGJ"><span>expand_more</span><span>Read more</span></button>
+    MODEL_CARD_ACTION_BUTTON: List[str] = [
+        '//button[.//span[contains(@class, "sc-fVHBlr") and contains(text(), "Read more")]]',  # Most stable: XPath targeting button with "Read more" span
+        '//button[.//span[text()="Read more"]]',  # Alternative: Direct text match
+        'button.sc-pYNGo.jwTgeH.sc-ftlDjJ.bEqNGJ',  # Class-based selector
+        'button[aria-label*="Read more"]',  # Fallback: aria-label (original selector)
+    ]
     
     # All tab buttons (to extract all tabs for processing)
     # Target: All tab buttons with role="tab" containing tab names
