@@ -108,7 +108,7 @@ LOG_FORMAT = '[%(asctime)s] %(levelname)s: %(message)s'
 LOG_DATEFORMAT = '%H:%M:%S'
 
 # Custom settings
-SELENIUM_DRIVER_NAME = 'chrome'
+SELENIUM_DRIVER_NAME = 'firefox'  # Changed from 'chrome' - Firefox works better with NVIDIA site
 SELENIUM_DRIVER_EXECUTABLE_PATH = None  # Uses system chromedriver
 SELENIUM_DRIVER_ARGUMENTS = [
     '--headless',

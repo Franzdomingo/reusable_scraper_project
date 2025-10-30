@@ -22,6 +22,9 @@ from my_scraper.extractors.nvidia.nvidia_url_extractor import (
     extract_model_url_from_card,
     extract_parent_container,
 )
+from selenium.webdriver.common.by import By
+from selenium.webdriver.support.ui import WebDriverWait
+from selenium.webdriver.support import expected_conditions as EC
 
 
 class NvidiaModelsSpider(scrapy.Spider):
@@ -55,6 +58,41 @@ class NvidiaModelsSpider(scrapy.Spider):
         if self.skip_modelcard:
             self.logger.info('Model card extraction is DISABLED - will scrape faster')
 
+        self.cookie_dismissed = False  # Track if we've dismissed the cookie popup
+
+    def dismiss_cookie_popup(self, driver):
+        """
+        Dismiss NVIDIA's cookie consent popup
+
+        Args:
+            driver: Selenium WebDriver instance
+
+        Returns:
+            bool: True if popup was dismissed, False otherwise
+        """
+        try:
+            # Try to find and click the reject cookies button
+            cookie_button = WebDriverWait(driver, 2).until(
+                EC.element_to_be_clickable((By.XPATH, '//*[@id="onetrust-reject-all-handler"]'))
+            )
+            cookie_button.click()
+
+            # Wait for the popup container to disappear completely
+            time.sleep(1)
+            try:
+                # Wait for overlay to be invisible
+                WebDriverWait(driver, 3).until(
+                    EC.invisibility_of_element_located((By.ID, 'onetrust-group-container'))
+                )
+            except:
+                pass  # Continue even if we can't verify it's gone
+
+            self.logger.info("Cookie popup dismissed")
+            return True
+        except Exception:
+            self.logger.debug("No cookie popup found or already dismissed")
+            return False
+
     def start_requests(self):
         """Generate initial request to NVIDIA models page"""
         for url in self.start_urls:
@@ -84,6 +122,9 @@ class NvidiaModelsSpider(scrapy.Spider):
         if not driver:
             self.logger.error('No driver available for NVIDIA models page')
             return
+
+        # Dismiss cookie popup on first request
+        self.dismiss_cookie_popup(driver)
 
         try:
             # Parse tree from the response
@@ -244,19 +285,18 @@ class NvidiaModelsSpider(scrapy.Spider):
                     self.logger.info(f"DONE {model_name} - URL: {model_url} - Tags: {tags_count} - ModelCard: Skipped")
                     yield item
                 else:
-                    # Make request to modelcard page to extract model card content
-                    modelcard_url = f"{model_url}/modelcard"
-                    self.logger.debug(f"Requesting modelcard: {modelcard_url}")
+                    # Request model page (NOT /modelcard) and we'll click the tab in parse_modelcard
+                    self.logger.debug(f"Requesting model page: {model_url}")
 
                     yield scrapy.Request(
-                        url=modelcard_url,
+                        url=model_url,
                         callback=self.parse_modelcard,
                         errback=self.handle_modelcard_error,
                         meta={
                             'selenium': True,
                             'selenium_wait': 5,
-                            'selenium_wait_selector': 'div.prose',
                             'item': item,  # Pass the fully filled item (except model_card)
+                            'click_modelcard_tab': True,  # Signal to click the modelcard tab
                         },
                         dont_filter=True
                     )
@@ -305,7 +345,7 @@ class NvidiaModelsSpider(scrapy.Spider):
         Parse NVIDIA model card page and extract model card content
 
         Args:
-            response: Scrapy response object from /modelcard page
+            response: Scrapy response object from model page
 
         Yields:
             Complete NvidiaModelItem with model card content
@@ -331,6 +371,39 @@ class NvidiaModelsSpider(scrapy.Spider):
             return
 
         try:
+            # Dismiss cookie popup again (it may reappear on model pages)
+            self.dismiss_cookie_popup(driver)
+
+            # Click the modelcard tab if requested
+            if response.meta.get('click_modelcard_tab'):
+                try:
+                    # Wait for page to load and find modelcard tab
+                    time.sleep(1)  # Brief wait for page load
+
+                    modelcard_tab = WebDriverWait(driver, 10).until(
+                        EC.element_to_be_clickable((By.XPATH, '//button[contains(text(), "Model Card")]'))
+                    )
+
+                    # Scroll the tab into view and click it
+                    driver.execute_script("arguments[0].scrollIntoView(true);", modelcard_tab)
+                    time.sleep(0.3)  # Wait for scroll
+                    modelcard_tab.click()
+
+                    self.logger.debug(f"Clicked modelcard tab for {model_name}")
+                except Exception as e:
+                    self.logger.warning(f"Could not click modelcard tab for {model_name}: {e}")
+                    # Try JavaScript click as fallback
+                    try:
+                        tab = driver.find_element(By.XPATH, '//button[contains(text(), "Model Card")]')
+                        driver.execute_script("arguments[0].click();", tab)
+                        self.logger.debug(f"Used JavaScript click for {model_name}")
+                    except Exception as e2:
+                        self.logger.warning(f"JavaScript click also failed for {model_name}: {e2}")
+                        # Continue anyway, content might already be loaded
+
+            # Wait before extraction to ensure modelcard content has loaded
+            time.sleep(3)
+
             # Extract model card using extractor
             item['model_card'] = extract_modelcard(driver, self.selectors, model_name)
 
