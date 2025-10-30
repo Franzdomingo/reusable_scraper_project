@@ -30,8 +30,12 @@ ROBOTSTXT_OBEY = False
 # Configure maximum concurrent requests performed by Scrapy (default: 16)
 # IMPORTANT: Must match SELENIUM_POOL_SIZE to prevent spider from closing prematurely
 # When using Selenium, Scrapy should only schedule as many requests as there are drivers available
-# Scroll down to the variable SELENIUM_POOL_SIZE to see the number of selenium drivers it should be there - Franz
-CONCURRENT_REQUESTS_AND_SELENIUM_POOL_SIZE = 8
+# Auto-calculated based on CPU cores: 75% of available cores (minimum 2, fallback to 4 if detection fails)
+try:
+    CPU_COUNT = multiprocessing.cpu_count()
+except (NotImplementedError, AttributeError):
+    CPU_COUNT = 4  # Fallback to 4 cores if detection fails
+CONCURRENT_REQUESTS_AND_SELENIUM_POOL_SIZE = max(2, int(CPU_COUNT * 0.75))
 CONCURRENT_REQUESTS = CONCURRENT_REQUESTS_AND_SELENIUM_POOL_SIZE
 
 # Configure a delay for requests for the same website (default: 0)
@@ -39,8 +43,8 @@ CONCURRENT_REQUESTS = CONCURRENT_REQUESTS_AND_SELENIUM_POOL_SIZE
 # Reduced delay to allow concurrent Selenium requests (AutoThrottle will manage actual delays)
 DOWNLOAD_DELAY = 0.1
 # The download delay setting will honor only one of:
-CONCURRENT_REQUESTS_PER_DOMAIN = 8
-CONCURRENT_REQUESTS_PER_IP = 8
+CONCURRENT_REQUESTS_PER_DOMAIN = CONCURRENT_REQUESTS_AND_SELENIUM_POOL_SIZE
+CONCURRENT_REQUESTS_PER_IP = CONCURRENT_REQUESTS_AND_SELENIUM_POOL_SIZE
 
 # Disable cookies (enabled by default)
 COOKIES_ENABLED = True
@@ -90,7 +94,7 @@ AUTOTHROTTLE_START_DELAY = 0.1
 AUTOTHROTTLE_MAX_DELAY = 3.0
 # The average number of requests Scrapy should be sending in parallel to
 # each remote server (increased to allow more concurrent Selenium drivers to be used)
-AUTOTHROTTLE_TARGET_CONCURRENCY = 8.0
+AUTOTHROTTLE_TARGET_CONCURRENCY = float(CONCURRENT_REQUESTS_AND_SELENIUM_POOL_SIZE)
 # Enable showing throttling stats for every response received:
 AUTOTHROTTLE_DEBUG = False
 
@@ -144,7 +148,6 @@ ROTATING_PROXIES = [
 ]
 
 # Performance monitoring and system info
-CPU_COUNT = multiprocessing.cpu_count()
 SYSTEM_MEMORY_GB = os.sysconf('SC_PAGE_SIZE') * os.sysconf('SC_PHYS_PAGES') / (1024.**3) if hasattr(os, 'sysconf') else 'N/A'
 
 # Display configuration on startup
