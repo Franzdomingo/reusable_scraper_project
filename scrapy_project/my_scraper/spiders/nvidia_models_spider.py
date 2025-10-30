@@ -272,20 +272,21 @@ class NvidiaModelsSpider(scrapy.Spider):
             self.logger.info(f'STEP 1 COMPLETE: Extracted {len(all_items)} models from main page')
 
             # STEP 2: Now yield all items (with or without modelcard requests)
-            self.logger.info('STEP 2: Yielding items and requesting modelcards...')
-            for item in all_items:
-                model_name = item.get('name')
-                model_url = item.get('nvidia_url')
-                tags_count = len(item.get('tags', [])) if item.get('tags') else 0
+            self.logger.info('STEP 2: Yielding items and creating concurrent modelcard requests...')
 
-                # Check if we should fetch model card
-                if self.skip_modelcard:
-                    # Yield item immediately without model card
+            if self.skip_modelcard:
+                # Yield all items immediately without model card
+                for item in all_items:
+                    model_name = item.get('name')
+                    model_url = item.get('nvidia_url')
+                    tags_count = len(item.get('tags', [])) if item.get('tags') else 0
                     item['model_card'] = ''
                     self.logger.info(f"DONE {model_name} - URL: {model_url} - Tags: {tags_count} - ModelCard: Skipped")
                     yield item
-                else:
-                    # Request model page (NOT /modelcard) and we'll click the tab in parse_modelcard
+            else:
+                # Generate all requests at once to enable concurrent processing
+                for item in all_items:
+                    model_url = item.get('nvidia_url')
                     self.logger.debug(f"Requesting model page: {model_url}")
 
                     yield scrapy.Request(
@@ -295,10 +296,11 @@ class NvidiaModelsSpider(scrapy.Spider):
                         meta={
                             'selenium': True,
                             'selenium_wait': 5,
-                            'item': item,  # Pass the fully filled item (except model_card)
-                            'click_modelcard_tab': True,  # Signal to click the modelcard tab
+                            'item': item,
+                            'click_modelcard_tab': True,
                         },
-                        dont_filter=True
+                        dont_filter=True,
+                        priority=1  # Higher priority to process these concurrently
                     )
 
             self.logger.info(f'Successfully extracted and queued {len(all_items)} models for processing')
