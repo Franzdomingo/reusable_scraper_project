@@ -274,6 +274,7 @@ def extract_versions_from_popup(
         from .variation_is_finetunable_extractor import extract_is_finetunable
         from .variation_example_usage_extractor import extract_example_usage
         from .variation_version_metadata_extractor import extract_created_by, extract_update_description
+        from .variation_download_method_extractor import extract_download_methods
 
         for idx in range(len(version_items)):
             try:
@@ -356,6 +357,7 @@ def extract_versions_from_popup(
                 version_model_card = extract_model_card(driver, selectors.get('variation_model_card'), variation_counter)
                 version_is_finetunable = extract_is_finetunable(driver, selectors.get('is_finetunable'), variation_counter)
                 version_example_usage = extract_example_usage(driver, selectors.get('example_usage'), variation_counter)
+                version_download_methods = extract_download_methods(driver, variation_counter, selectors)
 
                 # Create version data dictionary
                 version_data = {
@@ -367,7 +369,8 @@ def extract_versions_from_popup(
                     'base_model': version_base_model,
                     'model_card': version_model_card,
                     'is_finetunable': version_is_finetunable,
-                    'example_usage': version_example_usage
+                    'example_usage': version_example_usage,
+                    'download_methods': version_download_methods
                 }
 
                 versions_data.append(version_data)

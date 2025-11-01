@@ -20,6 +20,7 @@ from .variation.variation_base_model_extractor import extract_base_model
 from .variation.variation_model_card_extractor import extract_model_card
 from .variation.variation_is_finetunable_extractor import extract_is_finetunable
 from .variation.variation_example_usage_extractor import extract_example_usage
+from .variation.variation_download_method_extractor import extract_download_methods
 from .tab_handler import build_tab_queue, click_tab
 from .variation.version_popup_extractor import extract_versions_from_popup
 from my_scraper.extractors.retry_utils import retry_selenium_find, retry_xpath, retry_click, retry_operation
@@ -369,7 +370,8 @@ def extract_variations_for_tab(
                             'variation_downloads': version_data.get('downloads', ''),
                             'variations_model_card': version_data.get('model_card', ''),
                             'variations_is_finetunable': version_data.get('is_finetunable', ''),
-                            'variations_example_usage': version_data.get('example_usage', '')
+                            'variations_example_usage': version_data.get('example_usage', ''),
+                            'download_methods': version_data.get('download_methods', [])
                         }
                         variations.append(variation)
                         logger.info(f"Extracted {variation_id}: {variation_name} (Version: {version_data.get('version_number')}, Created by: {version_data.get('created_by')}, Downloads: {version_data.get('downloads')}, License: {version_data.get('license')})")
@@ -385,6 +387,7 @@ def extract_variations_for_tab(
                     variation_model_card = extract_model_card(driver, model_card_selector, variation_counter)
                     variation_is_finetunable = extract_is_finetunable(driver, is_finetunable_selector, variation_counter)
                     variation_example_usage = extract_example_usage(driver, example_usage_selector, variation_counter)
+                    variation_download_methods = extract_download_methods(driver, variation_counter, selectors)
 
                     variation_id = f'{tab_prefix}/variation_{variation_counter:02d}'
 
@@ -399,7 +402,8 @@ def extract_variations_for_tab(
                         'variation_downloads': variation_downloads,
                         'variations_model_card': variation_model_card,
                         'variations_is_finetunable': variation_is_finetunable,
-                        'variations_example_usage': variation_example_usage
+                        'variations_example_usage': variation_example_usage,
+                        'download_methods': variation_download_methods
                     }
                     variations.append(variation)
                     logger.info(f"Extracted {variation_id}: {variation_name} (Version: {variation_version}, Downloads: {variation_downloads}, License: {variation_license})")
