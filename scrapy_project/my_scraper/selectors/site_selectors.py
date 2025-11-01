@@ -313,6 +313,7 @@ class KaggleSelectors:
     ]
 
     # Example Usage selector for variation (appears after selecting a variation)
+    # Updated 2025-10-25: Using parent container selector to capture both header and content
     # Target: Parent container that holds both the header and content
     # The structure is: parent div contains:
     #   - div#example-use (header)
@@ -321,7 +322,17 @@ class KaggleSelectors:
     TRANSFORMERS_EXAMPLE_USAGE_SELECTORS: List[str] = [
         'div:has(> div#example-use)',  # Parent div containing example-use
     ]
-    
+
+    # Overlay element selectors (for hiding elements that intercept tab clicks)
+    # Updated 2025-11-01: Extracted from tab_handler.py JavaScript code
+    # Target: Various overlay elements that can block tab navigation
+    OVERLAY_BUTTON_CLASS: str = 'button.sc-pYNGo.druOFB'  # Specific overlay button class
+    OVERLAY_BUTTON_XPATH: str = '/html/body/div/div[1]/div[2]/div/div[2]/div/div[5]/div/div[2]/div[2]/div[1]/div/div[2]/div/button[1]'  # Specific overlay button by XPath
+    OVERLAY_ELEMENTS_CLASSES: List[str] = [
+        '.sc-ABqPz.hkFQpn',  # Common overlay class 1
+        '[role="presentation"]',  # Common overlay role attribute
+    ]
+
     # Fallback CSS selector for description (used with Selenium)
     DESCRIPTION_CSS_FALLBACK: str = '.sc-iRTMaw:nth-child(1) > p:nth-child(1)'
     

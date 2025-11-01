@@ -8,6 +8,7 @@ from typing import Dict, List
 from selenium import webdriver
 from selenium.webdriver.common.by import By
 from my_scraper.extractors.retry_utils import retry_selenium_find, retry_xpath, retry_click, retry_operation
+from my_scraper.selectors.site_selectors import KaggleSelectors
 
 logger = logging.getLogger(__name__)
 
@@ -93,35 +94,40 @@ def click_tab(driver: webdriver.Chrome, tabs_all_selector: str, tab_idx: int, ta
         # Try to hide overlaying elements that might intercept the click
         try:
             logger.info(f"Attempting to hide overlaying elements for tab '{tab_text}'")
+            # Get selectors from KaggleSelectors
+            overlay_button_class = KaggleSelectors.OVERLAY_BUTTON_CLASS
+            overlay_button_xpath = KaggleSelectors.OVERLAY_BUTTON_XPATH
+            overlay_element_selectors = ', '.join(KaggleSelectors.OVERLAY_ELEMENTS_CLASSES)
+
             # Hide the specific overlaying button mentioned in the error
-            driver.execute_script("""
+            driver.execute_script(f"""
                 // Hide the specific overlaying button by class
-                let overlayButtons = document.querySelectorAll('button.sc-pYNGo.druOFB');
-                overlayButtons.forEach(btn => {
+                let overlayButtons = document.querySelectorAll('{overlay_button_class}');
+                overlayButtons.forEach(btn => {{
                     btn.style.display = 'none';
                     btn.style.visibility = 'hidden';
-                });
+                }});
 
                 // Also try the XPath-based selector
                 let xpathButton = document.evaluate(
-                    '/html/body/div/div[1]/div[2]/div/div[2]/div/div[5]/div/div[2]/div[2]/div[1]/div/div[2]/div/button[1]',
+                    '{overlay_button_xpath}',
                     document,
                     null,
                     XPathResult.FIRST_ORDERED_NODE_TYPE,
                     null
                 ).singleNodeValue;
-                if (xpathButton) {
+                if (xpathButton) {{
                     xpathButton.style.display = 'none';
                     xpathButton.style.visibility = 'hidden';
-                }
+                }}
 
                 // Hide other common overlay elements
-                let overlays = document.querySelectorAll('.sc-ABqPz.hkFQpn, [role="presentation"]');
-                overlays.forEach(el => {
-                    if (el.style.zIndex > 1000) {
+                let overlays = document.querySelectorAll('{overlay_element_selectors}');
+                overlays.forEach(el => {{
+                    if (el.style.zIndex > 1000) {{
                         el.style.display = 'none';
-                    }
-                });
+                    }}
+                }});
             """)
             time.sleep(0.3)
             logger.info(f"Successfully hid overlaying elements for tab '{tab_text}'")

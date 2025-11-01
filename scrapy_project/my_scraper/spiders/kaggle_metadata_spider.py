@@ -281,7 +281,7 @@ class KaggleMetadataSpider(scrapy.Spider):
                 driver, self.selectors, model_name, model_id, response.url
             )
 
-            self.logger.info(f'[PARSE THREAD: {thread_id}] ✓ Completed for {model_name} - Downloads: {total_downloads}, Views: {total_views}, Engagements: {total_engagements}, Variations: {len(item.get("variations", []))}')
+            self.logger.info(f'[PARSE THREAD: {thread_id}]   Completed for {model_name} - Downloads: {total_downloads}, Views: {total_views}, Engagements: {total_engagements}, Variations: {len(item.get("variations", []))}')
 
             # Return the item (will be yielded by parse method)
             return item

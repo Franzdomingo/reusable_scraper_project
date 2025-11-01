@@ -67,7 +67,7 @@ services:
       - DISPLAY=:99
       - CHROME_BIN=/usr/bin/chromium
       - CHROMEDRIVER_PATH=/usr/bin/chromedriver
-    command: python scrapy_project/run.py nvidia_models
+    command: python scrapy_project/run.py nvidia_models -a max_pages=1
     profiles:
       - individual
 

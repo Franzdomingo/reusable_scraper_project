@@ -136,19 +136,17 @@ FEED_EXPORT_ENCODING = 'utf-8'
 # This prevents "Connection pool is full" warnings
 CONCURRENT_REQUESTS_TO_REMOTE_SERVER = CONCURRENT_REQUESTS_AND_SELENIUM_POOL_SIZE * 2
 
-# Proxy rotation settings (disabled by default)
-# To enable proxy rotation:
-# 1. Set ENABLE_PROXY_ROTATION = True
-# 2. Add proxy URLs to ROTATING_PROXIES list
-# 3. Proxy format: 'http://username:password@host:port' or 'http://host:port'
-# I disabled proxy rotation by default try not to increase selenium pool size and scrapy concurrency too much as it may lead to enabling proxies unnecessarily. - Franz 
-ENABLE_PROXY_ROTATION = False
-ROTATING_PROXIES = [
-    # Example proxies (uncomment and replace with your proxies):
-    # 'http://proxy1.example.com:8080',
-    # 'http://proxy2.example.com:8080',
-    # 'http://username:password@proxy3.example.com:8080',
-]
+# Proxy rotation settings - DISABLED
+# Proxy rotation is not needed - issue solved by using Firefox with proper user agent
+# Firefox driver handles anti-bot detection better than Chrome without proxies
+# - Franz (Intern)
+# ENABLE_PROXY_ROTATION = False
+# ROTATING_PROXIES = [
+#     # Example proxies (uncomment and replace with your proxies):
+#     # 'http://proxy1.example.com:8080',
+#     # 'http://proxy2.example.com:8080',
+#     # 'http://username:password@proxy3.example.com:8080',
+# ]
 
 # Performance monitoring and system info
 SYSTEM_MEMORY_GB = os.sysconf('SC_PAGE_SIZE') * os.sysconf('SC_PHYS_PAGES') / (1024.**3) if hasattr(os, 'sysconf') else 'N/A'
