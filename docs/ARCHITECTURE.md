@@ -1274,10 +1274,7 @@ def test_kaggle_metadata_spider():
 
 ### Manual Testing
 
-**Test Scripts** (`test/`):
-- `test_nvidia_debug.py` - Test NVIDIA extraction
-- `test_nvidia_modelcard_url.py` - Test modelcard URL extraction
-- `fetchpagehtml.py` - Debug page rendering
+Manual testing is performed using ad-hoc scripts and local debugging helpers. These utility scripts are intended for local use and are not required for the core scraping pipeline.
 
 ---
 

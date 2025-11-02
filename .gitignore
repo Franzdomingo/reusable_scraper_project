@@ -223,5 +223,11 @@ nul
 
 
 # Ignore top-level api_output folder (API data persisted outside the scrapy project)
+// Ignore top-level api_output folder (API data persisted outside the scrapy project)
 /api_output/
 
+# Local test scripts (not tracked)
+/test/
+
+
+CLAUDE.md 
