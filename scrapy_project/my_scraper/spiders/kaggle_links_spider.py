@@ -23,7 +23,8 @@ class KaggleLinksSpider(scrapy.Spider):
 
     name = 'kaggle_links'
     allowed_domains = ['kaggle.com']
-    start_urls = ['https://www.kaggle.com/models?owner-type=organization']
+    # task=16696 filters for text generation/LLM models only
+    start_urls = ['https://www.kaggle.com/models?owner-type=organization&task=16696']
 
     # Custom settings - override global settings to use only 1 concurrent request
     custom_settings = {
