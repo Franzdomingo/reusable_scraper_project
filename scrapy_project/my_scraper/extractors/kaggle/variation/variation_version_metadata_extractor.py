@@ -24,24 +24,34 @@ def extract_created_by(item, created_by_selector) -> str:
     """
     created_by_selectors = created_by_selector if isinstance(created_by_selector, list) else [created_by_selector] if created_by_selector else []
 
+    logger.debug(f"extract_created_by: Have {len(created_by_selectors)} selectors to try")
+
     for idx, selector in enumerate(created_by_selectors):
         try:
+            logger.debug(f"extract_created_by: Trying selector {idx + 1}: {selector}")
             elem = retry_selenium_find(item, By.CSS_SELECTOR, selector)
-            created_by = elem.text.strip()
+            if elem:
+                created_by = elem.text.strip()
+                logger.debug(f"extract_created_by: Element found, text='{created_by}'")
 
-            if created_by:
-
-                logger.debug(f"Found created_by '{created_by}' using selector {idx + 1}/{len(created_by_selectors)}")
-                return created_by
+                if created_by:
+                    logger.info(f"extract_created_by: Found '{created_by}' using selector {idx + 1}/{len(created_by_selectors)}")
+                    return created_by
+                else:
+                    logger.debug(f"extract_created_by: Element text is empty")
+            else:
+                logger.debug(f"extract_created_by: retry_selenium_find returned None")
         except NoSuchElementException:
-            logger.debug(f"Created by selector {idx + 1}/{len(created_by_selectors)} not found")
+            logger.debug(f"extract_created_by: Selector {idx + 1}/{len(created_by_selectors)} not found (NoSuchElementException)")
             continue
         except Exception as e:
-            logger.debug(f"Created by selector {idx + 1}/{len(created_by_selectors)} failed: {e}")
+            logger.debug(f"extract_created_by: Selector {idx + 1}/{len(created_by_selectors)} failed: {e}")
             continue
 
     if created_by_selectors:
-        logger.debug(f"Could not find created_by with any selector")
+        logger.warning(f"extract_created_by: Could not find created_by with any of {len(created_by_selectors)} selectors")
+    else:
+        logger.warning(f"extract_created_by: No selectors provided!")
 
     return ""
 
@@ -59,22 +69,33 @@ def extract_update_description(item, update_desc_selector) -> str:
     """
     update_desc_selectors = update_desc_selector if isinstance(update_desc_selector, list) else [update_desc_selector] if update_desc_selector else []
 
+    logger.debug(f"extract_update_description: Have {len(update_desc_selectors)} selectors to try")
+
     for idx, selector in enumerate(update_desc_selectors):
         try:
+            logger.debug(f"extract_update_description: Trying selector {idx + 1}: {selector}")
             elem = retry_selenium_find(item, By.CSS_SELECTOR, selector)
-            update_desc = elem.text.strip()
+            if elem:
+                update_desc = elem.text.strip()
+                logger.debug(f"extract_update_description: Element found, text='{update_desc}'")
 
-            if update_desc:
-                logger.debug(f"Found update_description '{update_desc}' using selector {idx + 1}/{len(update_desc_selectors)}")
-                return update_desc
+                if update_desc:
+                    logger.info(f"extract_update_description: Found '{update_desc}' using selector {idx + 1}/{len(update_desc_selectors)}")
+                    return update_desc
+                else:
+                    logger.debug(f"extract_update_description: Element text is empty")
+            else:
+                logger.debug(f"extract_update_description: retry_selenium_find returned None")
         except NoSuchElementException:
-            logger.debug(f"Update description selector {idx + 1}/{len(update_desc_selectors)} not found")
+            logger.debug(f"extract_update_description: Selector {idx + 1}/{len(update_desc_selectors)} not found (NoSuchElementException)")
             continue
         except Exception as e:
-            logger.debug(f"Update description selector {idx + 1}/{len(update_desc_selectors)} failed: {e}")
+            logger.debug(f"extract_update_description: Selector {idx + 1}/{len(update_desc_selectors)} failed: {e}")
             continue
 
     if update_desc_selectors:
-        logger.debug(f"Could not find update_description with any selector")
+        logger.warning(f"extract_update_description: Could not find update_description with any of {len(update_desc_selectors)} selectors")
+    else:
+        logger.warning(f"extract_update_description: No selectors provided!")
 
     return ""
