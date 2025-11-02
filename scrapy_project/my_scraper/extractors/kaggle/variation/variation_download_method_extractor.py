@@ -53,7 +53,7 @@ def extract_download_methods(driver: webdriver.Chrome, variation_counter: int, s
 
     try:
         # Step 1: Click the download button to open popup
-        logger.info(f"Variation {variation_counter}: Attempting to click download button")
+        logger.debug(f"Variation {variation_counter}: Attempting to click download button")
 
         # Wait a bit for the page to stabilize
         time.sleep(0.5)
@@ -119,7 +119,7 @@ def extract_download_methods(driver: webdriver.Chrome, variation_counter: int, s
                                 continue
 
                         if popup_found:
-                            logger.info(f"Variation {variation_counter}: Successfully clicked download button using {method_name}")
+                            logger.debug(f"Variation {variation_counter}: Clicked download button using {method_name}")
                             button_clicked = True
                             break
                         else:
@@ -152,7 +152,7 @@ def extract_download_methods(driver: webdriver.Chrome, variation_counter: int, s
                     logger.debug(f"Variation {variation_counter}: Checking for popup with selector: {selector}")
                     wait.until(EC.presence_of_element_located((By.XPATH, selector)))
                     popup_appeared = True
-                    logger.info(f"Variation {variation_counter}: Download popup appeared using selector: {selector}")
+                    logger.debug(f"Variation {variation_counter}: Download popup appeared")
                     break
                 except TimeoutException:
                     continue
@@ -167,14 +167,14 @@ def extract_download_methods(driver: webdriver.Chrome, variation_counter: int, s
             return download_methods
 
         # Step 3: Click the "Download via" dropdown to open the methods list
-        logger.info(f"Variation {variation_counter}: Looking for 'Download via' dropdown")
+        logger.debug(f"Variation {variation_counter}: Looking for 'Download via' dropdown")
 
         # First, wait specifically for the combobox to be present and get it
         dropdown = None
         try:
             wait = WebDriverWait(driver, 5)
             dropdown = wait.until(EC.presence_of_element_located((By.XPATH, '//div[@role="combobox" and contains(@aria-label, "Download via")]')))
-            logger.info(f"Variation {variation_counter}: Found 'Download via' combobox")
+            logger.debug(f"Variation {variation_counter}: Found 'Download via' combobox")
             time.sleep(0.3)
         except TimeoutException:
             logger.warning(f"Variation {variation_counter}: Timeout waiting for 'Download via' combobox")
@@ -182,7 +182,7 @@ def extract_download_methods(driver: webdriver.Chrome, variation_counter: int, s
 
         # Now use the robust click_dropdown_to_open function
         selector = '//div[@role="combobox" and contains(@aria-label, "Download via")]'
-        logger.info(f"Variation {variation_counter}: Attempting to open 'Download via' dropdown")
+        logger.debug(f"Variation {variation_counter}: Attempting to open 'Download via' dropdown")
         dropdown_clicked = click_dropdown_to_open(driver, selector, timeout=5)
 
         if not dropdown_clicked:
@@ -190,7 +190,7 @@ def extract_download_methods(driver: webdriver.Chrome, variation_counter: int, s
             return download_methods
 
         # Step 4: Wait for listbox with download method options to appear
-        logger.info(f"Variation {variation_counter}: Waiting for download methods listbox to appear")
+        logger.debug(f"Variation {variation_counter}: Waiting for download methods listbox to appear")
 
         try:
             # Get the aria-controls attribute to find the controlled listbox ID
@@ -227,7 +227,7 @@ def extract_download_methods(driver: webdriver.Chrome, variation_counter: int, s
             for listbox_sel in listbox_selectors:
                 try:
                     wait.until(EC.presence_of_element_located((By.XPATH, listbox_sel)))
-                    logger.info(f"Variation {variation_counter}: Listbox appeared using selector: {listbox_sel}")
+                    logger.debug(f"Variation {variation_counter}: Listbox appeared")
                     listbox_appeared = True
                     break
                 except TimeoutException:
@@ -257,7 +257,7 @@ def extract_download_methods(driver: webdriver.Chrome, variation_counter: int, s
                 try:
                     menu_items = retry_selenium_find(driver, By.XPATH, items_selector, find_multiple=True)
                     if len(menu_items) > 0:
-                        logger.info(f"Variation {variation_counter}: Found {len(menu_items)} menu items with selector: {items_selector}")
+                        logger.debug(f"Variation {variation_counter}: Found {len(menu_items)} menu items")
                         break
                 except:
                     continue
@@ -284,7 +284,7 @@ def extract_download_methods(driver: webdriver.Chrome, variation_counter: int, s
 
         for idx in range(len(menu_items)):
             try:
-                logger.info(f"Variation {variation_counter}: Processing download method {idx + 1}/{len(menu_items)}")
+                logger.debug(f"Variation {variation_counter}: Processing download method {idx + 1}/{len(menu_items)}")
 
                 # Re-find menu items (they may be stale)
                 if working_items_selector:
@@ -318,14 +318,14 @@ def extract_download_methods(driver: webdriver.Chrome, variation_counter: int, s
                     # Final fallback to item text
                     method_name = item.text.strip()
 
-                logger.info(f"Variation {variation_counter}: Found download method '{method_name}'")
+                logger.debug(f"Variation {variation_counter}: Found download method '{method_name}'")
 
                 # Click the method option to display its command
                 try:
                     driver.execute_script("arguments[0].scrollIntoView({block: 'center'});", item)
                     time.sleep(0.2)
                     driver.execute_script("arguments[0].click();", item)
-                    logger.info(f"Variation {variation_counter}: Clicked download method '{method_name}'")
+                    logger.debug(f"Variation {variation_counter}: Clicked download method '{method_name}'")
 
                     # Wait longer for the command area to update with the new command
                     # The UI needs time to fetch and display the specific command for this method
@@ -365,7 +365,7 @@ def extract_download_methods(driver: webdriver.Chrome, variation_counter: int, s
                             # Verify this looks like a download command (not example usage)
                             # Download commands typically contain specific patterns
                             if command and any(pattern in command.lower() for pattern in ['kagglehub.model_download', 'kaggle models', 'curl', 'wget']):
-                                logger.info(f"Variation {variation_counter}: Extracted command for '{method_name}' using {cmd_selector}: {command[:100]}...")
+                                logger.debug(f"Variation {variation_counter}: Extracted command for '{method_name}'")
                                 break
                             else:
                                 logger.debug(f"Variation {variation_counter}: Found text but doesn't look like download command: {command[:100]}...")
@@ -393,7 +393,7 @@ def extract_download_methods(driver: webdriver.Chrome, variation_counter: int, s
                                         command = command.strip()
 
                                 if command:
-                                    logger.info(f"Variation {variation_counter}: Extracted command for '{method_name}' using {cmd_selector}: {command[:100]}...")
+                                    logger.debug(f"Variation {variation_counter}: Extracted command for '{method_name}'")
                                     break
                                 else:
                                     logger.debug(f"Variation {variation_counter}: Found element but text is empty with {cmd_selector}")
@@ -413,7 +413,7 @@ def extract_download_methods(driver: webdriver.Chrome, variation_counter: int, s
 
                 # Re-open dropdown for next method (if not last)
                 if idx < len(menu_items) - 1:
-                    logger.info(f"Variation {variation_counter}: Re-opening dropdown for next method")
+                    logger.debug(f"Variation {variation_counter}: Re-opening dropdown for next method")
 
                     # Wait a bit for previous command to be displayed
                     time.sleep(0.3)
@@ -433,7 +433,10 @@ def extract_download_methods(driver: webdriver.Chrome, variation_counter: int, s
                 logger.warning(f"Variation {variation_counter}: Error processing download method {idx + 1}: {e}")
                 continue
 
-        logger.info(f"Variation {variation_counter}: Extracted {len(download_methods)} download methods")
+        if download_methods:
+            logger.info(f"Variation {variation_counter}: Extracted {len(download_methods)} download methods")
+        else:
+            logger.warning(f"Variation {variation_counter}: No download methods extracted")
 
         # Close popup if still open
         try:

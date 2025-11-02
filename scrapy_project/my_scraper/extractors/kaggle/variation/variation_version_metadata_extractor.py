@@ -35,7 +35,7 @@ def extract_created_by(item, created_by_selector) -> str:
                 logger.debug(f"extract_created_by: Element found, text='{created_by}'")
 
                 if created_by:
-                    logger.info(f"extract_created_by: Found '{created_by}' using selector {idx + 1}/{len(created_by_selectors)}")
+                    logger.debug(f"extract_created_by: Extracted '{created_by}'")
                     return created_by
                 else:
                     logger.debug(f"extract_created_by: Element text is empty")
@@ -49,9 +49,9 @@ def extract_created_by(item, created_by_selector) -> str:
             continue
 
     if created_by_selectors:
-        logger.warning(f"extract_created_by: Could not find created_by with any of {len(created_by_selectors)} selectors")
+        logger.debug(f"extract_created_by: No created_by found")
     else:
-        logger.warning(f"extract_created_by: No selectors provided!")
+        logger.debug(f"extract_created_by: No selectors provided")
 
     return ""
 
@@ -80,7 +80,7 @@ def extract_update_description(item, update_desc_selector) -> str:
                 logger.debug(f"extract_update_description: Element found, text='{update_desc}'")
 
                 if update_desc:
-                    logger.info(f"extract_update_description: Found '{update_desc}' using selector {idx + 1}/{len(update_desc_selectors)}")
+                    logger.debug(f"extract_update_description: Extracted '{update_desc}'")
                     return update_desc
                 else:
                     logger.debug(f"extract_update_description: Element text is empty")
@@ -94,8 +94,8 @@ def extract_update_description(item, update_desc_selector) -> str:
             continue
 
     if update_desc_selectors:
-        logger.warning(f"extract_update_description: Could not find update_description with any of {len(update_desc_selectors)} selectors")
+        logger.debug(f"extract_update_description: No update_description found")
     else:
-        logger.warning(f"extract_update_description: No selectors provided!")
+        logger.debug(f"extract_update_description: No selectors provided")
 
     return ""

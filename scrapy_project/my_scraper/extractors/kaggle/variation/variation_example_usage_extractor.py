@@ -31,7 +31,7 @@ def extract_example_usage(driver: webdriver.Chrome, example_usage_selector, vari
 
             # Check if it contains the "no usage guide" message
             if 'This variation does not have a usage guide yet.' in example_usage_elem.text:
-                logger.info(f"Variation {variation_counter}: No usage guide available")
+                logger.debug(f"Variation {variation_counter}: No usage guide available")
                 return ''
 
             # Convert HTML to Markdown with inline links
@@ -44,21 +44,19 @@ def extract_example_usage(driver: webdriver.Chrome, example_usage_selector, vari
                 variation_example_usage = variation_example_usage[11:].strip()
 
             if variation_example_usage:
-                # Log truncated version (first 100 chars) to avoid log spam
-                preview = variation_example_usage[:100] + '...' if len(variation_example_usage) > 100 else variation_example_usage
-                logger.info(f"Variation {variation_counter}: Found example usage using selector {idx + 1}/{len(example_usage_selectors)} - Preview: {preview}")
+                logger.debug(f"Variation {variation_counter}: Extracted example usage ({len(variation_example_usage)} chars)")
 
                 # Count and log markdown links
                 link_count = variation_example_usage.count('](')
                 if link_count > 0:
-                    logger.info(f"Variation {variation_counter}: Converted {link_count} links to Markdown format in example usage")
+                    logger.debug(f"Variation {variation_counter}: Converted {link_count} links to Markdown format")
 
                 return variation_example_usage
         except Exception as e:
-            logger.info(f"Variation {variation_counter}: Example usage selector {idx + 1}/{len(example_usage_selectors)} failed: {e}")
+            logger.debug(f"Variation {variation_counter}: Example usage selector {idx + 1}/{len(example_usage_selectors)} failed: {e}")
             continue
 
     if example_usage_selectors:
-        logger.info(f"Variation {variation_counter}: Could not find example usage with any selector")
+        logger.debug(f"Variation {variation_counter}: No example usage found")
 
     return ''

@@ -30,7 +30,7 @@ def build_tab_queue(driver: webdriver.Chrome, tabs_all_selector: str, tab_text_s
 
     try:
         tab_buttons = retry_selenium_find(driver, By.CSS_SELECTOR, tabs_all_selector, find_multiple=True)
-        logger.info(f"Found {len(tab_buttons)} tab buttons with selector '{tabs_all_selector}'")
+        logger.debug(f"Found {len(tab_buttons)} tab buttons")
 
         if len(tab_buttons) == 0:
             logger.warning(f"No tabs found for {name}")
@@ -49,13 +49,13 @@ def build_tab_queue(driver: webdriver.Chrome, tabs_all_selector: str, tab_text_s
                         'text': tab_text,
                         'button': tab_button
                     })
-                    logger.info(f"Added tab to queue - Index {idx}: {tab_text}")
+                    logger.debug(f"Added tab to queue - Index {idx}: {tab_text}")
 
             except Exception as e:
                 logger.warning(f"Error extracting text from tab button {idx}: {e}")
                 continue
 
-        logger.info(f"Built tab queue with {len(tab_queue)} tabs for {name}")
+        logger.debug(f"Built tab queue with {len(tab_queue)} tabs for {name}")
 
     except Exception as e:
         logger.error(f"Error building tab queue for {name}: {e}")
@@ -87,13 +87,13 @@ def click_tab(driver: webdriver.Chrome, tabs_all_selector: str, tab_idx: int, ta
         tab_button = tab_buttons[tab_idx]
 
         # Scroll into view first
-        logger.info(f"Scrolling tab '{tab_text}' into view")
+        logger.debug(f"Scrolling tab '{tab_text}' into view")
         driver.execute_script("arguments[0].scrollIntoView({block: 'center', behavior: 'smooth'});", tab_button)
         time.sleep(0.5)
 
         # Try to hide overlaying elements that might intercept the click
         try:
-            logger.info(f"Attempting to hide overlaying elements for tab '{tab_text}'")
+            logger.debug(f"Attempting to hide overlaying elements for tab '{tab_text}'")
             # Get selectors from KaggleSelectors
             overlay_button_class = KaggleSelectors.OVERLAY_BUTTON_CLASS
             overlay_button_xpath = KaggleSelectors.OVERLAY_BUTTON_XPATH
@@ -130,23 +130,23 @@ def click_tab(driver: webdriver.Chrome, tabs_all_selector: str, tab_idx: int, ta
                 }});
             """)
             time.sleep(0.3)
-            logger.info(f"Successfully hid overlaying elements for tab '{tab_text}'")
+            logger.debug(f"Successfully hid overlaying elements for tab '{tab_text}'")
         except Exception as e:
-            logger.info(f"Could not hide overlays for tab '{tab_text}': {e}")
+            logger.debug(f"Could not hide overlays for tab '{tab_text}': {e}")
 
         # Method 1: JavaScript click (most reliable for intercepted elements)
         try:
-            logger.info(f"Method 1: Trying JavaScript click for tab '{tab_text}'")
+            logger.debug(f"Method 1: Trying JavaScript click for tab '{tab_text}'")
             driver.execute_script("arguments[0].click();", tab_button)
             time.sleep(1)  # Wait for tab content to load
-            logger.info(f"Method 1 succeeded - clicked tab: {tab_text}")
+            logger.debug(f"Method 1 succeeded - clicked tab: {tab_text}")
             return True
         except Exception as e:
-            logger.info(f"Method 1 failed for tab '{tab_text}': {e}")
+            logger.debug(f"Method 1 failed for tab '{tab_text}': {e}")
 
         # Method 2: JavaScript MouseEvent dispatch
         try:
-            logger.info(f"Method 2: Trying JavaScript MouseEvent dispatch for tab '{tab_text}'")
+            logger.debug(f"Method 2: Trying JavaScript MouseEvent dispatch for tab '{tab_text}'")
             driver.execute_script("""
                 var element = arguments[0];
                 var event = new MouseEvent('click', {
@@ -157,20 +157,20 @@ def click_tab(driver: webdriver.Chrome, tabs_all_selector: str, tab_idx: int, ta
                 element.dispatchEvent(event);
             """, tab_button)
             time.sleep(1)
-            logger.info(f"Method 2 succeeded - clicked tab: {tab_text}")
+            logger.debug(f"Method 2 succeeded - clicked tab: {tab_text}")
             return True
         except Exception as e:
-            logger.info(f"Method 2 failed for tab '{tab_text}': {e}")
+            logger.debug(f"Method 2 failed for tab '{tab_text}': {e}")
 
         # Method 3: Regular Selenium click (after hiding overlays)
         try:
-            logger.info(f"Method 3: Trying regular Selenium click for tab '{tab_text}'")
+            logger.debug(f"Method 3: Trying regular Selenium click for tab '{tab_text}'")
             tab_button.click()
             time.sleep(1)
-            logger.info(f"Method 3 succeeded - clicked tab: {tab_text}")
+            logger.debug(f"Method 3 succeeded - clicked tab: {tab_text}")
             return True
         except Exception as e:
-            logger.info(f"Method 3 failed for tab '{tab_text}': {e}")
+            logger.debug(f"Method 3 failed for tab '{tab_text}': {e}")
 
         logger.error(f"All click methods failed for tab '{tab_text}'")
         return False

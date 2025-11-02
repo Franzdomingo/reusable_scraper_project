@@ -35,13 +35,13 @@ def extract_version(driver: webdriver.Chrome, version_selector, variation_counte
                 version_elem = retry_selenium_find(driver, By.CSS_SELECTOR, ver_selector)
 
             variation_version = version_elem.text.strip()
-            logger.info(f"Variation {variation_counter}: Found version '{variation_version}' using selector {idx + 1}/{len(version_selectors)}")
+            logger.debug(f"Variation {variation_counter}: Extracted version: {variation_version}")
             return variation_version
         except Exception as e:
-            logger.info(f"Variation {variation_counter}: Version selector {idx + 1}/{len(version_selectors)} failed: {e}")
+            logger.debug(f"Variation {variation_counter}: Version selector {idx + 1}/{len(version_selectors)} failed: {e}")
             continue
 
     if version_selectors:
-        logger.info(f"Variation {variation_counter}: Could not find version with any selector")
+        logger.debug(f"Variation {variation_counter}: No version found")
 
     return ''

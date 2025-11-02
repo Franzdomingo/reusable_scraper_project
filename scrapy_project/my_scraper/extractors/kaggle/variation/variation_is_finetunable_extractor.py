@@ -36,20 +36,20 @@ def extract_is_finetunable(driver: webdriver.Chrome, is_finetunable_selector, va
                 finetunable_elems = retry_selenium_find(driver, By.CSS_SELECTOR, ft_selector, find_multiple=True)
                 selector_type = "CSS"
 
-            logger.info(f"Variation {variation_counter}: Found {len(finetunable_elems)} elements matching is_finetunable {selector_type} selector {idx + 1}")
+            logger.debug(f"Variation {variation_counter}: Found {len(finetunable_elems)} elements matching selector")
 
             # Look for element with "Yes" or "No" text
             for elem in finetunable_elems:
                 text = elem.text.strip()
                 # Check if it's a Yes/No value (case-insensitive)
                 if text.lower() in ['yes', 'no']:
-                    logger.info(f"Variation {variation_counter}: Found is_finetunable '{text}' using {selector_type} selector {idx + 1}/{len(is_finetunable_selectors)}")
+                    logger.debug(f"Variation {variation_counter}: Extracted is_finetunable: {text}")
                     return text
         except Exception as e:
-            logger.info(f"Variation {variation_counter}: Is_finetunable selector {idx + 1}/{len(is_finetunable_selectors)} failed: {e}")
+            logger.debug(f"Variation {variation_counter}: Is_finetunable selector {idx + 1}/{len(is_finetunable_selectors)} failed: {e}")
             continue
 
     if is_finetunable_selectors:
-        logger.info(f"Variation {variation_counter}: Could not find is_finetunable with any selector")
+        logger.debug(f"Variation {variation_counter}: No is_finetunable found")
 
     return ''

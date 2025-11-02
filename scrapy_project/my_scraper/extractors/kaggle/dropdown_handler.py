@@ -35,17 +35,17 @@ def click_dropdown_to_open(driver: webdriver.Chrome, selector: str, timeout: int
             by_type = By.CSS_SELECTOR
             selector_type = "CSS"
 
-        logger.info(f"Using {selector_type} selector: {selector}")
+        logger.debug(f"Using {selector_type} selector: {selector}")
         element = retry_selenium_find(driver, by_type, selector)
 
         # First, scroll the element into view
-        logger.info("Scrolling dropdown element into view")
+        logger.debug("Scrolling dropdown element into view")
         driver.execute_script("arguments[0].scrollIntoView({block: 'center', behavior: 'smooth'});", element)
         time.sleep(0.5)
 
         # Try to hide any overlaying elements (common issue)
         try:
-            logger.info("Attempting to hide overlay elements")
+            logger.debug("Attempting to hide overlay elements")
             # Hide overlays using stable selectors (role="presentation" is semantic)
             # Updated 2025-10-25: Removed fragile CSS classes, using ARIA roles instead
             driver.execute_script("""
@@ -66,22 +66,22 @@ def click_dropdown_to_open(driver: webdriver.Chrome, selector: str, timeout: int
             """, element)
             time.sleep(0.3)
         except Exception as e:
-            logger.info(f"Could not hide overlays: {e}")
+            logger.debug(f"Could not hide overlays: {e}")
 
         # Method 1: JavaScript click with force
         try:
-            logger.info("Method 1: Trying JavaScript click")
+            logger.debug("Method 1: Trying JavaScript click")
             driver.execute_script("arguments[0].click();", element)
             time.sleep(0.5)
             if element.get_attribute('aria-expanded') == 'true':
-                logger.info("Method 1 succeeded - dropdown opened")
+                logger.debug("Method 1 succeeded - dropdown opened")
                 return True
         except Exception as e:
-            logger.info(f"Method 1 failed: {e}")
+            logger.debug(f"Method 1 failed: {e}")
 
         # Method 2: JavaScript MouseEvent dispatch (most powerful)
         try:
-            logger.info("Method 2: Trying JavaScript MouseEvent dispatch")
+            logger.debug("Method 2: Trying JavaScript MouseEvent dispatch")
             driver.execute_script("""
                 var element = arguments[0];
                 var event = new MouseEvent('mousedown', {
@@ -100,59 +100,59 @@ def click_dropdown_to_open(driver: webdriver.Chrome, selector: str, timeout: int
             """, element)
             time.sleep(0.5)
             if element.get_attribute('aria-expanded') == 'true':
-                logger.info("Method 2 succeeded - dropdown opened")
+                logger.debug("Method 2 succeeded - dropdown opened")
                 return True
         except Exception as e:
-            logger.info(f"Method 2 failed: {e}")
+            logger.debug(f"Method 2 failed: {e}")
 
         # Method 3: Focus and press SPACE key (accessibility method)
         try:
-            logger.info("Method 3: Trying focus via JavaScript and SPACE key")
+            logger.debug("Method 3: Trying focus via JavaScript and SPACE key")
             driver.execute_script("arguments[0].focus();", element)
             time.sleep(0.2)
             element.send_keys(Keys.SPACE)
             time.sleep(0.5)
             if element.get_attribute('aria-expanded') == 'true':
-                logger.info("Method 3 succeeded - dropdown opened")
+                logger.debug("Method 3 succeeded - dropdown opened")
                 return True
         except Exception as e:
-            logger.info(f"Method 3 failed: {e}")
+            logger.debug(f"Method 3 failed: {e}")
 
         # Method 4: Focus and press ENTER key
         try:
-            logger.info("Method 4: Trying focus via JavaScript and ENTER key")
+            logger.debug("Method 4: Trying focus via JavaScript and ENTER key")
             driver.execute_script("arguments[0].focus();", element)
             time.sleep(0.2)
             element.send_keys(Keys.ENTER)
             time.sleep(0.5)
             if element.get_attribute('aria-expanded') == 'true':
-                logger.info("Method 4 succeeded - dropdown opened")
+                logger.debug("Method 4 succeeded - dropdown opened")
                 return True
         except Exception as e:
-            logger.info(f"Method 4 failed: {e}")
+            logger.debug(f"Method 4 failed: {e}")
 
         # Method 5: Regular Selenium click (after overlay removal)
         try:
-            logger.info("Method 5: Trying regular Selenium click after overlay removal")
+            logger.debug("Method 5: Trying regular Selenium click after overlay removal")
             element.click()
             time.sleep(0.5)
             if element.get_attribute('aria-expanded') == 'true':
-                logger.info("Method 5 succeeded - dropdown opened")
+                logger.debug("Method 5 succeeded - dropdown opened")
                 return True
         except Exception as e:
-            logger.info(f"Method 5 failed: {e}")
+            logger.debug(f"Method 5 failed: {e}")
 
         # Method 6: ActionChains with offset
         try:
-            logger.info("Method 6: Trying ActionChains with offset")
+            logger.debug("Method 6: Trying ActionChains with offset")
             actions = ActionChains(driver)
             actions.move_to_element(element).move_by_offset(0, 0).click().perform()
             time.sleep(0.5)
             if element.get_attribute('aria-expanded') == 'true':
-                logger.info("Method 6 succeeded - dropdown opened")
+                logger.debug("Method 6 succeeded - dropdown opened")
                 return True
         except Exception as e:
-            logger.info(f"Method 6 failed: {e}")
+            logger.debug(f"Method 6 failed: {e}")
 
         logger.warning("All click methods failed - dropdown did not open")
         return False

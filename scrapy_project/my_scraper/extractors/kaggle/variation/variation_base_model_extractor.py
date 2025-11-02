@@ -46,7 +46,7 @@ def extract_base_model(driver: webdriver.Chrome, base_model_selector, variation_
                 # Clean and normalize the URL
                 base_model_url = base_model_url.strip()
 
-                logger.info(f"Variation {variation_counter}: Found base model URL '{base_model_url}' using selector {idx + 1}/{len(base_model_selectors)}")
+                logger.debug(f"Variation {variation_counter}: Extracted base model: {base_model_url}")
                 return base_model_url
         except Exception as e:
             logger.debug(f"Variation {variation_counter}: Base model selector {idx + 1}/{len(base_model_selectors)} failed: {e}")

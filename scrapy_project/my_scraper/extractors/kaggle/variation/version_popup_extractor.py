@@ -106,7 +106,7 @@ def extract_versions_from_popup(
             return created_by, update_description, version_urls
 
         # Step 1: Click the versions button to open popup
-        logger.info(f"Attempting to click versions button for variation {variation_counter}")
+        logger.debug(f"Attempting to click versions button for variation {variation_counter}")
 
         # Wait a bit for the page to stabilize after variation selection
         time.sleep(1.0)
@@ -136,7 +136,7 @@ def extract_versions_from_popup(
 
         # Strategy 2: Look for elements containing "Version" text (more resilient)
         if not button_candidates:
-            logger.info(f"Configured selectors didn't find button, trying text-based search")
+            logger.debug(f"Configured selectors didn't find button, trying text-based search")
             try:
                 # Look for <a> tags containing "Version" text
                 version_links = retry_selenium_find(driver, By.XPATH, "//a[contains(text(), 'Version')]", find_multiple=True)
@@ -171,7 +171,7 @@ def extract_versions_from_popup(
 
             return versions_data
 
-        logger.info(f"Found {len(button_candidates)} versions button candidate(s)")
+        logger.debug(f"Found {len(button_candidates)} versions button candidate(s)")
 
         # Try to click each candidate
         for strategy, selector_desc, button in button_candidates:
@@ -217,9 +217,7 @@ def extract_versions_from_popup(
                         try:
                             popup_elements = retry_selenium_find(driver, By.CSS_SELECTOR, popup_items_selector, find_multiple=True)
                             if len(popup_elements) > 0:
-                                logger.info(f" Successfully clicked versions button using {method_name} via {strategy}")
-                                logger.info(f"  Selector: {selector_desc}")
-                                logger.info(f"  Button text: '{button.text[:100]}'")
+                                logger.debug(f"Successfully clicked versions button using {method_name}")
                                 button_clicked = True
                                 break
                             else:
@@ -251,7 +249,7 @@ def extract_versions_from_popup(
         try:
             wait = WebDriverWait(driver, 3)
             wait.until(EC.presence_of_element_located((By.CSS_SELECTOR, popup_items_selector)))
-            logger.info(f"Version popup appeared")
+            logger.debug(f"Version popup appeared")
             time.sleep(0.3)  # Additional wait for items to render
         except TimeoutException:
             logger.warning(f"Timeout waiting for version popup to appear")
@@ -259,7 +257,7 @@ def extract_versions_from_popup(
 
         # Find all version items
         version_items = retry_selenium_find(driver, By.CSS_SELECTOR, popup_items_selector, find_multiple=True)
-        logger.info(f"Found {len(version_items)} version items in popup")
+        logger.debug(f"Found {len(version_items)} version items in popup")
 
         if len(version_items) == 0:
             logger.warning(f"No version items found in popup")
@@ -277,7 +275,7 @@ def extract_versions_from_popup(
         from .variation_download_method_extractor import extract_download_methods
 
         # Phase 1: Extract metadata from popup items (while popup is still open)
-        logger.info(f"Phase 1: Extracting metadata from {len(version_items)} popup items")
+        logger.debug(f"Phase 1: Extracting metadata from {len(version_items)} popup items")
         version_metadata_list = []
 
         for idx in range(len(version_items)):
@@ -306,7 +304,7 @@ def extract_versions_from_popup(
                         except NoSuchElementException:
                             continue
 
-                logger.info(f"Version {idx + 1}: {item_version_text} (Created by: {item_created_by}, Update desc: {item_update_desc})")
+                logger.debug(f"Version {idx + 1}: {item_version_text} (Created by: {item_created_by})")
 
                 # Store metadata
                 version_metadata_list.append({
@@ -327,11 +325,11 @@ def extract_versions_from_popup(
                 continue
 
         # Phase 2: Navigate to each version and extract page data
-        logger.info(f"Phase 2: Navigating to each version and extracting page data")
+        logger.debug(f"Phase 2: Navigating to each version and extracting page data")
 
         for idx, metadata in enumerate(version_metadata_list):
             try:
-                logger.info(f"Processing version {idx + 1}/{len(version_metadata_list)}: {metadata['version_number']}")
+                logger.debug(f"Processing version {idx + 1}/{len(version_metadata_list)}: {metadata['version_number']}")
 
                 # Re-open popup to click the version (popup closed after previous navigation)
                 if idx > 0:
@@ -368,11 +366,11 @@ def extract_versions_from_popup(
                         item = version_items[idx]
                         link = retry_selenium_find(item, By.CSS_SELECTOR, 'a')
                         driver.execute_script("arguments[0].click();", link)
-                        logger.info(f"Clicked version {idx + 1}: {metadata['version_number']}")
+                        logger.debug(f"Clicked version {idx + 1}: {metadata['version_number']}")
                         time.sleep(1.0)  # Wait for page to load/update
 
                         current_url = driver.current_url
-                        logger.info(f"Currently on URL: {current_url}")
+                        logger.debug(f"Currently on URL: {current_url}")
                     else:
                         logger.warning(f"Version item {idx + 1} not found in re-opened popup")
                         continue
@@ -410,7 +408,7 @@ def extract_versions_from_popup(
                 logger.warning(f"Error processing version {idx + 1}: {e}")
                 continue
 
-        logger.info(f"Extracted data for {len(versions_data)} versions from popup")
+        logger.info(f"Extracted {len(versions_data)} versions from popup")
 
         # Close popup if still open
         try:

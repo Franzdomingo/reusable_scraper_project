@@ -38,7 +38,7 @@ def extract_description(driver: webdriver.Chrome, tree: lxml_html.HtmlElement,
                 if desc_element:
                     outer = desc_element.get_attribute('outerHTML')
                     if outer and outer.strip():
-                        logger.info(f"Found short_description using CSS selector: {selector}")
+                        logger.debug(f"Extracted description using CSS selector")
                         return html_to_text(outer)
             except Exception as e:
                 logger.debug(f"Description CSS selector {selector} not found: {e}")
@@ -51,7 +51,7 @@ def extract_description(driver: webdriver.Chrome, tree: lxml_html.HtmlElement,
             logger.debug(f"Trying description XPath selector: {selector}")
             desc_elements = retry_xpath(tree, selector)
             if desc_elements and desc_elements[0].text_content().strip():
-                logger.info(f"Found short_description using XPath selector: {selector}")
+                logger.debug(f"Extracted description using XPath selector")
                 return desc_elements[0].text_content().strip()
         except Exception as e:
             logger.debug(f"Description XPath selector {selector} failed: {e}")
@@ -63,9 +63,9 @@ def extract_description(driver: webdriver.Chrome, tree: lxml_html.HtmlElement,
             if desc_element:
                 outer = desc_element.get_attribute('outerHTML')
                 if outer and outer.strip():
-                    logger.info(f"Found short_description using fallback CSS selector")
+                    logger.debug(f"Extracted description using fallback CSS selector")
                     return html_to_text(outer)
         except Exception:
-            logger.warning(f"Could not find short_description for {name}")
+            logger.warning(f"No description found for {name}")
 
     return description
