@@ -43,13 +43,13 @@ def extract_license(driver: webdriver.Chrome, license_selector, variation_counte
                 # Remove multiple spaces
                 variation_license = ' '.join(variation_license.split())
 
-                logger.info(f"Variation {variation_counter}: Found license '{variation_license}' using selector {idx + 1}/{len(license_selectors)}")
+                logger.debug(f"Variation {variation_counter}: Extracted license: {variation_license}")
                 return variation_license
         except Exception as e:
-            logger.info(f"Variation {variation_counter}: License selector {idx + 1}/{len(license_selectors)} failed: {e}")
+            logger.debug(f"Variation {variation_counter}: License selector {idx + 1}/{len(license_selectors)} failed: {e}")
             continue
 
     if license_selectors:
-        logger.info(f"Variation {variation_counter}: Could not find license with any selector")
+        logger.debug(f"Variation {variation_counter}: No license found")
 
     return ''

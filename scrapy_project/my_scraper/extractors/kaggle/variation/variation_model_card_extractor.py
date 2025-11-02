@@ -41,10 +41,10 @@ def extract_model_card(driver: webdriver.Chrome, model_card_selector, variation_
 
             # If selector doesn't exist (0 elements found), skip and leave field empty
             if len(model_card_elems) == 0:
-                logger.info(f"Variation {variation_counter}: {selector_type} selector '{mc_selector}' found 0 elements - skipping")
+                logger.debug(f"Variation {variation_counter}: {selector_type} selector found 0 elements")
                 continue
 
-            logger.info(f"Variation {variation_counter}: Found {len(model_card_elems)} elements matching {selector_type} model card selector: '{mc_selector}'")
+            logger.debug(f"Variation {variation_counter}: Found {len(model_card_elems)} elements matching selector")
 
             # Try each element until we find one with content
             for elem_idx, model_card_elem in enumerate(model_card_elems):
@@ -54,25 +54,23 @@ def extract_model_card(driver: webdriver.Chrome, model_card_selector, variation_
 
                     # Only accept if it has meaningful content (> 5 chars)
                     if text_content and len(text_content) > 5:
-                        # Log truncated version (first 100 chars) to avoid log spam
-                        preview = text_content[:100] + '...' if len(text_content) > 100 else text_content
-                        logger.info(f"Variation {variation_counter}: Found model card - Preview: {preview}")
+                        logger.debug(f"Variation {variation_counter}: Extracted model card ({len(text_content)} chars)")
 
                         # Count and log markdown links
                         link_count = text_content.count('](')
                         if link_count > 0:
-                            logger.info(f"Variation {variation_counter}: Converted {link_count} links to Markdown format")
+                            logger.debug(f"Variation {variation_counter}: Converted {link_count} links to Markdown format")
 
                         return text_content
                     else:
-                        logger.info(f"Variation {variation_counter}: Element {elem_idx + 1} has content too short ({len(text_content)} chars)")
+                        logger.debug(f"Variation {variation_counter}: Element {elem_idx + 1} has content too short ({len(text_content)} chars)")
                 except Exception as elem_error:
-                    logger.info(f"Variation {variation_counter}: Error extracting text from element {elem_idx + 1}: {elem_error}")
+                    logger.debug(f"Variation {variation_counter}: Error extracting text from element {elem_idx + 1}: {elem_error}")
                     continue
         except Exception as e:
-            logger.info(f"Variation {variation_counter}: Model card selector failed: {e}")
+            logger.debug(f"Variation {variation_counter}: Model card selector failed: {e}")
             continue
 
     # Log if field remains empty (this is expected and OK if selector doesn't exist)
-    logger.info(f"Variation {variation_counter}: Model card field will be empty (selector not found or no content)")
+    logger.debug(f"Variation {variation_counter}: No model card found")
     return ''

@@ -89,7 +89,7 @@ def extract_visible_tags(container_element, selectors: Dict, model_name: str) ->
         logger.error(f"Error in extract_visible_tags for {model_name}: {e}")
 
     if tags:
-        logger.info(f"Extracted {len(tags)} visible tags for {model_name}")
+        logger.debug(f"Extracted {len(tags)} visible tags for {model_name}")
     else:
         logger.debug(f"No visible tags found for {model_name}")
 
@@ -224,7 +224,7 @@ def extract_popover_tags(container_element, driver: webdriver.Chrome, selectors:
         logger.error(f"Error in extract_popover_tags for {model_name}: {e}")
 
     if tags:
-        logger.info(f"Extracted {len(tags)} tags from popovers for {model_name}")
+        logger.debug(f"Extracted {len(tags)} tags from popovers for {model_name}")
     else:
         logger.debug(f"No popover tags found for {model_name}")
 
@@ -261,8 +261,7 @@ def extract_nvidia_tags(container_element, driver: webdriver.Chrome, selectors: 
         all_tags = visible_tags.union(popover_tags)
 
         if all_tags:
-            logger.info(f"Total extracted {len(all_tags)} unique tags for {model_name} "
-                       f"({len(visible_tags)} visible + {len(popover_tags)} from popover)")
+            logger.info(f"Extracted {len(all_tags)} tags for {model_name}")
         else:
             logger.warning(f"No tags found for {model_name}")
 

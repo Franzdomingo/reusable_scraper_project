@@ -40,14 +40,14 @@ def extract_usability(driver: webdriver.Chrome, tree: lxml_html.HtmlElement,
         # Wait a moment for dynamic content to load
         try:
             # Try to wait for the usability section to be present
-            logger.info(f"Waiting for usability section to load for {name}")
+            logger.debug(f"Waiting for usability section to load")
             WebDriverWait(driver, 5).until(
                 EC.presence_of_element_located((By.XPATH, "//*[contains(text(), 'Usability')]"))
             )
             time.sleep(0.5)  # Small additional wait for rendering
-            logger.info(f"Usability section loaded for {name}")
+            logger.debug(f"Usability section loaded")
         except Exception as e:
-            logger.warning(f"Timeout waiting for usability section: {e}")
+            logger.debug(f"Timeout waiting for usability section: {e}")
             # Continue anyway and try the selectors
 
         # Try all selectors via Selenium for dynamic content
@@ -55,45 +55,45 @@ def extract_usability(driver: webdriver.Chrome, tree: lxml_html.HtmlElement,
             # Use smart selector detection
             if is_css_selector(selector):
                 try:
-                    logger.info(f"Trying usability CSS selector via Selenium: {selector}")
+                    logger.debug(f"Trying usability CSS selector: {selector}")
                     elements = retry_selenium_find(driver, By.CSS_SELECTOR, selector, find_multiple=True)
-                    logger.info(f"Found {len(elements) if elements else 0} elements with CSS selector")
+                    logger.debug(f"Found {len(elements) if elements else 0} elements with CSS selector")
 
                     if elements:
                         for i, elem in enumerate(elements):
                             try:
                                 text = elem.text.strip()
-                                logger.info(f"Element {i+1} text: '{text}'")
+                                logger.debug(f"Checking element {i+1} text: '{text}'")
                                 if text:
                                     # Found a valid value - return it immediately
-                                    logger.info(f"Found usability using CSS selector '{selector}': {text}")
+                                    logger.debug(f"Extracted usability using CSS selector: {text}")
                                     return text
                             except Exception as e:
-                                logger.warning(f"Error getting text from element {i+1}: {e}")
+                                logger.debug(f"Error getting text from element {i+1}: {e}")
                                 continue
                 except Exception as e:
-                    logger.warning(f"Usability CSS selector {selector} failed: {e}")
+                    logger.debug(f"Usability CSS selector {selector} failed: {e}")
             else:
                 # XPath selector - use Selenium's XPath method for dynamic content
                 try:
-                    logger.info(f"Trying usability XPath selector via Selenium: {selector}")
+                    logger.debug(f"Trying usability XPath selector: {selector}")
                     elements = retry_selenium_find(driver, By.XPATH, selector, find_multiple=True)
-                    logger.info(f"Found {len(elements) if elements else 0} elements with XPath")
+                    logger.debug(f"Found {len(elements) if elements else 0} elements with XPath")
 
                     if elements:
                         for i, elem in enumerate(elements):
                             try:
                                 text = elem.text.strip()
-                                logger.info(f"Element {i+1} text: '{text}'")
+                                logger.debug(f"Checking element {i+1} text: '{text}'")
                                 if text:
                                     # Found a valid value - return it immediately
-                                    logger.info(f"Found usability using XPath '{selector}': {text}")
+                                    logger.debug(f"Extracted usability using XPath: {text}")
                                     return text
                             except Exception as e:
-                                logger.warning(f"Error getting text from element {i+1}: {e}")
+                                logger.debug(f"Error getting text from element {i+1}: {e}")
                                 continue
                 except Exception as e:
-                    logger.warning(f"Usability XPath selector {selector} failed: {e}")
+                    logger.debug(f"Usability XPath selector {selector} failed: {e}")
 
     # Fallback: Search for text near "Usability" heading
     if not usability:
@@ -116,7 +116,7 @@ def extract_usability(driver: webdriver.Chrome, tree: lxml_html.HtmlElement,
                             text = following_p.text.strip()
                             if text:
                                 usability = text
-                                logger.info(f"Found usability near heading: {usability}")
+                                logger.debug(f"Extracted usability using fallback: {usability}")
                                 break
                     except Exception:
                         continue
@@ -125,6 +125,6 @@ def extract_usability(driver: webdriver.Chrome, tree: lxml_html.HtmlElement,
             logger.error(f"Fallback usability search failed: {e}")
 
     if not usability:
-        logger.warning(f"Could not find usability for {name}")
+        logger.warning(f"No usability found for {name}")
 
     return usability

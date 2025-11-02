@@ -66,7 +66,7 @@ def extract_downloads(driver: webdriver.Chrome, tree: lxml_html.HtmlElement,
                                 pass  # If conversion fails, keep it as candidate
 
                             # Found a valid value - return it immediately
-                            logger.info(f"Found downloads using selector '{selector}': {text}")
+                            logger.debug(f"Extracted downloads using CSS selector: {text}")
                             return text
                     except Exception as e:
                         logger.debug(f"Error getting text from element: {e}")
@@ -96,7 +96,7 @@ def extract_downloads(driver: webdriver.Chrome, tree: lxml_html.HtmlElement,
                                 pass  # If conversion fails, keep it as candidate
 
                             # Found a valid value - return it immediately
-                            logger.info(f"Found downloads using XPath via Selenium '{selector}': {text}")
+                            logger.debug(f"Extracted downloads using XPath: {text}")
                             return text
                     except Exception as e:
                         logger.debug(f"Error getting text from element: {e}")
@@ -131,7 +131,7 @@ def extract_downloads(driver: webdriver.Chrome, tree: lxml_html.HtmlElement,
                             pass  # If conversion fails, keep it as candidate
 
                         # Found a valid value - return it immediately
-                        logger.info(f"Found downloads using XPath '{selector}': {text}")
+                        logger.debug(f"Extracted downloads using XPath fallback: {text}")
                         return text
         except Exception as e:
             logger.debug(f"Downloads XPath selector {selector} failed: {e}")
@@ -187,13 +187,13 @@ def extract_downloads(driver: webdriver.Chrome, tree: lxml_html.HtmlElement,
                         continue
 
             if all_candidates:
-                logger.info(f"Found {len(all_candidates)} download candidates: {all_candidates[:10]}")
+                logger.debug(f"Found {len(all_candidates)} download candidates from heuristic search")
 
                 # Prefer values with K/M/B suffix, then largest plain number
                 with_suffix = [c for c in all_candidates if any(x in c.upper() for x in ['K', 'M', 'B'])]
                 if with_suffix:
                     downloads = with_suffix[0]
-                    logger.info(f"Using first value with suffix: {downloads}")
+                    logger.debug(f"Extracted downloads using heuristic: {downloads}")
                 elif all_candidates:
                     # Find largest number (likely to be total downloads)
                     def to_int(val):
@@ -203,12 +203,12 @@ def extract_downloads(driver: webdriver.Chrome, tree: lxml_html.HtmlElement,
                         except:
                             return 0
                     downloads = max(all_candidates, key=to_int)
-                    logger.info(f"Using largest number: {downloads}")
+                    logger.debug(f"Extracted downloads using heuristic: {downloads}")
 
         except Exception as e:
             logger.error(f"Fallback download search failed: {e}")
 
     if not downloads:
-        logger.warning(f"Could not find downloads for {name}")
+        logger.warning(f"No downloads found for {name}")
 
     return downloads

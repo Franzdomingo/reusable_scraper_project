@@ -53,7 +53,7 @@ def extract_total_views(driver: webdriver.Chrome, tree: lxml_html.HtmlElement,
                         logger.debug(f"Checking element text: '{text}'")
                         if text and is_numeric_value(text):
                             # Found a valid value - return it immediately
-                            logger.info(f"Found total_views using selector '{selector}': {text}")
+                            logger.debug(f"Extracted total_views using CSS selector: {text}")
                             return text
                     except Exception as e:
                         logger.debug(f"Error getting text from element: {e}")
@@ -73,7 +73,7 @@ def extract_total_views(driver: webdriver.Chrome, tree: lxml_html.HtmlElement,
                         logger.debug(f"Checking element text: '{text}'")
                         if text and is_numeric_value(text):
                             # Found a valid value - return it immediately
-                            logger.info(f"Found total_views using XPath via Selenium '{selector}': {text}")
+                            logger.debug(f"Extracted total_views using XPath: {text}")
                             return text
                     except Exception as e:
                         logger.debug(f"Error getting text from element: {e}")
@@ -98,13 +98,13 @@ def extract_total_views(driver: webdriver.Chrome, tree: lxml_html.HtmlElement,
                     logger.debug(f"Checking element text: '{text}'")
                     if text and is_numeric_value(text):
                         # Found a valid value - return it immediately
-                        logger.info(f"Found total_views using XPath '{selector}': {text}")
+                        logger.debug(f"Extracted total_views using XPath fallback: {text}")
                         return text
         except Exception as e:
             logger.debug(f"Total views XPath selector {selector} failed: {e}")
             continue
 
     if not total_views:
-        logger.warning(f"Could not find total views for {name}")
+        logger.warning(f"No total views found for {name}")
 
     return total_views

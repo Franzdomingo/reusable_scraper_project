@@ -52,7 +52,7 @@ def extract_authors(driver: webdriver.Chrome, tree: lxml_html.HtmlElement,
                 logger.debug(f"Authors section aria-expanded: {aria_expanded}")
 
                 if aria_expanded == 'false':
-                    logger.info(f"Expanding authors section for {name}")
+                    logger.debug(f"Expanding authors section for {name}")
                     if click_element(driver, action_selector):
                         time.sleep(0.5)  # Wait for expansion animation
                         # Refresh tree after click
@@ -109,7 +109,7 @@ def extract_authors(driver: webdriver.Chrome, tree: lxml_html.HtmlElement,
                             continue
 
                     if authors:
-                        logger.info(f"Found {len(authors)} authors using CSS selector: {selector}")
+                        logger.debug(f"Extracted {len(authors)} authors using CSS selector")
                         break
                 else:
                     # XPath selector - use lxml
@@ -157,7 +157,7 @@ def extract_authors(driver: webdriver.Chrome, tree: lxml_html.HtmlElement,
                             continue
 
                     if authors:
-                        logger.info(f"Found {len(authors)} authors using XPath: {selector}")
+                        logger.debug(f"Extracted {len(authors)} authors using XPath")
                         break
 
             except Exception as e:
@@ -165,9 +165,9 @@ def extract_authors(driver: webdriver.Chrome, tree: lxml_html.HtmlElement,
                 continue
 
         if authors:
-            logger.info(f"Successfully extracted {len(authors)} authors for {name}")
+            logger.info(f"Extracted {len(authors)} authors for {name}")
         else:
-            logger.warning(f"Could not find any authors for {name}")
+            logger.warning(f"No authors found for {name}")
 
     except Exception as e:
         logger.error(f"Error extracting authors for {name}: {e}")

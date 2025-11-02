@@ -126,7 +126,7 @@ def extract_tags_from_more_buttons(driver: webdriver.Chrome, selectors: Dict) ->
             logger.debug("No 'more' buttons found")
             return all_tags
 
-        logger.info(f"Found {len(more_buttons)} 'more' buttons to click")
+        logger.debug(f"Found {len(more_buttons)} 'more' buttons to click")
 
         # Click each more button and extract tags from the popup
         buttons_clicked = 0
@@ -189,7 +189,7 @@ def extract_tags_from_more_buttons(driver: webdriver.Chrome, selectors: Dict) ->
                 logger.debug(f"Error clicking button {i+1}: {e}")
                 continue
 
-        logger.info(f"Clicked {buttons_clicked} 'more' buttons and found {len(all_tags)} additional tags")
+        logger.debug(f"Clicked {buttons_clicked} 'more' buttons and extracted {len(all_tags)} additional tags")
 
     except Exception as e:
         logger.error(f"Error in extract_tags_from_more_buttons: {e}")
@@ -225,7 +225,7 @@ def extract_tags(driver: webdriver.Chrome, tree: lxml_html.HtmlElement,
         logger.debug("Checking for hidden tags in 'more' buttons")
         hidden_tags = extract_tags_from_more_buttons(driver, selectors)
         if hidden_tags:
-            logger.info(f"Found {len(hidden_tags)} tags from 'more' buttons")
+            logger.debug(f"Extracted {len(hidden_tags)} tags from 'more' buttons")
             tags.extend(list(hidden_tags))
 
         # Then try the specific tag link selector
@@ -280,16 +280,7 @@ def extract_tags(driver: webdriver.Chrome, tree: lxml_html.HtmlElement,
 
                 tags_added = len(tags) - tags_before
                 if tags_added > 0:
-                    log_msg = f"Found {tags_added} new tags using specific selector"
-                    if skipped_duplicates > 0:
-                        log_msg += f" ({skipped_duplicates} duplicates skipped"
-                        if skipped_empty > 0:
-                            log_msg += f", {skipped_empty} empty tags skipped)"
-                        else:
-                            log_msg += ")"
-                    elif skipped_empty > 0:
-                        log_msg += f" ({skipped_empty} empty tags skipped)"
-                    logger.info(log_msg)
+                    logger.debug(f"Extracted {tags_added} tags using tag link selector")
                 elif skipped_empty > 0 or skipped_duplicates > 0:
                     logger.debug(f"No new tags added: {skipped_duplicates} duplicates, {skipped_empty} empty")
 
@@ -366,7 +357,7 @@ def extract_tags(driver: webdriver.Chrome, tree: lxml_html.HtmlElement,
                             continue
 
                     if tags:
-                        logger.info(f"Found {len(tags)} tags using fallback method")
+                        logger.debug(f"Extracted {len(tags)} tags using fallback method")
                 else:
                     logger.debug("No TAGS heading found")
 
@@ -374,9 +365,9 @@ def extract_tags(driver: webdriver.Chrome, tree: lxml_html.HtmlElement,
                 logger.debug(f"Fallback tags search failed: {e}")
 
         if tags:
-            logger.info(f"Successfully extracted {len(tags)} total unique tags for {name}")
+            logger.info(f"Extracted {len(tags)} tags for {name}")
         else:
-            logger.warning(f"Could not find any tags for {name}")
+            logger.warning(f"No tags found for {name}")
 
     except Exception as e:
         logger.error(f"Error extracting tags for {name}: {e}")

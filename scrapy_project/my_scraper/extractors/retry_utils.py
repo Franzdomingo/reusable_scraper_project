@@ -213,3 +213,57 @@ def retry_click(element, driver=None, max_retries: int = None, delay: float = No
     clean_message = _clean_exception_message(last_error)
     logger.error(f'Click: All {max_retries} attempts failed. Last error: {clean_message}')
     return False
+
+
+def check_and_handle_redirect(driver, expected_url: str, context: str = "") -> bool:
+    """
+    Check if the driver was redirected to license/consent page and navigate back if needed
+
+    Kaggle sometimes redirects to /license/consent when clicking download buttons, version links,
+    or tabs. This causes subsequent extraction operations to fail.
+
+    Args:
+        driver: Selenium WebDriver instance
+        expected_url: The expected URL (or base URL pattern) we should be on
+        context: Optional context for logging (e.g., "download methods", "version popup")
+
+    Returns:
+        True if we're on the correct page (or successfully recovered), False if redirect detected and can't recover
+    """
+    try:
+        current_url = driver.current_url
+
+        # Check if we were redirected to license/consent page
+        if '/license/consent' in current_url:
+            logger.warning(f"{context}: Detected redirect to license/consent page: {current_url}")
+
+            # Try to navigate back to the expected URL
+            try:
+                # Remove /license/consent and any trailing parts to get back to the model page
+                if expected_url:
+                    logger.info(f"{context}: Navigating back to expected URL: {expected_url}")
+                    driver.get(expected_url)
+                    time.sleep(1.5)  # Wait for page to load
+
+                    # Verify we're back on the correct page
+                    new_url = driver.current_url
+                    if '/license/consent' not in new_url:
+                        logger.info(f"{context}: Successfully navigated back from license/consent redirect")
+                        return True
+                    else:
+                        logger.error(f"{context}: Still on license/consent page after navigation attempt")
+                        return False
+                else:
+                    logger.error(f"{context}: No expected URL provided, cannot navigate back")
+                    return False
+
+            except Exception as e:
+                logger.error(f"{context}: Failed to navigate back from license/consent: {e}")
+                return False
+
+        # Not a redirect, we're on the correct page
+        return True
+
+    except Exception as e:
+        logger.error(f"{context}: Error checking for redirect: {e}")
+        return False

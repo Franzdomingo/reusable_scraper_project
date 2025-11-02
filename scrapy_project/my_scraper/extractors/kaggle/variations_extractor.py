@@ -20,6 +20,7 @@ from .variation.variation_base_model_extractor import extract_base_model
 from .variation.variation_model_card_extractor import extract_model_card
 from .variation.variation_is_finetunable_extractor import extract_is_finetunable
 from .variation.variation_example_usage_extractor import extract_example_usage
+from .variation.variation_download_method_extractor import extract_download_methods
 from .tab_handler import build_tab_queue, click_tab
 from .variation.version_popup_extractor import extract_versions_from_popup
 from my_scraper.extractors.retry_utils import retry_selenium_find, retry_xpath, retry_click, retry_operation
@@ -84,7 +85,7 @@ def extract_variations_for_tab(
     variations = []
 
     try:
-        logger.info(f"Extracting variations for tab '{tab_prefix}' - {name}")
+        logger.debug(f"Extracting variations for tab '{tab_prefix}' - {name}")
 
         # Get selectors from configuration
         action_selector = selectors.get('variation_action')
@@ -113,12 +114,12 @@ def extract_variations_for_tab(
 
             for selector in action_selectors:
                 dropdown_buttons = retry_selenium_find(driver, By.CSS_SELECTOR, selector, find_multiple=True)
-                logger.info(f"Trying selector '{selector}': found {len(dropdown_buttons)} dropdown buttons")
+                logger.debug(f"Trying selector '{selector}': found {len(dropdown_buttons)} dropdown buttons")
 
                 if len(dropdown_buttons) > 0:
                     dropdown_found = True
                     working_selector = selector
-                    logger.info(f"Using selector '{selector}' for dropdown")
+                    logger.debug(f"Using selector '{selector}' for dropdown")
                     break
 
             if not dropdown_found:
@@ -129,12 +130,12 @@ def extract_variations_for_tab(
             action_selector = working_selector
 
             # Click the first dropdown button to open the variation list
-            logger.info(f"Attempting to click dropdown button for {name}")
+            logger.debug(f"Attempting to click dropdown button for {name}")
             if not click_dropdown_to_open(driver, action_selector):
                 logger.warning(f"Could not open variation dropdown for {name} - all click methods failed")
                 return variations
 
-            logger.info(f"Successfully opened variation dropdown for {name}")
+            logger.debug(f"Successfully opened variation dropdown for {name}")
             time.sleep(0.5)  # Additional wait for list to render
 
         except Exception as e:
@@ -152,7 +153,7 @@ def extract_variations_for_tab(
             # Wait for the list container to appear first
             list_container_selector = selectors.get('variation_list_container', 'ul[role="listbox"]')
 
-            logger.info(f"Waiting for list container with selector '{list_container_selector}'")
+            logger.debug(f"Waiting for list container with selector '{list_container_selector}'")
 
             # Try multiple selectors with fallback
             list_container_found = False
@@ -165,16 +166,16 @@ def extract_variations_for_tab(
 
             for selector in container_selectors:
                 try:
-                    logger.info(f"Trying container selector: {selector}")
+                    logger.debug(f"Trying container selector: {selector}")
                     # Use shorter timeout for each attempt (2 seconds)
                     wait = WebDriverWait(driver, 2)
                     wait.until(EC.presence_of_element_located((By.CSS_SELECTOR, selector)))
-                    logger.info(f"List container appeared with selector: {selector}")
+                    logger.debug(f"List container appeared with selector: {selector}")
                     list_container_selector = selector  # Update to working selector
                     list_container_found = True
                     break
                 except TimeoutException:
-                    logger.info(f"Selector '{selector}' timed out, trying next...")
+                    logger.debug(f"Selector '{selector}' timed out, trying next...")
                     continue
 
             if not list_container_found:
@@ -187,10 +188,10 @@ def extract_variations_for_tab(
             # Find all variation list items within the list container
             # Use a more specific selector that targets items within the listbox
             specific_selector = f'{list_container_selector} {list_items_selector}'
-            logger.info(f"Finding list items with selector '{specific_selector}'")
+            logger.debug(f"Finding list items with selector '{specific_selector}'")
 
             list_items = retry_selenium_find(driver, By.CSS_SELECTOR, specific_selector, find_multiple=True)
-            logger.info(f"Found {len(list_items)} variation list items")
+            logger.debug(f"Found {len(list_items)} variation list items")
 
             if len(list_items) == 0:
                 logger.warning(f"Dropdown opened but no variation list items found for {name}")
@@ -235,13 +236,13 @@ def extract_variations_for_tab(
                             'index': idx,
                             'name': variation_name
                         })
-                        logger.info(f"Added to queue - Index {idx}: {variation_name}")
+                        logger.debug(f"Added to queue - Index {idx}: {variation_name}")
 
                 except Exception as e:
                     logger.warning(f"Error extracting name from list item {idx}: {e}")
                     continue
 
-            logger.info(f"Built variation queue with {len(variation_queue)} items for {name}")
+            logger.debug(f"Built variation queue with {len(variation_queue)} items for {name}")
 
         except TimeoutException:
             logger.warning(f"Timeout waiting for variation list items to appear for {name}")
@@ -258,13 +259,13 @@ def extract_variations_for_tab(
             queued_name = queue_item['name']
 
             try:
-                logger.info(f"Processing variation {variation_counter}/{len(variation_queue)}: {queued_name}")
+                logger.debug(f"Processing variation {variation_counter}/{len(variation_queue)}: {queued_name}")
 
                 # Re-open the dropdown (it may have closed after previous selection)
                 if variation_counter > 1:  # Don't re-open on first iteration
                     try:
                         # Add explicit wait for dropdown element to be available
-                        logger.info(f"Waiting for dropdown element to be available for variation {variation_counter}")
+                        logger.debug(f"Waiting for dropdown element to be available for variation {variation_counter}")
                         dropdown_available = False
                         working_selector = None
 
@@ -281,7 +282,7 @@ def extract_variations_for_tab(
                                     wait.until(EC.presence_of_element_located((By.CSS_SELECTOR, selector)))
                                     dropdown_available = True
                                     working_selector = selector
-                                    logger.info(f"Dropdown element found with selector '{selector}' on attempt {attempt + 1}")
+                                    logger.debug(f"Dropdown element found with selector '{selector}' on attempt {attempt + 1}")
                                     break
                                 except TimeoutException:
                                     logger.debug(f"Selector '{selector}' not found on attempt {attempt + 1}")
@@ -301,7 +302,7 @@ def extract_variations_for_tab(
                         if not click_dropdown_to_open(driver, working_selector):
                             logger.warning(f"Could not re-open dropdown for variation {variation_counter}")
                             continue
-                        logger.info(f"Re-opened dropdown for variation {variation_counter}")
+                        logger.debug(f"Re-opened dropdown for variation {variation_counter}")
                         time.sleep(0.5)  # Increased wait for dropdown to fully open
                     except Exception as e:
                         logger.error(f"Error re-opening dropdown for variation {variation_counter}: {e}")
@@ -331,7 +332,7 @@ def extract_variations_for_tab(
 
                     # Try JavaScript click (more reliable for dropdown items)
                     driver.execute_script("arguments[0].click();", variation_button)
-                    logger.info(f"Clicked variation button at index {idx}: {queued_name}")
+                    logger.debug(f"Clicked variation button at index {idx}: {queued_name}")
                     time.sleep(0.8)  # Wait for variation details to load
 
                 except (TimeoutException, StaleElementReferenceException) as e:
@@ -347,7 +348,7 @@ def extract_variations_for_tab(
                     versions_data = extract_versions_from_popup(
                         driver, selectors, base_url, variation_counter
                     )
-                    logger.info(f"Found {len(versions_data)} versions for variation {variation_counter}")
+                    logger.debug(f"Found {len(versions_data)} versions for variation {variation_counter}")
                 except Exception as e:
                     logger.warning(f"Error extracting version popup data for variation {variation_counter}: {e}")
 
@@ -369,14 +370,15 @@ def extract_variations_for_tab(
                             'variation_downloads': version_data.get('downloads', ''),
                             'variations_model_card': version_data.get('model_card', ''),
                             'variations_is_finetunable': version_data.get('is_finetunable', ''),
-                            'variations_example_usage': version_data.get('example_usage', '')
+                            'variations_example_usage': version_data.get('example_usage', ''),
+                            'download_methods': version_data.get('download_methods', [])
                         }
                         variations.append(variation)
                         logger.info(f"Extracted {variation_id}: {variation_name} (Version: {version_data.get('version_number')}, Created by: {version_data.get('created_by')}, Downloads: {version_data.get('downloads')}, License: {version_data.get('license')})")
                         variation_counter += 1
                 else:
                     # No versions found, extract data from current page as single variation
-                    logger.info(f"No versions found in popup, extracting current page data")
+                    logger.debug(f"No versions found in popup, extracting current page data")
 
                     variation_version = extract_version(driver, version_selector, variation_counter)
                     variation_downloads = extract_downloads(driver, selectors, variation_counter)
@@ -385,6 +387,7 @@ def extract_variations_for_tab(
                     variation_model_card = extract_model_card(driver, model_card_selector, variation_counter)
                     variation_is_finetunable = extract_is_finetunable(driver, is_finetunable_selector, variation_counter)
                     variation_example_usage = extract_example_usage(driver, example_usage_selector, variation_counter)
+                    variation_download_methods = extract_download_methods(driver, variation_counter, selectors, expected_url=base_url)
 
                     variation_id = f'{tab_prefix}/variation_{variation_counter:02d}'
 
@@ -399,7 +402,8 @@ def extract_variations_for_tab(
                         'variation_downloads': variation_downloads,
                         'variations_model_card': variation_model_card,
                         'variations_is_finetunable': variation_is_finetunable,
-                        'variations_example_usage': variation_example_usage
+                        'variations_example_usage': variation_example_usage,
+                        'download_methods': variation_download_methods
                     }
                     variations.append(variation)
                     logger.info(f"Extracted {variation_id}: {variation_name} (Version: {variation_version}, Downloads: {variation_downloads}, License: {variation_license})")
@@ -481,7 +485,7 @@ def extract_variations(driver: webdriver.Chrome, selectors: Dict, name: str, mod
                 logger.info(f"Processing tab {tab_idx + 1}/{len(tab_queue)}: {tab_text}")
 
                 # Click the tab button
-                if not click_tab(driver, tabs_all_selector, tab_idx, tab_text):
+                if not click_tab(driver, tabs_all_selector, tab_idx, tab_text, expected_url=base_url):
                     continue
 
                 # Extract variations for this tab

@@ -53,7 +53,7 @@ def extract_total_engagements(driver: webdriver.Chrome, tree: lxml_html.HtmlElem
                         logger.debug(f"Checking element text: '{text}'")
                         if text and is_numeric_value(text):
                             # Found a valid value - return it immediately
-                            logger.info(f"Found total_engagements using selector '{selector}': {text}")
+                            logger.debug(f"Extracted total_engagements using CSS selector: {text}")
                             return text
                     except Exception as e:
                         logger.debug(f"Error getting text from element: {e}")
@@ -73,7 +73,7 @@ def extract_total_engagements(driver: webdriver.Chrome, tree: lxml_html.HtmlElem
                         logger.debug(f"Checking element text: '{text}'")
                         if text and is_numeric_value(text):
                             # Found a valid value - return it immediately
-                            logger.info(f"Found total_engagements using XPath via Selenium '{selector}': {text}")
+                            logger.debug(f"Extracted total_engagements using XPath: {text}")
                             return text
                     except Exception as e:
                         logger.debug(f"Error getting text from element: {e}")
@@ -98,13 +98,13 @@ def extract_total_engagements(driver: webdriver.Chrome, tree: lxml_html.HtmlElem
                     logger.debug(f"Checking element text: '{text}'")
                     if text and is_numeric_value(text):
                         # Found a valid value - return it immediately
-                        logger.info(f"Found total_engagements using XPath '{selector}': {text}")
+                        logger.debug(f"Extracted total_engagements using XPath fallback: {text}")
                         return text
         except Exception as e:
             logger.debug(f"Total engagements XPath selector {selector} failed: {e}")
             continue
 
     if not total_engagements:
-        logger.warning(f"Could not find total engagements for {name}")
+        logger.warning(f"No total engagements found for {name}")
 
     return total_engagements

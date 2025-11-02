@@ -34,17 +34,17 @@ def extract_downloads(driver: webdriver.Chrome, selectors: Dict, variation_count
             text = downloads_elem.text.strip()
             if text:
                 variation_downloads = text
-                logger.info(f"Variation {variation_counter}: Found downloads '{variation_downloads}' using XPath selector")
+                logger.debug(f"Variation {variation_counter}: Extracted downloads using XPath: {variation_downloads}")
                 return variation_downloads
         except Exception as e:
-            logger.info(f"Variation {variation_counter}: XPath downloads selector failed: {e}")
+            logger.debug(f"Variation {variation_counter}: XPath downloads selector failed: {e}")
 
     # Try CSS selector as fallback
     if downloads_css_selector:
         try:
             # Find all matching elements to ensure we get the right one
             downloads_elems = retry_selenium_find(driver, By.CSS_SELECTOR, downloads_css_selector, find_multiple=True)
-            logger.info(f"Variation {variation_counter}: Found {len(downloads_elems)} elements matching CSS downloads selector")
+            logger.debug(f"Variation {variation_counter}: Found {len(downloads_elems)} elements matching CSS selector")
 
             # Look for the element with numeric content only (no text)
             for idx, elem in enumerate(downloads_elems):
@@ -52,18 +52,18 @@ def extract_downloads(driver: webdriver.Chrome, selectors: Dict, variation_count
                 # Check if text is numeric (digits only, possibly with K/M suffix)
                 if text and (text.isdigit() or (text[:-1].isdigit() and text[-1] in ['K', 'M', 'k', 'm'])):
                     variation_downloads = text
-                    logger.info(f"Variation {variation_counter}: Found downloads '{variation_downloads}' from CSS element {idx + 1}/{len(downloads_elems)}")
+                    logger.debug(f"Variation {variation_counter}: Extracted downloads using CSS: {variation_downloads}")
                     return variation_downloads
 
             # If no numeric-only element found, use the first one as fallback
             if len(downloads_elems) > 0:
                 variation_downloads = downloads_elems[0].text.strip()
-                logger.info(f"Variation {variation_counter}: Using first CSS element for downloads: '{variation_downloads}'")
+                logger.debug(f"Variation {variation_counter}: Extracted downloads using CSS fallback: {variation_downloads}")
                 return variation_downloads
         except Exception as e:
-            logger.info(f"Variation {variation_counter}: Could not find downloads with CSS: {e}")
+            logger.debug(f"Variation {variation_counter}: CSS downloads selector failed: {e}")
 
     if not variation_downloads:
-        logger.info(f"Variation {variation_counter}: Could not find downloads with any selector")
+        logger.debug(f"Variation {variation_counter}: No downloads found")
 
     return variation_downloads

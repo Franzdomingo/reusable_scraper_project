@@ -272,33 +272,36 @@ class NvidiaModelsSpider(scrapy.Spider):
             self.logger.info(f'STEP 1 COMPLETE: Extracted {len(all_items)} models from main page')
 
             # STEP 2: Now yield all items (with or without modelcard requests)
-            self.logger.info('STEP 2: Yielding items and requesting modelcards...')
-            for item in all_items:
-                model_name = item.get('name')
-                model_url = item.get('nvidia_url')
-                tags_count = len(item.get('tags', [])) if item.get('tags') else 0
+            self.logger.info('STEP 2: Yielding items and creating concurrent modelcard requests...')
 
-                # Check if we should fetch model card
-                if self.skip_modelcard:
-                    # Yield item immediately without model card
+            if self.skip_modelcard:
+                # Yield all items immediately without model card
+                for item in all_items:
+                    model_name = item.get('name')
+                    model_url = item.get('nvidia_url')
+                    tags_count = len(item.get('tags', [])) if item.get('tags') else 0
                     item['model_card'] = ''
                     self.logger.info(f"DONE {model_name} - URL: {model_url} - Tags: {tags_count} - ModelCard: Skipped")
                     yield item
-                else:
-                    # Request model page (NOT /modelcard) and we'll click the tab in parse_modelcard
-                    self.logger.debug(f"Requesting model page: {model_url}")
+            else:
+                # Generate all requests at once to enable concurrent processing
+                for item in all_items:
+                    model_url = item.get('nvidia_url')
+                    # Construct the modelcard URL by appending /modelcard
+                    modelcard_url = f"{model_url}/modelcard"
+                    self.logger.debug(f"Requesting modelcard page: {modelcard_url}")
 
                     yield scrapy.Request(
-                        url=model_url,
+                        url=modelcard_url,
                         callback=self.parse_modelcard,
                         errback=self.handle_modelcard_error,
                         meta={
                             'selenium': True,
                             'selenium_wait': 5,
-                            'item': item,  # Pass the fully filled item (except model_card)
-                            'click_modelcard_tab': True,  # Signal to click the modelcard tab
+                            'item': item,
                         },
-                        dont_filter=True
+                        dont_filter=True,
+                        priority=1  # Higher priority to process these concurrently
                     )
 
             self.logger.info(f'Successfully extracted and queued {len(all_items)} models for processing')
@@ -374,35 +377,10 @@ class NvidiaModelsSpider(scrapy.Spider):
             # Dismiss cookie popup again (it may reappear on model pages)
             self.dismiss_cookie_popup(driver)
 
-            # Click the modelcard tab if requested
-            if response.meta.get('click_modelcard_tab'):
-                try:
-                    # Wait for page to load and find modelcard tab
-                    time.sleep(1)  # Brief wait for page load
-
-                    modelcard_tab = WebDriverWait(driver, 10).until(
-                        EC.element_to_be_clickable((By.XPATH, '//button[contains(text(), "Model Card")]'))
-                    )
-
-                    # Scroll the tab into view and click it
-                    driver.execute_script("arguments[0].scrollIntoView(true);", modelcard_tab)
-                    time.sleep(0.3)  # Wait for scroll
-                    modelcard_tab.click()
-
-                    self.logger.debug(f"Clicked modelcard tab for {model_name}")
-                except Exception as e:
-                    self.logger.warning(f"Could not click modelcard tab for {model_name}: {e}")
-                    # Try JavaScript click as fallback
-                    try:
-                        tab = driver.find_element(By.XPATH, '//button[contains(text(), "Model Card")]')
-                        driver.execute_script("arguments[0].click();", tab)
-                        self.logger.debug(f"Used JavaScript click for {model_name}")
-                    except Exception as e2:
-                        self.logger.warning(f"JavaScript click also failed for {model_name}: {e2}")
-                        # Continue anyway, content might already be loaded
-
-            # Wait before extraction to ensure modelcard content has loaded
-            time.sleep(3)
+            # Since we're navigating directly to /modelcard URL, no need to click tabs
+            # Just wait for the page content to load
+            self.logger.debug(f"Waiting for modelcard page to load for {model_name}")
+            time.sleep(2)  # Brief wait for page load
 
             # Extract model card using extractor
             item['model_card'] = extract_modelcard(driver, self.selectors, model_name)

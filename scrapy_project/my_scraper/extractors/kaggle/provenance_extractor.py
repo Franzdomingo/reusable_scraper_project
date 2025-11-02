@@ -52,7 +52,7 @@ def extract_provenance(driver: webdriver.Chrome, tree: lxml_html.HtmlElement,
                 logger.debug(f"Provenance section aria-expanded: {aria_expanded}")
 
                 if aria_expanded == 'false':
-                    logger.info(f"Expanding provenance section for {name}")
+                    logger.debug(f"Expanding provenance section")
                     if click_element(driver, action_selector):
                         time.sleep(0.5)  # Wait for expansion animation
                         # Refresh tree after click
@@ -75,12 +75,12 @@ def extract_provenance(driver: webdriver.Chrome, tree: lxml_html.HtmlElement,
                             text = convert_html_to_markdown(elem, driver)
                             if text:
                                 provenance_text = text
-                                logger.info(f"Found provenance using CSS selector: {selector}")
+                                logger.debug(f"Extracted provenance using CSS selector")
 
                                 # Count and log markdown links
                                 link_count = text.count('](')
                                 if link_count > 0:
-                                    logger.info(f"Converted {link_count} links to Markdown format in provenance")
+                                    logger.debug(f"Converted {link_count} links to Markdown format")
 
                                 break
                         except Exception as e:
@@ -101,12 +101,12 @@ def extract_provenance(driver: webdriver.Chrome, tree: lxml_html.HtmlElement,
                             text = convert_html_to_markdown(elem)
                             if text:
                                 provenance_text = text
-                                logger.info(f"Found provenance using XPath: {selector}")
+                                logger.debug(f"Extracted provenance using XPath")
 
                                 # Count and log markdown links
                                 link_count = text.count('](')
                                 if link_count > 0:
-                                    logger.info(f"Converted {link_count} links to Markdown format in provenance")
+                                    logger.debug(f"Converted {link_count} links to Markdown format")
 
                                 break
                         except Exception as e:
@@ -121,9 +121,9 @@ def extract_provenance(driver: webdriver.Chrome, tree: lxml_html.HtmlElement,
                 continue
 
         if provenance_text:
-            logger.info(f"Successfully extracted provenance for {name}")
+            logger.info(f"Extracted provenance for {name}")
         else:
-            logger.warning(f"Could not find provenance information for {name}")
+            logger.warning(f"No provenance found for {name}")
 
     except Exception as e:
         logger.error(f"Error extracting provenance for {name}: {e}")

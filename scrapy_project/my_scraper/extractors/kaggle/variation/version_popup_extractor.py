@@ -12,7 +12,7 @@ from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.common.exceptions import TimeoutException, NoSuchElementException, ElementClickInterceptedException
-from my_scraper.extractors.retry_utils import retry_selenium_find, retry_xpath, retry_click, retry_operation
+from my_scraper.extractors.retry_utils import retry_selenium_find, retry_xpath, retry_click, retry_operation, check_and_handle_redirect
 
 logger = logging.getLogger(__name__)
 
@@ -106,7 +106,7 @@ def extract_versions_from_popup(
             return created_by, update_description, version_urls
 
         # Step 1: Click the versions button to open popup
-        logger.info(f"Attempting to click versions button for variation {variation_counter}")
+        logger.debug(f"Attempting to click versions button for variation {variation_counter}")
 
         # Wait a bit for the page to stabilize after variation selection
         time.sleep(1.0)
@@ -136,7 +136,7 @@ def extract_versions_from_popup(
 
         # Strategy 2: Look for elements containing "Version" text (more resilient)
         if not button_candidates:
-            logger.info(f"Configured selectors didn't find button, trying text-based search")
+            logger.debug(f"Configured selectors didn't find button, trying text-based search")
             try:
                 # Look for <a> tags containing "Version" text
                 version_links = retry_selenium_find(driver, By.XPATH, "//a[contains(text(), 'Version')]", find_multiple=True)
@@ -171,7 +171,7 @@ def extract_versions_from_popup(
 
             return versions_data
 
-        logger.info(f"Found {len(button_candidates)} versions button candidate(s)")
+        logger.debug(f"Found {len(button_candidates)} versions button candidate(s)")
 
         # Try to click each candidate
         for strategy, selector_desc, button in button_candidates:
@@ -217,9 +217,7 @@ def extract_versions_from_popup(
                         try:
                             popup_elements = retry_selenium_find(driver, By.CSS_SELECTOR, popup_items_selector, find_multiple=True)
                             if len(popup_elements) > 0:
-                                logger.info(f" Successfully clicked versions button using {method_name} via {strategy}")
-                                logger.info(f"  Selector: {selector_desc}")
-                                logger.info(f"  Button text: '{button.text[:100]}'")
+                                logger.debug(f"Successfully clicked versions button using {method_name}")
                                 button_clicked = True
                                 break
                             else:
@@ -247,11 +245,16 @@ def extract_versions_from_popup(
             logger.warning(f"Current URL: {driver.current_url}")
             return versions_data
 
+        # Check if we were redirected to license/consent page after clicking versions button
+        if not check_and_handle_redirect(driver, base_url, f"Variation {variation_counter} - Versions button"):
+            logger.warning(f"Redirected to license/consent page after clicking versions button, cannot extract versions")
+            return versions_data
+
         # Step 2: Wait for popup to appear and find all version items
         try:
             wait = WebDriverWait(driver, 3)
             wait.until(EC.presence_of_element_located((By.CSS_SELECTOR, popup_items_selector)))
-            logger.info(f"Version popup appeared")
+            logger.debug(f"Version popup appeared")
             time.sleep(0.3)  # Additional wait for items to render
         except TimeoutException:
             logger.warning(f"Timeout waiting for version popup to appear")
@@ -259,13 +262,13 @@ def extract_versions_from_popup(
 
         # Find all version items
         version_items = retry_selenium_find(driver, By.CSS_SELECTOR, popup_items_selector, find_multiple=True)
-        logger.info(f"Found {len(version_items)} version items in popup")
+        logger.debug(f"Found {len(version_items)} version items in popup")
 
         if len(version_items) == 0:
             logger.warning(f"No version items found in popup")
             return versions_data
 
-        # Step 3: Click each version item and extract data
+        # Step 3: Extract metadata from all version items FIRST (before navigating)
         # Import extractors we need
         from .variation_downloads_extractor import extract_downloads
         from .variation_license_extractor import extract_license
@@ -274,16 +277,68 @@ def extract_versions_from_popup(
         from .variation_is_finetunable_extractor import extract_is_finetunable
         from .variation_example_usage_extractor import extract_example_usage
         from .variation_version_metadata_extractor import extract_created_by, extract_update_description
+        from .variation_download_method_extractor import extract_download_methods
+
+        # Phase 1: Extract metadata from popup items (while popup is still open)
+        logger.debug(f"Phase 1: Extracting metadata from {len(version_items)} popup items")
+        version_metadata_list = []
 
         for idx in range(len(version_items)):
             try:
-                logger.info(f"Processing version item {idx + 1}/{len(version_items)}")
+                item = version_items[idx]
 
-                # Re-open popup if needed (it may have closed)
+                # Extract metadata from popup item
+                logger.debug(f"Extracting metadata for version item {idx + 1}")
+                item_created_by = extract_created_by(item, created_by_selector)
+                logger.debug(f"  Created by: '{item_created_by}'")
+
+                item_update_desc = extract_update_description(item, update_desc_selector)
+                logger.debug(f"  Update description: '{item_update_desc}'")
+
+                item_version_text = ""
+
+                # Extract version number
+                if version_number_selector:
+                    for selector in (version_number_selector if isinstance(version_number_selector, list) else [version_number_selector]):
+                        try:
+                            elem = retry_selenium_find(item, By.CSS_SELECTOR, selector)
+                            item_version_text = elem.text.strip()
+                            if item_version_text:
+                                logger.debug(f"  Version number: '{item_version_text}' (using selector: {selector})")
+                                break
+                        except NoSuchElementException:
+                            continue
+
+                logger.debug(f"Version {idx + 1}: {item_version_text} (Created by: {item_created_by})")
+
+                # Store metadata
+                version_metadata_list.append({
+                    'created_by': item_created_by,
+                    'update_description': item_update_desc,
+                    'version_number': item_version_text,
+                    'item_element': item  # Keep reference for clicking later
+                })
+
+            except Exception as e:
+                logger.warning(f"Error extracting metadata for version item {idx + 1}: {e}")
+                version_metadata_list.append({
+                    'created_by': '',
+                    'update_description': '',
+                    'version_number': f'Version {idx + 1}',
+                    'item_element': version_items[idx] if idx < len(version_items) else None
+                })
+                continue
+
+        # Phase 2: Navigate to each version and extract page data
+        logger.debug(f"Phase 2: Navigating to each version and extracting page data")
+
+        for idx, metadata in enumerate(version_metadata_list):
+            try:
+                logger.debug(f"Processing version {idx + 1}/{len(version_metadata_list)}: {metadata['version_number']}")
+
+                # Re-open popup to click the version (popup closed after previous navigation)
                 if idx > 0:
-                    # Click version button again to open popup
-                    logger.debug(f"Re-opening version popup for item {idx + 1}")
-                    # Use same clicking logic as before
+                    logger.debug(f"Re-opening version popup to navigate to version {idx + 1}")
                     button_found = False
                     for selector in (versions_button_selector if isinstance(versions_button_selector, list) else [versions_button_selector]):
                         try:
@@ -303,81 +358,79 @@ def extract_versions_from_popup(
 
                     if not button_found:
                         logger.warning(f"Could not re-open popup for version {idx + 1}")
-                        break
+                        continue
 
-                    # Wait for popup
                     time.sleep(0.3)
 
-                # Re-find version items (they may be stale)
-                version_items = retry_selenium_find(driver, By.CSS_SELECTOR, popup_items_selector, find_multiple=True)
-                if idx >= len(version_items):
-                    logger.warning(f"Version item {idx + 1} no longer available")
-                    break
-
-                item = version_items[idx]
-
-                # Extract metadata from popup item
-                item_created_by = extract_created_by(item, created_by_selector)
-                item_update_desc = extract_update_description(item, update_desc_selector)
-                item_version_text = ""
-
-                # Extract version number
-                if version_number_selector:
-                    for selector in (version_number_selector if isinstance(version_number_selector, list) else [version_number_selector]):
-                        try:
-                            elem = retry_selenium_find(item, By.CSS_SELECTOR, selector)
-                            item_version_text = elem.text.strip()
-                            if item_version_text:
-                                break
-                        except NoSuchElementException:
-                            continue
-
-                logger.info(f"Version {idx + 1}: {item_version_text} (Created by: {item_created_by})")
+                    # Re-find version items
+                    version_items = retry_selenium_find(driver, By.CSS_SELECTOR, popup_items_selector, find_multiple=True)
 
                 # Click the version item to navigate to that version
                 try:
-                    # Find the clickable link within the item
-                    link = retry_selenium_find(item, By.CSS_SELECTOR, 'a')
-                    driver.execute_script("arguments[0].click();", link)
-                    logger.info(f"Clicked version {idx + 1}: {item_version_text}")
-                    time.sleep(1.0)  # Wait for page to load/update
+                    if idx < len(version_items):
+                        item = version_items[idx]
+                        link = retry_selenium_find(item, By.CSS_SELECTOR, 'a')
+                        driver.execute_script("arguments[0].click();", link)
+                        logger.debug(f"Clicked version {idx + 1}: {metadata['version_number']}")
+                        time.sleep(1.0)  # Wait for page to load/update
 
-                    # Log current URL after version switch
-                    current_url = driver.current_url
-                    logger.info(f"Currently on URL: {current_url}")
+                        current_url = driver.current_url
+                        logger.debug(f"Currently on URL: {current_url}")
+
+                        # Store the version URL for redirect recovery
+                        # If we got redirected to /license/consent, current_url will contain it
+                        # Otherwise, it's the actual version page URL we want
+                        if '/license/consent' in current_url:
+                            # Extract the actual version URL from the redirect URL
+                            # e.g., .../keras/license/consent -> .../keras
+                            # But we need the version number, so construct it
+                            version_url = construct_version_url(base_url, extract_version_number_from_text(metadata['version_number']))
+                        else:
+                            version_url = current_url
+
+                        # Check if we were redirected to license/consent page
+                        if not check_and_handle_redirect(driver, version_url, f"Variation {variation_counter} - Version {idx + 1}"):
+                            logger.warning(f"Redirected to license/consent page for version {idx + 1}, skipping this version")
+                            continue
+                    else:
+                        logger.warning(f"Version item {idx + 1} not found in re-opened popup")
+                        continue
                 except Exception as e:
                     logger.warning(f"Could not click version {idx + 1}: {e}")
                     continue
 
-                # Extract data for this version
+                # Extract data for this version from the page
+                # Use version_url for redirect checks during download methods extraction
                 version_downloads = extract_downloads(driver, selectors, variation_counter)
                 version_license = extract_license(driver, selectors.get('variation_license'), variation_counter)
                 version_base_model = extract_base_model(driver, selectors.get('variation_base_model'), variation_counter)
                 version_model_card = extract_model_card(driver, selectors.get('variation_model_card'), variation_counter)
                 version_is_finetunable = extract_is_finetunable(driver, selectors.get('is_finetunable'), variation_counter)
                 version_example_usage = extract_example_usage(driver, selectors.get('example_usage'), variation_counter)
+                version_download_methods = extract_download_methods(driver, variation_counter, selectors, expected_url=version_url)
 
-                # Create version data dictionary
+                # Create version data dictionary combining metadata from popup and data from page
                 version_data = {
-                    'created_by': item_created_by,
-                    'update_description': item_update_desc,
-                    'version_number': item_version_text,
+                    'created_by': metadata['created_by'],
+                    'update_description': metadata['update_description'],
+                    'version_number': metadata['version_number'],
                     'downloads': version_downloads,
                     'license': version_license,
                     'base_model': version_base_model,
                     'model_card': version_model_card,
                     'is_finetunable': version_is_finetunable,
-                    'example_usage': version_example_usage
+                    'example_usage': version_example_usage,
+                    'download_methods': version_download_methods
                 }
 
                 versions_data.append(version_data)
-                logger.info(f"Extracted version {idx + 1}: {item_version_text} - Downloads: {version_downloads}, License: {version_license}")
+                logger.info(f"Extracted version {idx + 1}: {metadata['version_number']} - Downloads: {version_downloads}, License: {version_license}")
 
             except Exception as e:
-                logger.warning(f"Error processing version item {idx + 1}: {e}")
+                logger.warning(f"Error processing version {idx + 1}: {e}")
                 continue
 
-        logger.info(f"Extracted data for {len(versions_data)} versions from popup")
+        logger.info(f"Extracted {len(versions_data)} versions from popup")
 
         # Close popup if still open
         try:

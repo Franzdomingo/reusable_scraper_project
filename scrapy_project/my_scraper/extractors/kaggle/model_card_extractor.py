@@ -56,7 +56,7 @@ def extract_model_card(driver: webdriver.Chrome, tree: lxml_html.HtmlElement,
                     by_type = By.CSS_SELECTOR
 
                 if click_element(driver, action_selector, by=by_type):
-                    logger.info(f"Clicked 'Read more' button using selector: {action_selector}")
+                    logger.debug(f"Clicked 'Read more' button")
                     time.sleep(1)
                     # Refresh tree after click (using driver's page source)
                     tree = lxml_html.fromstring(driver.page_source)
@@ -81,12 +81,12 @@ def extract_model_card(driver: webdriver.Chrome, tree: lxml_html.HtmlElement,
 
             if text_with_links:
                 result['text'] = text_with_links
-                logger.info(f"Found model card using selector '{sel}'")
+                logger.debug(f"Extracted model card")
 
                 # Count how many markdown links were created
                 link_count = text_with_links.count('](')
                 if link_count > 0:
-                    logger.info(f"Converted {link_count} links to Markdown format")
+                    logger.debug(f"Converted {link_count} links to Markdown format")
 
                 break
         except Exception as e:
@@ -110,13 +110,13 @@ def extract_model_card(driver: webdriver.Chrome, tree: lxml_html.HtmlElement,
                     text = convert_html_to_markdown(elem)
                     if text:
                         result['text'] = text
-                        logger.info(f"Found model card using fallback XPath: {xp}")
+                        logger.debug(f"Extracted model card using fallback XPath")
                         break
             except Exception as e:
                 logger.debug(f"Fallback XPath {xp} failed: {e}")
                 pass
 
     if not result['text']:
-        logger.warning(f"Could not find model_card for {name}")
+        logger.warning(f"No model card found for {name}")
 
     return result['text']

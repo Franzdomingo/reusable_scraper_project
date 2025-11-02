@@ -313,6 +313,7 @@ class KaggleSelectors:
     ]
 
     # Example Usage selector for variation (appears after selecting a variation)
+    # Updated 2025-10-25: Using parent container selector to capture both header and content
     # Target: Parent container that holds both the header and content
     # The structure is: parent div contains:
     #   - div#example-use (header)
@@ -321,7 +322,87 @@ class KaggleSelectors:
     TRANSFORMERS_EXAMPLE_USAGE_SELECTORS: List[str] = [
         'div:has(> div#example-use)',  # Parent div containing example-use
     ]
-    
+
+    # Overlay element selectors (for hiding elements that intercept tab clicks)
+    # Updated 2025-11-01: Extracted from tab_handler.py JavaScript code
+    # Target: Various overlay elements that can block tab navigation
+    OVERLAY_BUTTON_CLASS: str = 'button.sc-pYNGo.druOFB'  # Specific overlay button class
+    OVERLAY_BUTTON_XPATH: str = '/html/body/div/div[1]/div[2]/div/div[2]/div/div[5]/div/div[2]/div[2]/div[1]/div/div[2]/div/button[1]'  # Specific overlay button by XPath
+    OVERLAY_ELEMENTS_CLASSES: List[str] = [
+        '.sc-ABqPz.hkFQpn',  # Common overlay class 1
+        '[role="presentation"]',  # Common overlay role attribute
+    ]
+
+    # Download method button selectors
+    # Updated 2025-11-02: Download button that opens download popup
+    # Target: Button with download icon and "Download" text (in variation/model pages)
+    # Structure: <button data-testid="model-header-download"><span>download</span><span>Download</span></button>
+    DOWNLOAD_METHOD_BUTTON: List[str] = [
+        '//button[@data-testid="model-header-download"]',  # Most stable: data-testid attribute
+        '//button[@data-testid="model-instance-download"]',  # Alternative: instance-level download
+        'button[data-testid="model-header-download"]',  # CSS version
+        'button[data-testid="model-instance-download"]',  # CSS alternative
+        '//button[.//span[contains(., "Download")]]',  # Content-based: button containing "Download" text
+        'button[aria-label*="Download"]',  # Fallback: aria-label
+    ]
+
+    # Download popup selectors
+    # Updated 2025-11-02: Popup that appears after clicking download button
+    # Target: MuiPopover containing download options
+    # Structure: <div role="presentation" class="MuiPopover-root">...</div>
+    DOWNLOAD_POPUP: List[str] = [
+        '//div[@role="presentation" and contains(@class, "MuiPopover")]',  # Primary: role + class
+        '//div[contains(@class, "MuiPopover-root")]',  # Alternative: class only
+        '//div[contains(@class, "MuiPaper-root")]//div[contains(@class, "sc-hFQlRU")]',  # Popup content
+    ]
+
+    # Download via dropdown selectors
+    # Updated 2025-11-02: Dropdown inside popup to select download method
+    # Target: Combobox with "Download via" label INSIDE the download popup
+    # Structure: <div role="combobox" aria-label="Select Download via. kagglehub currently selected." class="MuiSelect-select...">
+    # The combobox element has aria-expanded="false" when closed, "true" when open
+    DOWNLOAD_VIA_DROPDOWN: List[str] = [
+        '//div[@role="combobox" and contains(@aria-label, "Download via")]',  # Most specific: combobox with Download via label
+        '//div[@role="presentation"]//div[@role="combobox"]',  # Inside presentation div
+        '//div[contains(@class, "MuiPopover")]//div[@role="combobox"]',  # Inside MuiPopover
+        '//label[text()="Download via"]/following-sibling::div//div[@role="combobox"]',  # Next to Download via label
+        '/html/body/div[2]/div[3]/div/div[1]/div/div/div[@role="combobox"]',  # Absolute XPath to combobox
+    ]
+
+    # Download method list items selectors
+    # Updated 2025-11-02: Menu items in the download methods dropdown
+    # Target: li elements with role="option" in the listbox (NOT menuitem)
+    # Structure: <ul role="listbox"><li role="option" data-value="kagglehub">...</li></ul>
+    # The correct listbox contains options like: kagglehub, kagglecli, curl
+    DOWNLOAD_METHOD_LIST_ITEMS: List[str] = [
+        '//ul[@role="listbox" and contains(@class, "MuiMenu-list")]/li[@role="option"]',  # Most specific: MuiMenu-list listbox with options
+        '//ul[@role="listbox"]/li[@role="option"]',  # Primary: listbox > option
+        '//li[@role="option"]',  # Alternative: any option
+        '//ul[@role="listbox"]//li',  # Fallback: any li in listbox
+    ]
+
+    # Download method name selectors
+    # Updated 2025-11-02: Extract method name from list item
+    # Target: p element containing method name (e.g., "kagglehub", "Kaggle CLI", "cURL")
+    # Structure: <li><div><p class="sc-fbQrwq sc-jIDBmd">kagglehub</p></div></li>
+    DOWNLOAD_METHOD_NAME: List[str] = [
+        'p.sc-fbQrwq.sc-jIDBmd',  # Primary: specific classes
+        'p.sc-fbQrwq',  # Alternative: broader class
+        'div.sc-jlTmTQ p',  # Structure-based
+        'p',  # Fallback: any p tag
+    ]
+
+    # Download command selectors
+    # Updated 2025-11-02: Code block containing download command
+    # Target: pre/code element with the command to copy
+    # Structure: <div><pre><code>command here</code></pre></div>
+    DOWNLOAD_COMMAND: List[str] = [
+        '/html/body/div[2]/div[3]/div/div[2]/pre/code',  # Primary: absolute path
+        '//div[@role="dialog"]//pre/code',  # Alternative: dialog context
+        '//div[contains(@class, "MuiDialog")]//pre/code',  # MUI Dialog
+        '//pre/code',  # Fallback: any pre/code
+    ]
+
     # Fallback CSS selector for description (used with Selenium)
     DESCRIPTION_CSS_FALLBACK: str = '.sc-iRTMaw:nth-child(1) > p:nth-child(1)'
     
@@ -461,6 +542,12 @@ def get_selectors_for_site(site: str) -> Dict:
             'model_name_xpath': KaggleSelectors.MODEL_NAME_XPATH,
             'next_button_xpath': KaggleSelectors.NEXT_BUTTON_XPATH,
             'next_button_alt_xpath': KaggleSelectors.NEXT_BUTTON_ALT_XPATH,
+            'download_method_button': KaggleSelectors.DOWNLOAD_METHOD_BUTTON,
+            'download_popup': KaggleSelectors.DOWNLOAD_POPUP,
+            'download_via_dropdown': KaggleSelectors.DOWNLOAD_VIA_DROPDOWN,
+            'download_method_list_items': KaggleSelectors.DOWNLOAD_METHOD_LIST_ITEMS,
+            'download_method_name': KaggleSelectors.DOWNLOAD_METHOD_NAME,
+            'download_command': KaggleSelectors.DOWNLOAD_COMMAND,
         },
         'nvidia': {
             'model_cards': NvidiaSelectors.MODEL_CARDS,

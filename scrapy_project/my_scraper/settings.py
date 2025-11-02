@@ -38,10 +38,13 @@ except (NotImplementedError, AttributeError):
 CONCURRENT_REQUESTS_AND_SELENIUM_POOL_SIZE = max(2, int(CPU_COUNT * 0.75))
 CONCURRENT_REQUESTS = CONCURRENT_REQUESTS_AND_SELENIUM_POOL_SIZE
 
+# Scrapy reactor settings for better concurrency
+REACTOR_THREADPOOL_MAXSIZE = CONCURRENT_REQUESTS_AND_SELENIUM_POOL_SIZE * 2
+
 # Configure a delay for requests for the same website (default: 0)
 # See https://docs.scrapy.org/en/latest/topics/settings.html#download-dela# See also autothrottle settings and docs
-# Reduced delay to allow concurrent Selenium requests (AutoThrottle will manage actual delays)
-DOWNLOAD_DELAY = 0.1
+# Set to 0 to allow concurrent Selenium requests (AutoThrottle will manage actual delays)
+DOWNLOAD_DELAY = 0
 # The download delay setting will honor only one of:
 CONCURRENT_REQUESTS_PER_DOMAIN = CONCURRENT_REQUESTS_AND_SELENIUM_POOL_SIZE
 CONCURRENT_REQUESTS_PER_IP = CONCURRENT_REQUESTS_AND_SELENIUM_POOL_SIZE
@@ -68,7 +71,7 @@ DEFAULT_REQUEST_HEADERS = {
 # See https://docs.scrapy.org/en/latest/topics/downloader-middleware.html
 DOWNLOADER_MIDDLEWARES = {
     'my_scraper.middlewares.RandomUserAgentMiddleware': 400,
-    'my_scraper.middlewares.ProxyRotationMiddleware': 750,  # Before Selenium
+    # 'my_scraper.middlewares.ProxyRotationMiddleware': 750,  # Disabled - solved using Firefox user agent - Franz (Intern)
     'my_scraper.middlewares.SeleniumMiddleware': 800,
 }
 
@@ -88,8 +91,8 @@ ITEM_PIPELINES = {
 # Enable and configure the AutoThrottle extension (disabled by default)
 # See https://docs.scrapy.org/en/latest/topics/autothrottle.html
 AUTOTHROTTLE_ENABLED = True
-# The initial download delay - reduced to allow faster concurrent Selenium requests
-AUTOTHROTTLE_START_DELAY = 0.1
+# The initial download delay - set to 0 to immediately utilize all drivers
+AUTOTHROTTLE_START_DELAY = 0
 # The maximum download delay to be set in case of high latencies
 AUTOTHROTTLE_MAX_DELAY = 3.0
 # The average number of requests Scrapy should be sending in parallel to
@@ -133,19 +136,17 @@ FEED_EXPORT_ENCODING = 'utf-8'
 # This prevents "Connection pool is full" warnings
 CONCURRENT_REQUESTS_TO_REMOTE_SERVER = CONCURRENT_REQUESTS_AND_SELENIUM_POOL_SIZE * 2
 
-# Proxy rotation settings (disabled by default)
-# To enable proxy rotation:
-# 1. Set ENABLE_PROXY_ROTATION = True
-# 2. Add proxy URLs to ROTATING_PROXIES list
-# 3. Proxy format: 'http://username:password@host:port' or 'http://host:port'
-# I disabled proxy rotation by default try not to increase selenium pool size and scrapy concurrency too much as it may lead to enabling proxies unnecessarily. - Franz 
-ENABLE_PROXY_ROTATION = False
-ROTATING_PROXIES = [
-    # Example proxies (uncomment and replace with your proxies):
-    # 'http://proxy1.example.com:8080',
-    # 'http://proxy2.example.com:8080',
-    # 'http://username:password@proxy3.example.com:8080',
-]
+# Proxy rotation settings - DISABLED
+# Proxy rotation is not needed - issue solved by using Firefox with proper user agent
+# Firefox driver handles anti-bot detection better than Chrome without proxies
+# - Franz (Intern)
+# ENABLE_PROXY_ROTATION = False
+# ROTATING_PROXIES = [
+#     # Example proxies (uncomment and replace with your proxies):
+#     # 'http://proxy1.example.com:8080',
+#     # 'http://proxy2.example.com:8080',
+#     # 'http://username:password@proxy3.example.com:8080',
+# ]
 
 # Performance monitoring and system info
 SYSTEM_MEMORY_GB = os.sysconf('SC_PAGE_SIZE') * os.sysconf('SC_PHYS_PAGES') / (1024.**3) if hasattr(os, 'sysconf') else 'N/A'

@@ -161,7 +161,7 @@ my_scraper/
 ## Important Notes
 
 - **No Scrapy selectors**: Codebase uses `driver.find_element()` directly, not `response.css()` or `response.xpath()`
-- **Proxy rotation**: Disabled by default (`ENABLE_PROXY_ROTATION = False`), enable only if necessary
-- **ChromeDriver required**: Ensure ChromeDriver is installed and on PATH for Selenium
+- **Proxy rotation**: Completely disabled and commented out - not needed. Firefox driver with proper user agents handles anti-bot detection without requiring IP rotation (Franz - Intern)
+- **Firefox driver**: Uses Firefox instead of Chrome for better anti-bot detection handling
 - **Output location**: Spiders output to `output/` directory by default
 - **Input chaining**: `kaggle_metadata` reads from `kaggle_links` output automatically

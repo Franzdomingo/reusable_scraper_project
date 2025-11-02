@@ -51,7 +51,7 @@ def extract_collaborators(driver: webdriver.Chrome, tree: lxml_html.HtmlElement,
                 logger.debug(f"Collaborators section aria-expanded: {aria_expanded}")
 
                 if aria_expanded == 'false':
-                    logger.info(f"Expanding collaborators section for {name}")
+                    logger.debug(f"Expanding collaborators section")
                     if click_element(driver, action_selector):
                         time.sleep(0.5)  # Wait for expansion animation
                         # Refresh tree after click
@@ -103,7 +103,7 @@ def extract_collaborators(driver: webdriver.Chrome, tree: lxml_html.HtmlElement,
                             continue
 
                     if collaborators:
-                        logger.info(f"Found {len(collaborators)} collaborators using CSS selector: {selector}")
+                        logger.debug(f"Extracted {len(collaborators)} collaborators using CSS selector")
                         break
                 else:
                     # XPath selector - use lxml
@@ -144,7 +144,7 @@ def extract_collaborators(driver: webdriver.Chrome, tree: lxml_html.HtmlElement,
                             continue
 
                     if collaborators:
-                        logger.info(f"Found {len(collaborators)} collaborators using XPath: {selector}")
+                        logger.debug(f"Extracted {len(collaborators)} collaborators using XPath")
                         break
 
             except Exception as e:
@@ -152,9 +152,9 @@ def extract_collaborators(driver: webdriver.Chrome, tree: lxml_html.HtmlElement,
                 continue
 
         if collaborators:
-            logger.info(f"Successfully extracted {len(collaborators)} collaborators for {name}")
+            logger.info(f"Extracted {len(collaborators)} collaborators for {name}")
         else:
-            logger.warning(f"Could not find any collaborators for {name}")
+            logger.warning(f"No collaborators found for {name}")
 
     except Exception as e:
         logger.error(f"Error extracting collaborators for {name}: {e}")
