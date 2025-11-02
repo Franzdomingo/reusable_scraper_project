@@ -326,43 +326,80 @@ def extract_download_methods(driver: webdriver.Chrome, variation_counter: int, s
                     time.sleep(0.2)
                     driver.execute_script("arguments[0].click();", item)
                     logger.info(f"Variation {variation_counter}: Clicked download method '{method_name}'")
-                    time.sleep(0.5)  # Wait for command to load
+
+                    # Wait longer for the command area to update with the new command
+                    # The UI needs time to fetch and display the specific command for this method
+                    time.sleep(1.2)  # Increased from 0.5s to ensure command updates
                 except Exception as e:
                     logger.warning(f"Variation {variation_counter}: Could not click method '{method_name}': {e}")
                     continue
 
                 # Extract the command from the code block
-                # Wait a bit for the command to load after clicking the method
-                time.sleep(0.5)
-
+                # Try to find the command in the popup (more specific context)
                 command = ""
 
-                for cmd_selector in command_selectors_config:
+                # First, try to find the command within the download popup context
+                # to avoid getting commands from other parts of the page
+                popup_command_selectors = [
+                    '//div[@role="presentation"]//div[contains(@class, "MuiPaper-root")]//pre/code',
+                    '//div[contains(@class, "MuiPopover-root")]//pre/code',
+                ]
+
+                # Try popup-specific selectors first
+                for cmd_selector in popup_command_selectors:
                     try:
-                        logger.debug(f"Variation {variation_counter}: Trying command selector: {cmd_selector}")
+                        logger.debug(f"Variation {variation_counter}: Trying popup command selector: {cmd_selector}")
                         command_elem = retry_selenium_find(driver, By.XPATH, cmd_selector)
                         if command_elem:
                             # Try multiple methods to get text
                             command = command_elem.text.strip()
                             if not command:
-                                # Try innerText
                                 command = command_elem.get_attribute('innerText')
                                 if command:
                                     command = command.strip()
                             if not command:
-                                # Try textContent
                                 command = command_elem.get_attribute('textContent')
                                 if command:
                                     command = command.strip()
 
-                            if command:
+                            # Verify this looks like a download command (not example usage)
+                            # Download commands typically contain specific patterns
+                            if command and any(pattern in command.lower() for pattern in ['kagglehub.model_download', 'kaggle models', 'curl', 'wget']):
                                 logger.info(f"Variation {variation_counter}: Extracted command for '{method_name}' using {cmd_selector}: {command[:100]}...")
                                 break
                             else:
-                                logger.debug(f"Variation {variation_counter}: Found element but text is empty with {cmd_selector}")
+                                logger.debug(f"Variation {variation_counter}: Found text but doesn't look like download command: {command[:100]}...")
+                                command = ""  # Reset if it's not a download command
                     except Exception as e:
                         logger.debug(f"Variation {variation_counter}: Could not extract command with {cmd_selector}: {e}")
                         continue
+
+                # If popup-specific selectors didn't work, try the general ones
+                if not command:
+                    for cmd_selector in command_selectors_config:
+                        try:
+                            logger.debug(f"Variation {variation_counter}: Trying command selector: {cmd_selector}")
+                            command_elem = retry_selenium_find(driver, By.XPATH, cmd_selector)
+                            if command_elem:
+                                # Try multiple methods to get text
+                                command = command_elem.text.strip()
+                                if not command:
+                                    command = command_elem.get_attribute('innerText')
+                                    if command:
+                                        command = command.strip()
+                                if not command:
+                                    command = command_elem.get_attribute('textContent')
+                                    if command:
+                                        command = command.strip()
+
+                                if command:
+                                    logger.info(f"Variation {variation_counter}: Extracted command for '{method_name}' using {cmd_selector}: {command[:100]}...")
+                                    break
+                                else:
+                                    logger.debug(f"Variation {variation_counter}: Found element but text is empty with {cmd_selector}")
+                        except Exception as e:
+                            logger.debug(f"Variation {variation_counter}: Could not extract command with {cmd_selector}: {e}")
+                            continue
 
                 if not command:
                     logger.warning(f"Variation {variation_counter}: Could not extract command for '{method_name}' with any selector")
