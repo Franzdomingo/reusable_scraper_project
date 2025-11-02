@@ -90,7 +90,7 @@ def extract_variations_for_tab(
         # Get selectors from configuration
         action_selector = selectors.get('variation_action')
         list_items_selector = selectors.get('variation_list_items')
-        name_selector = selectors.get('variation_name')
+        # name_selector removed - variation names extracted directly from item.text
         version_selector = selectors.get('variation_version')
         downloads_selector = selectors.get('variation_downloads')
         license_selector = selectors.get('variation_license')
@@ -200,33 +200,9 @@ def extract_variations_for_tab(
             # Build queue: store variation names and their indices
             for idx, item in enumerate(list_items):
                 try:
-                    # Extract variation name from the list item
-                    raw_name = ''
-                    if name_selector:
-                        # Support both single selector string and list of selectors
-                        name_selectors = name_selector if isinstance(name_selector, list) else [name_selector]
-
-                        # Try each selector in order until one works
-                        for selector in name_selectors:
-                            try:
-                                # Determine selector type (XPath or CSS)
-                                if selector.startswith('/') or selector.startswith('('):
-                                    by_type = By.XPATH
-                                else:
-                                    by_type = By.CSS_SELECTOR
-
-                                name_elem = retry_selenium_find(item, by_type, selector)
-                                raw_name = name_elem.text.strip()
-                                if raw_name:
-                                    break  # Found a working selector
-                            except:
-                                continue
-
-                        # If no selector worked, fall back to item text
-                        if not raw_name:
-                            raw_name = item.text.strip()
-                    else:
-                        raw_name = item.text.strip()
+                    # Extract variation name directly from the list item text
+                    # The li[role="option"] element contains the variation name as text
+                    raw_name = item.text.strip()
 
                     # Clean the variation name (remove push_pin, managed by text, etc.)
                     variation_name = clean_variation_name(raw_name)

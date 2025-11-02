@@ -53,3 +53,4 @@ CREATE TABLE model_collaborators (
     name TEXT,
     role TEXT
 );
+

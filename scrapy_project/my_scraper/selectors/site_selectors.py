@@ -186,13 +186,10 @@ class KaggleSelectors:
     # Target: li elements with role="option" within the opened listbox
     TRANSFORMERS_VARIATION_LIST_ITEMS: str = 'li[role="option"]'
 
-    # Transformers variation name selector (text within each list item in dropdown)
-    # Target: div with class "sc-jaGrhB hYa-DAr" containing the variation name
-    # Supports both CSS and XPath selectors
-    TRANSFORMERS_VARIATION_NAME: List[str] = [
-        'div.sc-jaGrhB.hYa-DAr',  # CSS selector
-        '/html/body/div/div[1]/div[2]/div/div[2]/div/div[5]/div/div[3]/div[2]/div[2]/div[1]/div[1]/div[1]/div/div/div/div/div',  # XPath selector
-    ]
+    # Transformers variation name extraction
+    # NOTE: Variation names are extracted directly from li[role="option"].text
+    # No specific child selectors needed - the fallback to item.text.strip() works reliably
+    # Previous selectors (div.sc-jaGrhB.hYa-DAr and XPath) were unused and have been removed
 
     # Version selector (appears after selecting a variation)
     # Updated 2025-10-23: Using absolute XPath selector
@@ -512,7 +509,7 @@ def get_selectors_for_site(site: str) -> Dict:
             'variation_action': KaggleSelectors.TRANSFORMERS_VARIATION_ACTION,
             'variation_list_container': KaggleSelectors.TRANSFORMERS_VARIATION_LIST_CONTAINER,
             'variation_list_items': KaggleSelectors.TRANSFORMERS_VARIATION_LIST_ITEMS,
-            'variation_name': KaggleSelectors.TRANSFORMERS_VARIATION_NAME,
+            # 'variation_name' removed - extracted directly from item.text in variations_extractor.py
             'variation_version': KaggleSelectors.TRANSFORMERS_VARIATION_VERSION,
             'variation_versions_button': KaggleSelectors.VARIATION_VERSIONS_BUTTON,
             'variation_versions_popup_items': KaggleSelectors.VARIATION_VERSIONS_POPUP_ITEMS,
