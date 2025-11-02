@@ -7,7 +7,7 @@ import time
 from typing import Dict, List
 from selenium import webdriver
 from selenium.webdriver.common.by import By
-from my_scraper.extractors.retry_utils import retry_selenium_find, retry_xpath, retry_click, retry_operation
+from my_scraper.extractors.retry_utils import retry_selenium_find, retry_xpath, retry_click, retry_operation, check_and_handle_redirect
 from my_scraper.selectors.site_selectors import KaggleSelectors
 
 logger = logging.getLogger(__name__)
@@ -63,7 +63,7 @@ def build_tab_queue(driver: webdriver.Chrome, tabs_all_selector: str, tab_text_s
     return tab_queue
 
 
-def click_tab(driver: webdriver.Chrome, tabs_all_selector: str, tab_idx: int, tab_text: str) -> bool:
+def click_tab(driver: webdriver.Chrome, tabs_all_selector: str, tab_idx: int, tab_text: str, expected_url: str = None) -> bool:
     """
     Click a tab button by re-finding it to avoid stale element references
     Uses multiple click methods to handle overlaying elements
@@ -73,6 +73,7 @@ def click_tab(driver: webdriver.Chrome, tabs_all_selector: str, tab_idx: int, ta
         tabs_all_selector: CSS selector for all tab buttons
         tab_idx: Index of the tab to click
         tab_text: Text of the tab for logging
+        expected_url: Expected URL to check for redirects (e.g., to /license/consent)
 
     Returns:
         True if tab was successfully clicked, False otherwise
@@ -140,6 +141,13 @@ def click_tab(driver: webdriver.Chrome, tabs_all_selector: str, tab_idx: int, ta
             driver.execute_script("arguments[0].click();", tab_button)
             time.sleep(1)  # Wait for tab content to load
             logger.debug(f"Method 1 succeeded - clicked tab: {tab_text}")
+
+            # Check if we were redirected to license/consent page
+            if expected_url:
+                if not check_and_handle_redirect(driver, expected_url, f"Tab '{tab_text}'"):
+                    logger.warning(f"Redirected to license/consent page after clicking tab '{tab_text}'")
+                    return False
+
             return True
         except Exception as e:
             logger.debug(f"Method 1 failed for tab '{tab_text}': {e}")
@@ -158,6 +166,13 @@ def click_tab(driver: webdriver.Chrome, tabs_all_selector: str, tab_idx: int, ta
             """, tab_button)
             time.sleep(1)
             logger.debug(f"Method 2 succeeded - clicked tab: {tab_text}")
+
+            # Check if we were redirected to license/consent page
+            if expected_url:
+                if not check_and_handle_redirect(driver, expected_url, f"Tab '{tab_text}'"):
+                    logger.warning(f"Redirected to license/consent page after clicking tab '{tab_text}'")
+                    return False
+
             return True
         except Exception as e:
             logger.debug(f"Method 2 failed for tab '{tab_text}': {e}")
@@ -168,6 +183,13 @@ def click_tab(driver: webdriver.Chrome, tabs_all_selector: str, tab_idx: int, ta
             tab_button.click()
             time.sleep(1)
             logger.debug(f"Method 3 succeeded - clicked tab: {tab_text}")
+
+            # Check if we were redirected to license/consent page
+            if expected_url:
+                if not check_and_handle_redirect(driver, expected_url, f"Tab '{tab_text}'"):
+                    logger.warning(f"Redirected to license/consent page after clicking tab '{tab_text}'")
+                    return False
+
             return True
         except Exception as e:
             logger.debug(f"Method 3 failed for tab '{tab_text}': {e}")

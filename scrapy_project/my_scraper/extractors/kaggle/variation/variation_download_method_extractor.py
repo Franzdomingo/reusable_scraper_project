@@ -12,14 +12,14 @@ from selenium.webdriver.common.keys import Keys
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.common.exceptions import TimeoutException, NoSuchElementException, ElementClickInterceptedException
-from my_scraper.extractors.retry_utils import retry_selenium_find, retry_click, retry_operation
+from my_scraper.extractors.retry_utils import retry_selenium_find, retry_click, retry_operation, check_and_handle_redirect
 from my_scraper.selectors.site_selectors import KaggleSelectors
 from my_scraper.extractors.kaggle.dropdown_handler import click_dropdown_to_open
 
 logger = logging.getLogger(__name__)
 
 
-def extract_download_methods(driver: webdriver.Chrome, variation_counter: int, selectors: Dict = None) -> List[Dict[str, str]]:
+def extract_download_methods(driver: webdriver.Chrome, variation_counter: int, selectors: Dict = None, expected_url: str = None) -> List[Dict[str, str]]:
     """
     Extract download methods by clicking the download button and iterating through method options
 
@@ -33,6 +33,7 @@ def extract_download_methods(driver: webdriver.Chrome, variation_counter: int, s
         driver: Selenium driver instance
         variation_counter: Current variation number for logging
         selectors: Optional selectors dictionary (will use defaults if not provided)
+        expected_url: Expected URL to check for redirects (e.g., to /license/consent)
 
     Returns:
         List of dictionaries containing download_method_name and download_method_command
@@ -140,6 +141,12 @@ def extract_download_methods(driver: webdriver.Chrome, variation_counter: int, s
         if not button_clicked:
             logger.warning(f"Variation {variation_counter}: Could not click download button - all methods failed")
             return download_methods
+
+        # Check if we were redirected to license/consent page
+        if expected_url:
+            if not check_and_handle_redirect(driver, expected_url, f"Variation {variation_counter} - Download methods"):
+                logger.warning(f"Variation {variation_counter}: Redirected to license/consent page, cannot extract download methods")
+                return download_methods
 
         # Step 2: Wait for popup to appear
         popup_appeared = False

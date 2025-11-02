@@ -12,7 +12,7 @@ from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.common.exceptions import TimeoutException, NoSuchElementException, ElementClickInterceptedException
-from my_scraper.extractors.retry_utils import retry_selenium_find, retry_xpath, retry_click, retry_operation
+from my_scraper.extractors.retry_utils import retry_selenium_find, retry_xpath, retry_click, retry_operation, check_and_handle_redirect
 
 logger = logging.getLogger(__name__)
 
@@ -245,6 +245,11 @@ def extract_versions_from_popup(
             logger.warning(f"Current URL: {driver.current_url}")
             return versions_data
 
+        # Check if we were redirected to license/consent page after clicking versions button
+        if not check_and_handle_redirect(driver, base_url, f"Variation {variation_counter} - Versions button"):
+            logger.warning(f"Redirected to license/consent page after clicking versions button, cannot extract versions")
+            return versions_data
+
         # Step 2: Wait for popup to appear and find all version items
         try:
             wait = WebDriverWait(driver, 3)
@@ -371,6 +376,22 @@ def extract_versions_from_popup(
 
                         current_url = driver.current_url
                         logger.debug(f"Currently on URL: {current_url}")
+
+                        # Store the version URL for redirect recovery
+                        # If we got redirected to /license/consent, current_url will contain it
+                        # Otherwise, it's the actual version page URL we want
+                        if '/license/consent' in current_url:
+                            # Extract the actual version URL from the redirect URL
+                            # e.g., .../keras/license/consent -> .../keras
+                            # But we need the version number, so construct it
+                            version_url = construct_version_url(base_url, extract_version_number_from_text(metadata['version_number']))
+                        else:
+                            version_url = current_url
+
+                        # Check if we were redirected to license/consent page
+                        if not check_and_handle_redirect(driver, version_url, f"Variation {variation_counter} - Version {idx + 1}"):
+                            logger.warning(f"Redirected to license/consent page for version {idx + 1}, skipping this version")
+                            continue
                     else:
                         logger.warning(f"Version item {idx + 1} not found in re-opened popup")
                         continue
@@ -379,13 +400,14 @@ def extract_versions_from_popup(
                     continue
 
                 # Extract data for this version from the page
+                # Use version_url for redirect checks during download methods extraction
                 version_downloads = extract_downloads(driver, selectors, variation_counter)
                 version_license = extract_license(driver, selectors.get('variation_license'), variation_counter)
                 version_base_model = extract_base_model(driver, selectors.get('variation_base_model'), variation_counter)
                 version_model_card = extract_model_card(driver, selectors.get('variation_model_card'), variation_counter)
                 version_is_finetunable = extract_is_finetunable(driver, selectors.get('is_finetunable'), variation_counter)
                 version_example_usage = extract_example_usage(driver, selectors.get('example_usage'), variation_counter)
-                version_download_methods = extract_download_methods(driver, variation_counter, selectors)
+                version_download_methods = extract_download_methods(driver, variation_counter, selectors, expected_url=version_url)
 
                 # Create version data dictionary combining metadata from popup and data from page
                 version_data = {

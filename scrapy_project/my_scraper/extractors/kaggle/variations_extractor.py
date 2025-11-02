@@ -387,7 +387,7 @@ def extract_variations_for_tab(
                     variation_model_card = extract_model_card(driver, model_card_selector, variation_counter)
                     variation_is_finetunable = extract_is_finetunable(driver, is_finetunable_selector, variation_counter)
                     variation_example_usage = extract_example_usage(driver, example_usage_selector, variation_counter)
-                    variation_download_methods = extract_download_methods(driver, variation_counter, selectors)
+                    variation_download_methods = extract_download_methods(driver, variation_counter, selectors, expected_url=base_url)
 
                     variation_id = f'{tab_prefix}/variation_{variation_counter:02d}'
 
@@ -485,7 +485,7 @@ def extract_variations(driver: webdriver.Chrome, selectors: Dict, name: str, mod
                 logger.info(f"Processing tab {tab_idx + 1}/{len(tab_queue)}: {tab_text}")
 
                 # Click the tab button
-                if not click_tab(driver, tabs_all_selector, tab_idx, tab_text):
+                if not click_tab(driver, tabs_all_selector, tab_idx, tab_text, expected_url=base_url):
                     continue
 
                 # Extract variations for this tab
