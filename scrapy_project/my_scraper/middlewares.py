@@ -10,7 +10,7 @@ import random
 import logging
 import threading
 import os
-from queue import Queue, Empty
+from queue import Queue
 from scrapy import signals
 from scrapy.http import HtmlResponse
 from selenium import webdriver
@@ -179,10 +179,10 @@ class SeleniumMiddleware:
 
         driver = None
         try:
-            # Get a driver from the pool (blocks if pool is empty)
+            # Get a driver from the pool (blocks indefinitely if pool is empty)
             available_before = self.driver_pool.qsize()
             logging.info(f'[SELENIUM POOL] [Thread: {thread_id}] Waiting for driver... | Available before: {available_before}')
-            driver = self.driver_pool.get(timeout=30)
+            driver = self.driver_pool.get(block=True)  # Wait indefinitely until driver available
 
             with self.lock:
                 self.active_drivers += 1
@@ -230,9 +230,6 @@ class SeleniumMiddleware:
                 request=request
             )
 
-        except Empty:
-            logging.error(f'[SELENIUM POOL] ✗ TIMEOUT waiting for driver (30s) | URL: {request.url[:80]}... | All {self.pool_size} drivers busy')
-            return None
         except Exception as e:
             logging.error(f'[SELENIUM POOL] ✗ ERROR processing {request.url[:80]}... | Error: {e}')
             # Return driver to pool if we acquired it

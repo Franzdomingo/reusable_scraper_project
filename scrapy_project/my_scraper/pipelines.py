@@ -138,4 +138,4 @@ class JsonExportPipeline:
         self.items.append(dict(item))
         return item
 
-
+#TODO add dynamodb pipeline
