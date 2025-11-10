@@ -1,0 +1,21 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(do python:*)",
+      "Bash(echo:*)",
+      "Bash(python:*)",
+      "Bash(mkdir:*)",
+      "Bash(git mv:*)",
+      "Bash(tree:*)",
+      "Bash(dir:*)",
+      "Bash(git add:*)",
+      "Bash(scrapy list:*)",
+      "Bash(xargs python:*)",
+      "Bash(timeout 30 python:*)",
+      "Bash(timeout:*)",
+      "Bash(chmod:*)"
+    ],
+    "deny": [],
+    "ask": []
+  }
+}

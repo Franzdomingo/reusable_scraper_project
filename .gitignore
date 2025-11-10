@@ -215,10 +215,7 @@ __marimo__/
 # Streamlit
 .streamlit/secrets.toml
 
-nul 
-
-.github/
-.claude/
+nul
 
 
 
@@ -230,4 +227,16 @@ nul
 /test/
 
 
-CLAUDE.md 
+CLAUDE.md
+
+# CDK
+cdk.out/
+cdk.context.json
+*.assets.json
+.cdk.staging/
+
+# AWS Credentials (never commit!)
+.aws/
+credentials
+config
+*.pem

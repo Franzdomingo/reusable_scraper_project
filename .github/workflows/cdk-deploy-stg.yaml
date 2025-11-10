@@ -1,0 +1,22 @@
+name: cdk-deploy-stg
+
+on:
+  push:
+    branches:
+      - "task/*"
+      - "feature/*"
+
+jobs:
+  deploy-stg:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: CDK Deploy to STG
+        uses: ./.github/actions/cdk-deploy
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_STG }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_KEY_STG }}
+          aws-region: ${{ secrets.AWS_REGION_STG }}
+          env: stg
