@@ -13,7 +13,8 @@
       "Bash(xargs python:*)",
       "Bash(timeout 30 python:*)",
       "Bash(timeout:*)",
-      "Bash(chmod:*)"
+      "Bash(chmod:*)",
+      "Bash(move:*)"
     ],
     "deny": [],
     "ask": []
