@@ -1,0 +1,53 @@
+{
+  "dev": {
+    "system_name": "metadata-scraper",
+    "account": "YOUR_AWS_ACCOUNT_ID",
+    "region": "us-east-1",
+    "tags": {
+      "owner": "llm-team",
+      "env": "dev",
+      "sys": "metadata-scraper"
+    },
+    "vpc_id": "vpc-XXXXX",
+    "availability_zones": ["us-east-1a", "us-east-1b"],
+    "private_subnet_ids": ["subnet-XXXXX", "subnet-YYYYY"],
+    "ecs": {
+      "cluster_name": "llm-dev-ecs-cluster",
+      "container": {
+        "image": "./scrapy_project",
+        "memory_limit_mib": 2048,
+        "cpu": 256,
+        "logging": "LLMScraperLogs"
+      },
+      "environment_var": {
+        "DISPLAY": ":99",
+        "CHROME_BIN": "/usr/bin/chromium",
+        "CHROMEDRIVER_PATH": "/usr/bin/chromedriver"
+      }
+    },
+    "iam": {
+      "task_role": {
+        "assumed_by": "ecs-tasks.amazonaws.com",
+        "inline_policies": [
+          "s3:PutObject",
+          "s3:GetObject",
+          "s3:ListBucket"
+        ]
+      }
+    },
+    "s3": {
+      "bucket_name": "llm-dev-metadata-scraper-output"
+    },
+    "eventbridge": {
+      "minute": "*/30",
+      "hour": "*",
+      "month": "*",
+      "week_day": "*",
+      "year": "*",
+      "event_role": {
+        "assumed_by": "events.amazonaws.com",
+        "actions": ["ecs:RunTask", "ecs:StopTask", "ecs:DescribeTasks"]
+      }
+    }
+  }
+}
